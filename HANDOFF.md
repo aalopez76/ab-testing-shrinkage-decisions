@@ -122,11 +122,58 @@ Contraer comprime todo hacia el centro. Eso baja el error cuadrático, pero **co
 1. **τ² salía cero con dos mitades.** Porque δ̂ = θ̂(máximo) − media **ya es un estadístico seleccionado**, y Bayes empírico supone una estimación no seleccionada. Se resolvió con `thinning.partir_tres`: un tercio elige, otro estima, otro evalúa. Así δ̂ es la ventaja de un brazo **ya fijado** y la contracción se le puede aplicar.
 2. **Escribí la interpretación de la sensibilidad antes de ver los números**, y la contradecían. Queda anotado: es el fallo que la regla de evidencia §3 existe para evitar.
 
-## Qué sigue — fase F
+## El resultado del proyecto (3-oct-2026) — completo y coherente
 
-1. Dónde falla, en los dos niveles: qué experimentos pierde la contracción y qué los caracteriza.
-2. Explicar: el régimen de la proporción (Chen y Lei), la dependencia parámetro-precisión (Chen), la calibración del paso 1.
-3. Con esto, el enunciado del proyecto ya está casi completo y **es negativo en las dos decisiones**. Hay que escribirlo tal cual.
+```
+EL ESTIMANDO
+  la variante ganadora promete 1.551% y entrega 1.314%   →  +15.3% relativo
+  elegir al azar da inflación de 0.00002                 →  es efecto de SELECCIÓN
+
+LA PRUEBA DECISIVA (mismos datos, misma partición)
+  error cuadrático medio    cruda 3.63e-05 → contraída 2.76e-05    -24.0%
+  correlación de orden      cruda +0.3608  → contraída +0.3662     +0.005
+  ganancia realizada al 5%  cruda  1.073   → contraída  1.029      -0.044 pp
+```
+
+**La contracción reduce el error de estimación un 24% y deja la decisión donde estaba.**
+
+### Por qué, en los dos niveles
+
+**Dentro de un experimento: no puede, demostrablemente.** Con α casi uniforme (rango 0.009) y destino común, θ̃ es monótona en θ̂. Y es el caso degenerado que la literatura ya describe: Gu y Koenker (*Econometrica* 2023) señalan que **con varianza homogénea, media posterior, probabilidad de cola y expectativa de cola dan el mismo orden**. Los brazos reciben tráfico parejo por diseño (razón 1.04), así que no había problema de selección que mejorar.
+
+**Entre experimentos: reordena, pero empata.** Ahí α sí varía (media 0.432, desv. 0.168) y la precisión también (coef. de variación 0.389). La contracción reordena de verdad, y la ganancia realizada queda en empate técnico.
+
+### Por qué no alcanza su óptimo teórico
+
+Para maximizar el valor real de lo seleccionado, lo óptimo es ordenar por la media posterior — **pero solo con la previa bien especificada.** Medida: **asimetría de δ = +1.19**, cuando la normal supone 0. δ es la ventaja de un brazo *ya seleccionado*, así que su distribución está corrida y la previa normal está mal especificada.
+
+Es el modo de falla documentado: los métodos que dependen de la independencia previa pueden dar peores medias posteriores, y **el cribado basado en ellas puede ser peor que con las estimaciones crudas**.
+
+### La regla de cola pierde en los dos criterios, y es consistente
+
+```
+              ganancia 5%   potencia 5%
+  cruda           1.07         36.4%
+  contraída       1.03         30.5%
+  cola            0.89         22.7%
+```
+
+No es desajuste de criterio: pierde también en potencia. Y es coherente con la literatura — bajo restricción de capacidad, **la media posterior favorece a los de menor varianza y la probabilidad de cola prefiere a los de mayor varianza**. Para ganancia realizada, preferir a los imprecisos es mal negocio.
+
+### Un error propio que se corrigió por el camino
+
+Reporté primero que contraer **perjudicaba** la decisión (−0.27 pp). Era artefacto mío: le apliqué a δ el factor de diseño 1.94, que se midió para comparaciones **entre brazos** en pruebas A/A. La referencia por covarianza —Cov(δ̂_A2, δ_B) = Var(δ), que no usa `v` en absoluto— da un factor de ~1.09 para δ. Inflar `v` al doble hundió τ² y disparó α de 0.43 a 0.87.
+
+**El factor de diseño no transfiere entre niveles.** Eso vale más que el número que corrigió.
+
+## Qué sigue — fases F y G
+
+El resultado está completo. Falta:
+
+1. **Dónde falla**, con su caracterización (fase F).
+2. **Congelar** el método, correr el confirmatorio **una sola vez**, y escribir el análisis de 2 000 a 3 000 palabras (fase G).
+
+**Titular propuesto, pendiente de visto bueno:** *la contracción de Bayes empírico reduce el error de estimación un 24% y deja la decisión donde estaba; si se adoptó para decidir mejor, se midió lo que no era.*
 
 ## Decisiones tomadas que no hay que volver a discutir
 
