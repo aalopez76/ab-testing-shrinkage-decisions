@@ -121,5 +121,133 @@
         "fraccion_desbalance": 0.0
       }
     ]
+  },
+  "confirmatorio": {
+    "muestra": "confirmatorio",
+    "experimentos_evaluados": 22741,
+    "umbral_p": 0.001,
+    "fraccion_desbalance_global": 0.1552262433490172,
+    "por_mes": [
+      {
+        "mes": "2013-05",
+        "experimentos": 80,
+        "fraccion_desbalance": 0.05
+      },
+      {
+        "mes": "2013-06",
+        "experimentos": 695,
+        "fraccion_desbalance": 0.2173
+      },
+      {
+        "mes": "2013-07",
+        "experimentos": 809,
+        "fraccion_desbalance": 0.6106
+      },
+      {
+        "mes": "2013-08",
+        "experimentos": 837,
+        "fraccion_desbalance": 0.5532
+      },
+      {
+        "mes": "2013-09",
+        "experimentos": 833,
+        "fraccion_desbalance": 0.6531
+      },
+      {
+        "mes": "2013-10",
+        "experimentos": 692,
+        "fraccion_desbalance": 0.776
+      },
+      {
+        "mes": "2013-11",
+        "experimentos": 686,
+        "fraccion_desbalance": 0.8819
+      },
+      {
+        "mes": "2013-12",
+        "experimentos": 683,
+        "fraccion_desbalance": 0.8199
+      },
+      {
+        "mes": "2014-01",
+        "experimentos": 673,
+        "fraccion_desbalance": 0.1605
+      },
+      {
+        "mes": "2014-02",
+        "experimentos": 786,
+        "fraccion_desbalance": 0.0013
+      },
+      {
+        "mes": "2014-03",
+        "experimentos": 765,
+        "fraccion_desbalance": 0.0013
+      },
+      {
+        "mes": "2014-04",
+        "experimentos": 832,
+        "fraccion_desbalance": 0.0036
+      },
+      {
+        "mes": "2014-05",
+        "experimentos": 806,
+        "fraccion_desbalance": 0.0012
+      },
+      {
+        "mes": "2014-06",
+        "experimentos": 1049,
+        "fraccion_desbalance": 0.0038
+      },
+      {
+        "mes": "2014-07",
+        "experimentos": 1138,
+        "fraccion_desbalance": 0.0026
+      },
+      {
+        "mes": "2014-08",
+        "experimentos": 1360,
+        "fraccion_desbalance": 0.0037
+      },
+      {
+        "mes": "2014-09",
+        "experimentos": 1663,
+        "fraccion_desbalance": 0.0006
+      },
+      {
+        "mes": "2014-10",
+        "experimentos": 1756,
+        "fraccion_desbalance": 0.0023
+      },
+      {
+        "mes": "2014-11",
+        "experimentos": 1268,
+        "fraccion_desbalance": 0.0032
+      },
+      {
+        "mes": "2014-12",
+        "experimentos": 1175,
+        "fraccion_desbalance": 0.0009
+      },
+      {
+        "mes": "2015-01",
+        "experimentos": 873,
+        "fraccion_desbalance": 0.0023
+      },
+      {
+        "mes": "2015-02",
+        "experimentos": 798,
+        "fraccion_desbalance": 0.0025
+      },
+      {
+        "mes": "2015-03",
+        "experimentos": 731,
+        "fraccion_desbalance": 0.0
+      },
+      {
+        "mes": "2015-04",
+        "experimentos": 689,
+        "fraccion_desbalance": 0.0029
+      }
+    ]
   }
 }

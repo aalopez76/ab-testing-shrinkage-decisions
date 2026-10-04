@@ -24,9 +24,17 @@ Misma corrección, dos decisiones, dos respuestas. Este script mide la segunda.
 
 Salida: reports/results/09_decision_de_lanzar.json
 """
+import json
+from pathlib import Path
+
 import numpy as np
+
 from wcab import panel, portfolio, shrinkage, thinning
-from wcab.consola import preparar; preparar()
+from wcab.consola import preparar
+
+preparar()
+RAIZ = Path(__file__).resolve().parents[1]
+SALIDA = RAIZ / "reports" / "results" / "09_decision_de_lanzar.json" 
 
 p = panel.cargar("confirmatorio")
 # umbrales de lanzamiento, en puntos porcentuales de mejora
@@ -68,3 +76,19 @@ for u in UMBRALES:
     gana = np.mean(b > a)
     print("  >%.1f pp   %11.2f%% %11.2f%% %+9.2f pp   (contraer gana en %.0f%%)"
           % (u, a.mean()*100, b.mean()*100, (b.mean()-a.mean())*100, gana*100))
+
+cifras = {"umbrales": {}, "particiones": 20, "muestra": "confirmatorio"}
+for u in UMBRALES:
+    a = np.array(res[u]["cru_ok"]); b = np.array(res[u]["con_ok"])
+    cifras["umbrales"][str(u)] = {
+        "acierto_cruda": float(a.mean()),
+        "acierto_contraida": float(b.mean()),
+        "mejora": float(b.mean() - a.mean()),
+        "contraida_gana_en": float(np.mean(b > a)),
+        "lanza_cruda": float(np.mean(res[u]["cru_lanza"])),
+        "lanza_contraida": float(np.mean(res[u]["con_lanza"])),
+        "deberia_lanzar": float(np.mean(res[u]["real_lanza"])),
+    }
+SALIDA.parent.mkdir(parents=True, exist_ok=True)
+SALIDA.write_text(json.dumps(cifras, indent=2, ensure_ascii=False), encoding="utf-8")
+print("\ncifras -> %s" % SALIDA.relative_to(RAIZ))

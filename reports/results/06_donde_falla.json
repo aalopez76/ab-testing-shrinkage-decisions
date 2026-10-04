@@ -41,5 +41,48 @@
       "grupos_tipo": 4,
       "sobrevive_al_control": true
     }
+  },
+  "confirmatorio": {
+    "muestra": "confirmatorio",
+    "particiones": 24,
+    "donde_falla": {
+      "presupuesto": 0.1,
+      "fraccion_de_la_seleccion_que_cambia": 0.23018486255358872,
+      "descartados_delta_realizado": 0.006470490562441998,
+      "anadidos_delta_realizado": 0.005096295102076841,
+      "descartados_alpha": 0.6891177885755261,
+      "anadidos_alpha": 0.31836439977915054,
+      "descartados_impresiones": 4000.1310736073415,
+      "anadidos_impresiones": 7151.424612125821,
+      "descartados_brazos": 4.593247523886984,
+      "anadidos_brazos": 5.1706198082269585
+    },
+    "calibracion_ruido": {
+      "experimentos": 1279,
+      "brazos": 6296,
+      "grados_libertad": 5017,
+      "Q_total": 9669.946831,
+      "razon_Q_gl": 1.927436,
+      "mediana_Q_gl": 1.475196,
+      "fraccion_p_005": 0.258014,
+      "factor_diseno": 1.927436,
+      "aprobada": false
+    },
+    "regimen_proporcion": {
+      "tasa_global": 0.0127689901176626,
+      "n_mediana": 3129.0,
+      "n_por_p_mediana": 39.95417007816627,
+      "fraccion_con_np_menor_10": 0.0013299589391317821,
+      "fraccion_con_np_menor_5": 0.0007489089171810035
+    },
+    "precision_predice_parametro": {
+      "correlacion_cruda": -0.11923163845749975,
+      "p_cruda": 4.4307147685600415e-51,
+      "correlacion_dentro_de_semana": -0.08730913992016777,
+      "grupos_semana": 66,
+      "correlacion_dentro_de_tipo": -0.11298565706041093,
+      "grupos_tipo": 4,
+      "sobrevive_al_control": true
+    }
   }
 }

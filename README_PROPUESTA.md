@@ -1,125 +1,103 @@
-# Contexto del proyecto
+# El problema
 
-El comercio digital y los sectores que operan como él —medios, suscripción, marketplaces— tienen que decidir continuamente qué desplegar: un anuncio, un descuento, una promoción, un titular, un orden de resultados. Hay varios métodos para tomar esa decisión, y cada uno sirve para una forma distinta de problema:
+Hay una decisión que se repite, con la misma forma, en sectores que no tienen nada que ver entre sí: **se miden varios candidatos, se elige el que midió mejor, y luego el elegido rinde menos de lo que prometió.**
+
+Pasa porque el que midió mejor lo hizo por dos razones a la vez —porque es bueno y porque le favoreció el azar— y el azar no se repite. El nombre se lo pusieron tres ingenieros de petróleo en 1971: estudiando las subastas de arrendamiento marítimo, documentaron que las compañías obtenían rendimientos inesperadamente bajos «año tras año», y llamaron a eso **la maldición del ganador**.
+
+Desde entonces el mismo problema aparece documentado en:
+
+| Sector | Qué se elige | Cómo se manifiesta |
+|---|---|---|
+| **Subastas** | La puja ganadora | La ganadora paga de más por un bien de valor incierto |
+| **Genética** | Las variantes más significativas entre un millón | Los efectos de las variantes seleccionadas están exagerados frente a su valor real |
+| **Ensayos clínicos** | La dosis con mayor efecto observado | Estimaciones demasiado optimistas para la dosis elegida, más error de tipo I inflado |
+| **Educación** | Los docentes mejor evaluados | Se contraen las evaluaciones hacia la media, con peso creciente en la imprecisión |
+| **Gestión de inversión** | Los gestores con mejor desempeño | Se contrata y despide en los momentos equivocados, extrapolando rendimientos |
+| **Comercio digital** | La variante ganadora de una prueba A/B | **El caso de este proyecto** |
+
+Es el mismo problema estadístico con seis nombres distintos. Y en todos, la corrección propuesta es la misma familia: **contraer las estimaciones hacia la media del grupo**, con un peso que crece con la imprecisión de cada medición.
+
+## El caso que resuelve este proyecto
+
+El comercio digital y los sectores que operan como él —medios, suscripción, marketplaces— tienen que decidir continuamente qué desplegar: un anuncio, un descuento, una promoción, un titular, un orden de resultados.
+
+Hay varios métodos para esa decisión, y conviene distinguirlos en dos ejes, porque confundirlos lleva a comparar cosas que no compiten.
+
+**Cómo se asigna** (el diseño):
 
 | Método | Para qué sirve |
 |---|---|
-| **Pruebas A/B** | Comparar versiones completas cuando se puede repartir usuarios al azar |
-| **Bandidos multibrazo** (*Thompson sampling*) | Muchas variantes y mucho tráfico: mueve el tráfico hacia la que va ganando, sin esperar a cerrar la prueba |
-| **Intercalado** (*interleaving*) | Sistemas de ranking: mezcla los resultados de dos algoritmos dentro de la misma búsqueda del mismo usuario |
-| **Pruebas de conmutación** (*switchback*) | Marketplaces y sistemas con oferta compartida: aleatoriza región y franja horaria en lugar de usuarios |
-| **Métodos cuasiexperimentales** (diferencias en diferencias, control sintético, experimentos geográficos) | Cuando no se puede aleatorizar y solo hay datos de comportamiento |
+| **Pruebas A/B** | Comparar versiones completas repartiendo usuarios al azar |
+| **Bandidos multibrazo** | Mucho tráfico y muchas variantes: mueve el tráfico hacia la que va ganando |
+| **Intercalado** | Sistemas de ranking: mezcla dos algoritmos dentro de la misma búsqueda |
+| **Conmutación** (*switchback*) | Marketplaces: aleatoriza región y franja horaria en lugar de usuarios |
+| **Cuasiexperimentales** | Cuando no se puede aleatorizar y solo hay datos de comportamiento |
 
-Aunque existen todos esos, **las pruebas A/B son el estándar de la industria**, por tres razones concretas: establecen causalidad —no correlación— porque el reparto es al azar; son sencillas de iterar, porque comparar dos versiones completas no exige rediseñar el sistema; y escalan, porque las plataformas digitales ya tienen el volumen de tráfico que el método necesita. Por eso son el procedimiento con el que la industria digital decide hoy qué desplegar.
+**Cómo se analiza lo recogido** (la inferencia):
 
-El funcionamiento es simple: se lanzan varias versiones de una propuesta, se mide cuál rinde mejor —en atracción de clientes, retención, gasto, tasa de clics, lo que el negocio persiga— y se despliega la ganadora.
+| Método | Para qué sirve |
+|---|---|
+| **Frecuentista de horizonte fijo** | Lo dominante: muestra fija, lectura al final |
+| **Secuencial de grupo** | Permite mirar antes sin inflar el error |
+| **Bayesiano** | Previa explícita, posterior interpretable |
+| **Bayes empírico post-hoc** | La previa se **estima del histórico**. Aquí entran la contracción y sus variantes |
 
-## El problema
+Las pruebas A/B son el estándar del primer eje, por tres razones concretas: establecen causalidad porque el reparto es al azar; son sencillas de iterar, porque comparar versiones completas no exige rediseñar el sistema; y escalan, porque las plataformas ya tienen el tráfico que el método necesita.
 
-**La variante ganadora casi nunca rinde lo que prometió.** Parte de su ventaja era mérito y parte fue suerte —ruido—, y la suerte no se repite al desplegar. Es un fenómeno conocido: se le llama **la maldición del ganador**, y aparece siempre que se elige el máximo de varias mediciones ruidosas.
+**La corrección de la maldición del ganador vive en el segundo eje.** Se monta encima de una prueba A/B ya corrida, no la sustituye.
 
-## La corrección que se propone, y quién hace qué
+## Por qué cuesta decidir mal
 
-La corrección es la **contracción de Bayes empírico**: no creerse del todo el resultado del ganador y acercarlo al promedio del grupo, en una proporción que depende de cuánto ruido tiene la medición.
+La corrección no es gratis. Es infraestructura —un trimestre de ingeniería— y cambia cómo se reporta cada resultado al negocio. Y equivocarse tiene costo en las dos direcciones: si funciona y no se usa, se dejan mejoras sobre la mesa; **si se usa donde no corresponde, se decide peor que no corrigiendo nada.**
 
-No es una técnica nueva ni de nadie en particular. Charles Stein la demostró en **1956**, James y Stein publicaron el estimador explícito en 1961, Herbert Robbins le dio el nombre de «Bayes empírico» y Efron y Morris la desarrollaron en los setenta. **Tiene setenta años.**
+Lo que vuelve esto difícil es que **no es una decisión, son cuatro**, y la literatura las trata como si fueran la misma:
 
-Lo que es reciente —y lo que crea la decisión— es que los equipos de experimentación de las grandes plataformas están publicando activamente sobre llevarla a producción, **y no coinciden**:
+1. **¿Qué variante despliego?** — ordenar candidatos dentro de un experimento.
+2. **¿Qué experimentos priorizo?** — ordenar con presupuesto limitado.
+3. **¿Lanzo esto o no?** — comparar contra un umbral absoluto.
+4. **¿Qué cifra le reporto al negocio?** — la estimación misma.
 
-| Quién | Qué publicó | Postura |
-|---|---|---|
-| **Meta** — [Coey y Hung](https://arxiv.org/abs/2210.03905) | *Empirical Bayes Selection for Value Maximization*: usar la contracción para **seleccionar**, con cotas de arrepentimiento demostradas y código público | A favor, con teoría |
-| **Meta** — [Mudd, Friedberg, Gorbachev, Nassif y Zaidi](https://arxiv.org/abs/2511.06318) | *Bayesian Hybrid Shrinkage* (BHS): añade factores de contracción **locales por experimento** para reducir la sensibilidad a la elección de previa | A favor, propuesta de 2025 |
-| **Amazon, MIT y Stanford** — [Abadie, Agarwal, Imbens, Jia, McQueen, Stepaniants y Torres](https://arxiv.org/abs/2306.13681) | *Estimating the Value of Evidence-Based Decision Making*: las reglas de decisión basadas en significancia «pueden dejar valor sin realizar y, en algunos casos, generar valor esperado negativo» | A favor de corregir la regla de decisión |
-| **Spotify** — [ingeniería](https://engineering.atspotify.com/2026/9/why-spotify-is-not-using-bayesian-a-b-testing) | *Why Spotify Is Not Using Bayesian A/B Testing*: las ventajas atribuidas «solo se sostienen bajo configuraciones específicas y exigentes» que rara vez vienen por defecto | **En contra, por escrito** |
+Esa distinción no es mía. La genética ya la nombra: separan el **sesgo de ranking**, que nace de ordenar un millón de variantes, del **sesgo de selección**, que nace de usar un umbral. Son dos mecanismos distintos, y nada garantiza que una corrección arregle los dos.
 
-**Dos cosas que conviene no exagerar, y que este documento no exagera.** Primero: BHS es una propuesta presentada a congreso en 2025, no un sistema de producción documentado — el artículo describe cómo se *implementaría* sobre la infraestructura existente, no que esté desplegado. Segundo: **este proyecto no implementa BHS.** BHS añade factores locales por experimento; aquí se evalúa la versión estándar, con un único peso estimado en conjunto. Es deliberado: antes de añadir la capa local de Meta hay que saber si la versión básica aporta algo, y eso es lo que aún no estaba medido en datos públicos.
-
-## La decisión, y por qué cuesta
-
-Un equipo que hoy quiera corregir la maldición del ganador tiene tres opciones, y ninguna buena:
-
-1. **Adivinar.**
-2. **Seguir a la plataforma más grande** y suponer que su caso es el suyo.
-3. **Invertir el trimestre** en construirla para averiguarlo.
-
-Y equivocarse no es gratis en ninguna dirección: adoptar la corrección es infraestructura y cambia cómo se reporta cada resultado al negocio, mientras que **hay un régimen en el que corregir decide peor que no corregir nada**.
-
-## Lo que entrega este proyecto
-
-**La cuarta opción:** cuatro comprobaciones que un equipo corre sobre su propio histórico en un día, con el umbral y la consecuencia de cada una, y que devuelven la respuesta para su caso antes de comprometer el trimestre.
-
-No es un «depende». Dos de las cuatro dan respuestas duras, y una de ellas es un **no algebraico** que ninguna cantidad de datos puede revertir.
-
-Esto importa porque adoptar el método implica **dos cosas distintas que suelen confundirse**:
-
-1. **El número que se reporta** al negocio — la mejora que prometes.
-2. **La variante que se elige** desplegar — la decisión.
-
-Si se adopta esperando decidir mejor y solo arregla el número, el trimestre se gastó en lo que no era.
-
-## Qué representan los datos
-
-Este proyecto **analiza con datos reales un escenario hipotético, pero muy parecido al que enfrentan hoy los sectores industriales digitales.** La distinción merece precisión, porque es de lo que depende que el resultado sirva.
-
-No son los datos de ninguna empresa que esté tomando esta decisión hoy, y no pretenden serlo. Lo que reproducen no es el dato, **es el procedimiento**: una organización que lanza varias versiones de una propuesta, reparte el tráfico al azar entre ellas, mide una tasa de conversión y despliega la ganadora. Ese es el mismo bucle que corre hoy un equipo de comercio digital.
-
-Y es la estructura de ese bucle —no el sector, ni la métrica, ni el año— la que determina si la corrección funciona. Por eso **lo que transfiere es el procedimiento y sus umbrales; los números concretos, no.**
-
-Resultados y recomendaciones sobre cuatro áreas:
-
-- **Calibración del ruido:** ¿está bien medida la varianza de la que depende todo el método?
-- **Capacidad de reordenar:** ¿puede la corrección cambiar siquiera la decisión, dado el diseño del experimento?
-- **Independencia previa:** ¿el supuesto central del método se sostiene en estos datos?
-- **Régimen de la aproximación:** ¿qué versión del método corresponde?
-
-El código de ingesta, construcción del panel y los diagnósticos está en [`src/wcab/`](src/wcab/). Los scripts reproducibles que generan cada cifra citada, en [`scripts/`](scripts/). Las cifras crudas que respaldan este documento, en [`reports/results/`](reports/results/).
-
-**Lo que este proyecto no tiene, y no voy a inventar:** no hay SQL —el procesamiento es Python sobre CSV planos— ni panel interactivo. Las secciones del informe que pedirían un diagrama entidad-relación o un dashboard no aplican y se marcan como tales.
+**Este proyecto mide las cuatro, por separado, y encuentra cuatro respuestas distintas.**
 
 ---
 
-# Estructura de los datos y comprobaciones iniciales
+# Cómo lo resolví
 
-Los datos son el **Upworthy Research Archive** ([Matias, Munger, Aubin Le Quéré y Ebersole, *Scientific Data* 8:195, 2021](https://www.nature.com/articles/s41597-021-00934-7)), descargable de [OSF](https://osf.io/jd64p/) con licencia abierta. Upworthy era un medio digital estadounidense que probaba titulares de forma sistemática antes de publicar: a cada visitante le mostraba una variante distinta del mismo artículo y medía los clics.
+## Los datos: lo que reproducen es el procedimiento, no el dato
 
-Dos archivos planos, sin estructura relacional:
+Los datos ideales serían los del propio equipo. Nadie los publica. Así que el proyecto **analiza con datos reales un escenario hipotético, pero muy parecido al que enfrentan hoy los sectores industriales digitales.**
 
-| | `upworthy-exploratory.csv` | `upworthy-confirmatory.csv` |
+Lo que reproducen no es el dato, **es el bucle**: una organización que lanza varias versiones de una propuesta, reparte el tráfico al azar entre ellas, mide una tasa de conversión y despliega la ganadora. Y es la estructura de ese bucle —no el sector, ni la métrica, ni el año— la que determina si la corrección funciona.
+
+Son el **Upworthy Research Archive** ([Matias, Munger, Aubin Le Quéré y Ebersole, *Scientific Data* 8:195, 2021](https://www.nature.com/articles/s41597-021-00934-7)): un medio digital estadounidense que probaba titulares de forma sistemática antes de publicar.
+
+| | Exploratorio | Confirmatorio |
 |---|---|---|
-| Filas (variantes) | 31 580 | 149 187 |
 | Experimentos tras exclusión | 3 380 | **15 787** |
-| Variantes tras exclusión | 16 629 | **77 446** |
-| Impresiones | 58 769 384 | **273 495 317** |
+| Variantes | 16 629 | **77 446** |
+| Impresiones | 58.8 millones | **273.5 millones** |
 | Clics | 749 878 | **3 492 259** |
-| Tasa de clic | 1.28% | 1.28% |
 | Variantes por experimento | 2 a 14 (mediana 5) | 2 a 20 (mediana 5) |
-| Rango de fechas | may-2013 a abr-2015 | may-2013 a abr-2015 |
+| Tasa de clic | 1.28% | 1.28% |
 
-Columnas relevantes: `clickability_test_id` (el experimento), `headline`, `excerpt`, `lede`, `eyecatcher_id` (la imagen), `impressions`, `clicks`, `created_at`, `test_week`.
+Sirven porque reúnen las seis condiciones que el problema exige, y que casi ningún archivo público reúne juntas:
 
-El archivo **viene partido de fábrica** en una muestra exploratoria y una confirmatoria. Los autores lo diseñaron así para que un investigador pueda fijar su método en la primera y confirmarlo en la segunda. Este proyecto usa esa partición exactamente para eso.
-
-## Por qué estos datos sirven, aunque no sean los datos ideales
-
-Los datos ideales serían los del propio equipo: su plataforma, su métrica, su tráfico. **Nadie publica eso.** El argumento no es que estos sean los datos, sino que **tienen las seis características estructurales que el problema exige**:
-
-| Lo que el problema exige | Por qué es imprescindible | Qué aporta este archivo |
+| Condición | Por qué es imprescindible | Qué aporta |
 |---|---|---|
-| Aleatorización real | Sin ella, el efecto de selección se confunde con sesgo de asignación | 19 167 experimentos aleatorizados |
-| Varias variantes por experimento | La maldición del ganador vive en el **máximo** sobre variantes | mediana 5, hasta 20 |
-| Muchos experimentos | Para estimar la dispersión **entre** ellos, que es el denominador del método | 15 787 |
-| Experimentos A/A | Vara **independiente** para auditar el modelo de ruido | 1 279 en el confirmatorio |
-| Partición previa | Para congelar el método y confirmarlo sin contaminación | incluida por los autores |
+| Aleatorización real | Sin ella el efecto de selección se confunde con sesgo de asignación | 19 167 experimentos aleatorizados |
+| Varias variantes | La maldición vive en el **máximo** sobre candidatos | mediana 5, hasta 20 |
+| Muchos experimentos | Para estimar la dispersión entre ellos | 15 787, muy por encima de los 200 que la literatura fija como mínimo |
+| Experimentos A/A | Vara **independiente** para auditar el ruido | 1 279 |
+| Partición previa | Para congelar el método y confirmarlo | incluida por los autores |
 | Precisión heterogénea | Para que el peso de contracción pueda variar | impresiones p99/p01 = 7.1 |
 
-## Comprobaciones iniciales
+Y lo que no tienen: un solo medio, métrica de clic, 2013–2015, datos agregados sin nivel de persona. **Transfiere el procedimiento y sus umbrales; los números concretos, no.**
 
-**1. La aleatorización falló durante meses, y el archivo público no lo marca.**
+## Dos problemas de los datos, resueltos antes de medir nada
 
-En junio de 2024 los autores publicaron una corrección: una mala configuración de caché de Cloudflare, el 25 de junio de 2013, hizo que durante meses se mostrara una sola variante. Afecta a ~22% de las pruebas y desaconsejan usarlas para inferencia causal. **Los CSV públicos no traen la columna que las identifica.**
-
-Se verificó desde cero con una prueba de bondad de ajuste sobre las impresiones por variante. Reproduce el fallo mes a mes:
+**La aleatorización falló durante meses y el archivo público no lo marca.** Los autores publicaron en 2024 que una mala configuración de caché, el 25 de junio de 2013, hizo que durante meses se mostrara una sola variante. Afecta a ~22% de las pruebas. Los CSV no traen la columna que las identifica, así que se verificó desde cero con una prueba sobre las impresiones por variante:
 
 | Mes | Experimentos con reparto anómalo |
 |---|---|
@@ -128,157 +106,185 @@ Se verificó desde cero con una prueba de bondad de ajuste sobre las impresiones
 | ene-2014 | 11.0% |
 | feb-2014 en adelante | 0.0% a 0.9% |
 
-Se excluye la ventana del 2013-06-01 al 2014-02-01: **6 956 de 22 743 experimentos fuera (30.6%)**. El periodo conservado corre a la tasa de anomalía que se esperaría por azar.
+Se excluye esa ventana: **6 956 de 22 743 experimentos fuera (30.6%)**.
 
-**2. El modelo de ruido no describe estos datos.**
+**Y el modelo de ruido no describe estos datos.** Los experimentos A/A —donde nada varía entre variantes— dan una vara independiente: la diferencia verdadera es cero por construcción, así que la dispersión observada debería igualar la calculada. No lo hace: la *Q* de Cochran vale **1.940** veces sus grados de libertad en el exploratorio y **1.927** en el confirmatorio. El modelo binomial subestima el ruido cerca del doble, y **replica en las dos muestras**.
 
-Toda contracción depende de la varianza de cada medición. El archivo ofrece una vara independiente: los experimentos donde **nada varía entre variantes**, donde la diferencia verdadera es cero por construcción. La dispersión observada debería igualar la calculada. No lo hace:
+![Izquierda: el fallo de aleatorización mes a mes, verificado desde cero porque los CSV no lo marcan. Derecha: la Q de Cochran sobre los experimentos A/A, donde la diferencia verdadera es cero por construcción.](reports/figures/02_comprobaciones_iniciales.png)
+
+*Izquierda: el fallo de aleatorización mes a mes, verificado desde cero porque los CSV no lo marcan. Derecha: la Q de Cochran sobre los experimentos A/A, donde la diferencia verdadera es cero por construcción.*
+
+
+## El estado del arte, aplicado
+
+| Qué | Para qué, aquí |
+|---|---|
+| **Contracción de Bayes empírico** | La corrección a evaluar. Dispersión estimada en conjunto con los métodos del meta-análisis |
+| **Bayesian Hybrid Shrinkage** (Meta, 2025) | La variante más reciente: factores de contracción **locales** por experimento. Implementada en `src/wcab/shrinkage/bhs.py` |
+| **Probabilidad de cola posterior** | La regla alternativa cuando el criterio no es el valor realizado |
+| **Data thinning** (*JMLR* 2024) | Partir los conteos de forma hipergeométrica para evaluar fuera de muestra sin datos extra |
+| **Diagnóstico de precisión-parámetro** | Comprobar si se sostiene el supuesto central de la corrección |
+| **Régimen n·p** | Decidir si corresponde la versión gaussiana o la binomial directa |
+
+Dos decisiones de método que vale la pena explicitar.
+
+**Por qué hubo que partir en tres tercios y no en dos.** La ventaja del ganador, δ = máximo − media, es un estadístico **ya seleccionado**, y el Bayes empírico supone una estimación que no lo sea. Con dos mitades, la dispersión entre experimentos se estimaba en **cero**: la calibración colapsaba. La solución fue partir en tres —uno elige el brazo, otro estima su ventaja, otro evalúa—, de modo que el δ estimado es la ventaja de un brazo **ya fijado**. La dispersión pasó de 0 a 1.787e-05 y la corrección volvió a funcionar.
+
+Esto importa más allá de este proyecto, porque es un bloqueo que la literatura enuncia y deja abierto: los corpus seleccionados por el ganador **impiden la calibración independientemente del tamaño del corpus**, y recoger más datos de la misma fuente sesgada no ayuda. Correcto — y la respuesta no es recoger más, es **partir los conteos que ya se tienen** para que la selección y la estimación ocurran en mitades independientes.
+
+**Y cómo se sabe si BHS hacía falta.** El modelo de BHS se reparametrizó con `b = a − 2`, lo que deja a `a` como único mando: con `a` grande reproduce exactamente la contracción estándar —el caso que el propio artículo llama *Bayesian Global Shrinkage*—, y con `a` chico da las colas pesadas. Así que **ajustar `a` es preguntarle a los datos cuánta flexibilidad local necesitan.** Validado en tres casos construidos, incluido el decisivo: con una previa normal, el método responde «aquí no hago falta» (razón de verosimilitudes 0.67, p = 0.41).
+
+---
+
+# Lo que encontré
+
+El método se congeló el 3 de octubre de 2026 —con fecha, commit de git y criterio de éxito declarado— y entonces se corrió la muestra confirmatoria **una sola vez**.
+
+## La maldición del ganador es real y grande
 
 | | Exploratorio | Confirmatorio |
 |---|---|---|
-| Experimentos A/A | 295 | 1 279 |
-| *Q* de Cochran / grados de libertad | **1.940** | **1.927** |
-| Fracción con p < 0.05 (debería ser ~0.05) | 0.251 | 0.258 |
+| Inflación de la variante ganadora | 0.236 pp | **0.237 pp** |
 
-El modelo binomial subestima el ruido cerca del doble, y **replica en las dos muestras**. Dos explicaciones son compatibles con esto —impresiones no independientes, o variación en campos que el archivo no publica— y **no son distinguibles** con estos datos. Ambas quedan declaradas.
+La variante desplegada promete 1.792% y entrega 1.553%: una **sobreestimación del 15.4% relativo**, medida sobre lo que esa variante realmente rinde. Y es un efecto de **selección**, no de medición: elegir una variante al azar da una inflación cien veces menor.
 
-*No aplica: diagrama entidad-relación. Son dos archivos planos sin claves foráneas.*
+![La variante elegida promete más de lo que entrega. Elegir al azar no produce brecha: la maldición es un efecto de selección.](reports/figures/01_maldicion_del_ganador.png)
 
----
+*La variante elegida promete más de lo que entrega. Elegir al azar no produce brecha: la maldición es un efecto de selección.*
 
-# Resumen ejecutivo
 
-## Lo esencial
 
-**La contracción de Bayes empírico corrige la cifra que le reportas al negocio, no cuál variante lanzas.** Sobre 15 787 experimentos aleatorizados, con el método congelado antes de ver la muestra confirmatoria, reduce el error de estimación un **24.0%** y deja la decisión estadísticamente donde estaba.
+![La misma corrección sobre cuatro decisiones distintas. Cada panel está en sus propias unidades a propósito: normalizarlas a un eje común sería disfrazar cantidades distintas de comparables.](reports/figures/03_cuatro_decisiones.png)
 
-Tres cosas que un responsable de experimentación debería llevarse:
+*La misma corrección sobre cuatro decisiones distintas. Cada panel está en sus propias unidades a propósito: normalizarlas a un eje común sería disfrazar cantidades distintas de comparables.*
 
-1. **La maldición del ganador es real y grande.** La variante ganadora promete 1.551% y entrega 1.314%: una **sobreestimación del 18.5% relativo**. Si tu equipo reporta el resultado del ganador sin corregir, infla sistemáticamente lo que promete.
+## Las cuatro decisiones, cuatro respuestas
 
-2. **Corregirla no mejora la elección, y en un caso ni puede.** Si tus variantes reciben tráfico parejo —como ocurre por diseño en la mayoría de las plataformas— la corrección es una transformación monótona del estimador y **conserva el orden**. Es una imposibilidad algebraica, no un problema de implementación.
-
-3. **En el régimen equivocado, empeora la elección de forma medible.** Cuando se aplica a toda la cartera, la corrección pierde en las 40 particiones evaluadas (−0.0556 pp, IC 95% [−0.0619, −0.0493]). El motivo es diagnosticable en tres líneas de código, y el procedimiento lo detecta antes de adoptar nada.
-
-| El resultado, replicado | Exploratorio (3 380 exp.) | Confirmatorio (15 787 exp.) |
+| La decisión | ¿Ayuda contraer? | La cifra |
 |---|---|---|
-| Inflación del ganador | 0.236 pp | **0.237 pp** |
-| Error cuadrático medio | **−24.0%** | **−24.0%** |
-| Correlación de orden con lo realizado | +0.3608 → +0.3662 | +0.3601 → +0.3656 |
-| Ganancia realizada al 5% de presupuesto | 1.073 → 1.029 pp | 1.086 → 1.033 pp |
+| **1. Qué variante despliego** | **No, y no puede** | 99.8% de decisiones idénticas |
+| **2. Qué experimentos priorizo** | **No, levemente peor** | −0.0556 pp, IC 95% [−0.0619, −0.0493], pierde en 40/40 |
+| **3. Lanzo o no** | **Sí, y crece con la exigencia** | +1.73 a +2.91 pp de acierto, gana en 20/20 |
+| **4. La cifra que reporto** | **Sí** | −24.0% estándar, **−28.1%** con BHS |
 
-La muestra confirmatoria es **4.7 veces más grande y no se tocó durante el desarrollo**. El método se congeló en [`reports/results/METODO_CONGELADO.json`](reports/results/METODO_CONGELADO.json) con fecha, commit de git y criterio de éxito declarado, y se corrió **una sola vez**.
+**La decisión 1 no puede mejorarse, y eso se demuestra.** La contracción es un promedio ponderado entre el dato y un centro común. Si el peso y el centro son iguales para las variantes de un experimento, es una función monótona creciente del estimador y **conserva el orden**. Medido: el peso varía **0.009** entre variantes del mismo experimento, porque reciben tráfico parejo por diseño —la razón entre la más y la menos expuesta tiene mediana 1.040. Con variantes balanceadas no había un problema de selección que mejorar.
 
-*Pendiente: figura con la curva de ganancia realizada por presupuesto para las cuatro reglas. Las cifras están en [`reports/results/07_resultado.json`](reports/results/07_resultado.json); el gráfico no está hecho.*
+**La decisión 2 empeora, y se sabe por qué.** Al 10% de presupuesto la corrección cambia el 23.4% de la selección: descarta experimentos con peso 0.689 y 4 000 impresiones, y añade otros con peso 0.318 y 7 151. Descarta los imprecisos y añade los precisos, que es lo que la teoría dice que hace. Pero **los que descarta tenían más ganancia real** (0.647 contra 0.510 pp), porque el supuesto de independencia previa falla: la correlación entre impresiones y tasa es −0.119 cruda, **−0.087 dentro de cada semana** (66 semanas) y **−0.113 dentro de cada tipo de experimento**. Sobrevive al control.
 
----
+![El mecanismo del daño: la corrección descarta los experimentos imprecisos, y en este corpus los imprecisos tienen mejor resultado real porque la precisión y el resultado están correlacionados.](reports/figures/05_donde_falla.png)
 
-# Los cuatro diagnósticos en detalle
+*El mecanismo del daño: la corrección descarta los experimentos imprecisos, y en este corpus los imprecisos tienen mejor resultado real porque la precisión y el resultado están correlacionados.*
 
-Cada uno decide algo concreto antes de gastar el trimestre, y cada uno viene de la literatura actual.
 
-## 1. Calibración del ruido: ¿está bien medida tu varianza?
+**La decisión 3 sí mejora, y la razón es la asimetría que separa ordenar de comparar.** Ordenar es invariante a una transformación monótona, así que contraer no puede cambiar el argmax. Comparar contra un **umbral absoluto** no lo es: contraer cambia el valor, así que cambia si cruza la línea.
 
-**Decide:** si la varianza está mal medida, el peso de contracción sale mal y todo lo que venga después es ruido. Esto se arregla primero o no se sigue.
+| Umbral de lanzamiento | Acierto cruda | Acierto contraída | Mejora | Gana en |
+|---|---|---|---|---|
+| > 0.2 pp | 62.60% | 62.61% | +0.01 pp | 45% |
+| > 0.4 pp | 68.69% | 70.42% | **+1.73 pp** | **100%** |
+| > 0.6 pp | 76.72% | 79.62% | **+2.91 pp** | **100%** |
+| > 0.8 pp | 83.83% | 86.68% | **+2.85 pp** | **100%** |
 
-* **El modelo de ruido se rechaza, y replica.** *Q*/gl = 1.940 en el exploratorio sobre 295 experimentos A/A y 1.927 en el confirmatorio sobre 1 279. El 25.8% de los A/A sale significativo cuando debería ser el 5%.
+Con umbral exigente la regla cruda lanza el 14.2% y la verdad es 14.2%: **acierta la tasa y se equivoca en los individuos.** La contraída lanza el 3.2% y acierta más, porque la mayoría genuinamente no cruza un umbral alto, y contraer lo dice bien.
 
-* **La consecuencia es cuantitativa, no retórica.** Con el factor mal aplicado, el peso de contracción medio salta de 0.43 a 0.87 y la conclusión se invierte. Lo comprobé a mi costa (ver *Supuestos y advertencias*).
+![Donde la corrección sí gana. La ventaja crece con la exigencia del umbral, y a partir de 0.4 pp gana en las 20 particiones.](reports/figures/04_decision_de_lanzar.png)
 
-* **El factor de diseño no transfiere entre niveles.** El 1.94 se midió para comparaciones **entre variantes** dentro de un experimento. Aplicado a la ganancia **entre experimentos** fabrica un resultado falso. La referencia correcta es una covarianza que no usa la varianza en absoluto —Cov(ganancia estimada, ganancia realizada) estima la dispersión verdadera— y da ~1.09 para ese nivel.
+*Donde la corrección sí gana. La ventaja crece con la exigencia del umbral, y a partir de 0.4 pp gana en las 20 particiones.*
 
-* **La vara independiente es lo que lo hace posible.** Sin experimentos A/A no hay forma de auditar el modelo de ruido con los propios datos. Si tu plataforma no corre A/A, esta comprobación no está disponible, y ése es en sí un hallazgo operativo.
 
-## 2. Capacidad de reordenar: ¿puede la corrección cambiar la decisión?
+## La variante más reciente estima mejor y tampoco cambia el orden
 
-**Decide:** si tus variantes están balanceadas, la corrección **no puede** cambiar qué eliges. No la adoptes esperando mejores decisiones.
+Los datos piden la flexibilidad local de BHS sin ambigüedad:
 
-* **La razón es algebraica.** La contracción es un promedio ponderado entre el dato y un centro común. Si el peso y el centro son iguales para las variantes de un experimento, es una función monótona creciente del estimador y conserva el argmax.
+```
+a ajustado = 2.65  [2.52, 2.79] en 12 particiones
+razón de verosimilitudes contra la versión estándar = 961   (1 grado de libertad)
+```
 
-* **Y se cumple en los datos.** El peso varía **0.009** entre las variantes de un mismo experimento, porque reciben tráfico parejo por diseño: la razón entre la variante con más y con menos impresiones tiene mediana **1.040**. El 99.8% de las decisiones son idénticas con y sin corregir.
+Una previa t con 2.65 grados de libertad: colas casi tan pesadas como el modelo admite. Y **coincide con la asimetría de +1.19** medida antes por una vía independiente.
 
-* **No es un fallo del método.** Con variantes balanceadas no había un problema de selección que mejorar. Gu y Koenker (*Econometrica*, 2023) ya lo describen: con varianza homogénea, la media posterior, la probabilidad de cola y la expectativa de cola **dan el mismo orden**.
+BHS cumple lo que promete: **estima mejor que la versión estándar** (−28.1% contra −23.9%). Pero la diferencia en la decisión de orden es **+0.0092 pp y gana en el 0% de las particiones**.
 
-* **Entre experimentos sí reordena, porque ahí la precisión es heterogénea.** El peso medio es 0.432 con desviación 0.168; las impresiones varían 7.1 veces entre el percentil 99 y el 1. La corrección cambia el **23.4%** de la selección a un presupuesto del 10%.
 
-## 3. Independencia previa: ¿se sostiene el supuesto central?
+![La variante de 2025 estima mejor que la estándar y deja el orden donde estaba. Los datos piden su flexibilidad local sin ambigüedad, pero esa flexibilidad corrige otro supuesto.](reports/figures/06_bhs.png)
 
-**Decide:** si la precisión predice el valor verdadero, la corrección canjea mal y **escogerás peor**.
+*La variante de 2025 estima mejor que la estándar y deja el orden donde estaba. Los datos piden su flexibilidad local sin ambigüedad, pero esa flexibilidad corrige otro supuesto.*
 
-* **El supuesto falla en estos datos, y sobrevive al control.** La correlación entre impresiones y tasa de clic es −0.140 cruda (p = 3.1e−16), **−0.098 dentro de cada semana** (60 semanas) y **−0.138 dentro de cada tipo de experimento** (4 tipos). No es confusión por periodo ni por tipo.
+**El motivo ya estaba medido.** BHS corrige la **forma** de la previa, con colas pesadas. Lo que falla aquí es la **independencia previa**. Hacer la previa más flexible no hace que la precisión sea independiente del parámetro: son dos supuestos distintos, y BHS solo toca uno.
 
-* **El mecanismo del daño es visible.** A un presupuesto del 10%, la corrección descarta experimentos con peso 0.695 y 4 161 impresiones, y añade otros con peso 0.320 y 7 283. Es decir, **descarta los imprecisos y añade los precisos** — exactamente lo que la teoría dice que hace bajo restricción de capacidad.
+## Y el resultado favorable más citado vale en su régimen
 
-* **Y en este corpus el canje sale mal.** Los experimentos que descarta tenían **0.643 pp** de ganancia realizada; los que añade, **0.530 pp**. Como los imprecisos aquí tienen tasas más altas, despreciarlos empuja sistemáticamente hacia los peores.
+El trabajo empírico más cercano sobre este mismo archivo filtra las variantes con menos de 1 000 impresiones o 100 clics, «para asegurar que las aproximaciones de normalidad sean razonables». **Ese filtro conserva el 6.9%.** Medido dentro y fuera:
 
-* **Es el modo de falla que la literatura documenta.** Chen (*Econometrica* 94(2), marzo 2026) demuestra que cuando la independencia previa falla, el cribado basado en estimaciones contraídas puede ser **peor** que con las crudas. Aquí está medido.
-
-* **Y explica por qué la corrección no alcanza su óptimo teórico.** La asimetría de la ganancia estimada es **+1.19** cuando la previa normal supone 0, porque es la ventaja de una variante **ya seleccionada**. La previa está mal especificada por construcción.
-
-## 4. Régimen de la aproximación: ¿qué versión del método corresponde?
-
-**Decide:** si la aproximación gaussiana vale, o si hace falta la formulación binomial directa. Y también **qué tanto se puede confiar en la literatura existente** para tu caso.
-
-* **Aquí la aproximación gaussiana vale.** La regla habitual pide n·p ≥ 10. La mediana es **40**, y **el 0% de las variantes** cae por debajo de 10 o de 5. Así que Chen y Lei (diciembre 2025), que trabajan la binomial directamente para proporciones y muestras pequeñas, queda descartado **por diagnóstico y no por supuesto**.
-
-* **Y aquí está la parte que importa para interpretar la literatura.** Coey y Hung (Meta), en *Empirical Bayes Selection for Value Maximization*, hacen esta misma pregunta sobre este mismo archivo, con cotas de arrepentimiento demostradas y código público. Su tesis: *«seleccionar las mejores unidades es fundamentalmente más fácil que estimar sus valores»*. Pero su montaje, descrito en su apéndice, impone dos condiciones:
-
-  > *«Filtramos los pares artículo-paquete con menos de 1 000 impresiones o 100 clics, para asegurar que las aproximaciones de normalidad sean razonables.»*
-  >
-  > *«Consideramos arbitrariamente el de más impresiones como grupo de control y el de segundas más impresiones como tratamiento, omitiendo cualquier otro paquete.»*
-
-* **Ese filtro conserva el 6.9% de las variantes.** Y «el de más impresiones» no es una selección por resultado, así que su montaje —por construcción— **no contiene la maldición del ganador**. Además evalúan contra una verdad simulada desde una previa ajustada, no contra resultados reales.
-
-* **Medido dentro y fuera de su filtro, con 40 particiones y presupuesto del 5%:**
-
-| | Su régimen | Archivo completo |
+| Al 5% de presupuesto | Su régimen | Archivo completo |
 |---|---|---|
 | Experimentos | 1 277 | 15 787 |
-| n·p mediana | 131 | 40 |
-| Error cuadrático medio | −32.8% | −23.9% |
-| **Ganancia, contraída − cruda** | **+0.0148 pp** | **−0.0556 pp** |
+| Ganancia, contraída − cruda | +0.0148 pp | −0.0556 pp |
 | IC 95% | [−0.0153, +0.0448] | [−0.0619, −0.0493] |
-| Contraer gana en | 55% de las particiones | **0%** |
 | ¿Se distingue de cero? | **No** | **Sí** |
 
-* **La lectura, sin inflarla.** En el régimen que ellos conservan, contraer es **neutro** para la decisión: el intervalo cruza el cero, exactamente lo que su teorema predice. Fuera de él —el 93% del archivo— **degrada la selección de forma medible**. No es un cambio de signo, y conviene no venderlo así: es un **límite de validez**, con el mecanismo del diagnóstico 3 detrás.
+En el régimen que conservan, contraer es **neutro** para el orden —el intervalo cruza el cero—, que es lo que su teorema predice. Fuera de él degrada la selección de forma medible. **No es un cambio de signo: es un límite de validez.**
 
 ---
 
 # Recomendaciones
 
-Para un equipo de experimentación que está evaluando adoptar la contracción de Bayes empírico:
+Para un equipo que está evaluando adoptar la corrección:
 
-* **La variante ganadora sobreestima un 18.5% relativo y eso sí se corrige.** **Adopta la corrección para lo que reportas al negocio.** Reduce el error de estimación un 24.0%, replicado en dos muestras independientes, y es lo que evita prometer mejoras que no llegan.
+* **La variante ganadora sobreestima un 15.4% relativo, y eso sí se corrige.** **Adóptala para lo que reportas al negocio y para decidir si lanzas.** Reduce el error un 24% y mejora el acierto de la decisión de lanzamiento hasta 2.9 puntos, ganando en todas las particiones evaluadas.
 
-* **Tus variantes probablemente reciben tráfico parejo, y entonces la corrección no puede cambiar la elección.** **No la justifiques ante tu dirección como una mejora de la decisión.** Mide la razón de impresiones entre tu variante más y menos expuesta: si está cerca de 1, hay una razón algebraica para que no reordene. Es una línea de código y evita un trimestre mal vendido.
+* **No la justifiques como una mejora de qué variante eliges.** **Mide la razón de impresiones entre tu variante más y menos expuesta.** Si está cerca de 1, hay una razón algebraica para que no reordene — es una línea de código y evita un trimestre mal vendido.
 
-* **Antes de usarla para priorizar entre experimentos, mide la correlación entre precisión y resultado.** **Si es negativa, la corrección te hará escoger peor.** Aquí vale −0.14 y sobrevive al control por periodo y por tipo. Son tres líneas de código y es el diagnóstico con mayor rendimiento del procedimiento.
+* **Antes de usarla para priorizar entre experimentos, mide la correlación entre precisión y resultado.** **Si es negativa, te hará escoger peor.** Aquí vale −0.12 y sobrevive al control. Tres líneas de código, y es el diagnóstico de mayor rendimiento.
 
-* **Comprueba en qué régimen estás antes de apoyarte en la literatura publicada.** **Los resultados favorables más citados se obtuvieron en condiciones filtradas que pueden no ser las tuyas.** El filtro de uno de los trabajos de referencia conserva el 6.9% de estos datos, y su conclusión no se sostiene fuera de él.
+* **Audita tu modelo de ruido contra experimentos A/A antes que nada.** **Si tu plataforma no corre A/A, empieza por ahí**, porque sin una vara independiente no puedes saber si la varianza —el insumo del que todo depende— está bien medida. Aquí estaba subestimada al doble.
 
-* **Evalúa la decisión, no la estimación.** **Si el criterio de éxito es el error cuadrático medio, vas a aprobar un método que no mejora lo que te importa.** Partir los conteos con *data thinning* (Neufeld, Dharamshi, Gao y Witten, *JMLR* 2024) permite medir la ganancia realizada fuera de muestra sin datos extra. Es el único cambio de instrumentación que este procedimiento requiere.
+* **Si tu ventaja estimada viene de un máximo, no la contraigas directamente.** **Parte los conteos en tres**: uno elige, otro estima, otro evalúa. Con dos la dispersión se estima en cero y la corrección deja de funcionar, por una razón que no se ve hasta que pasa.
 
-* **Si tu plataforma no corre experimentos A/A, empieza por ahí.** **Sin una vara independiente no puedes auditar tu modelo de ruido**, y el modelo de ruido es el insumo del que depende todo el método. Aquí los A/A revelaron que la varianza estaba subestimada al doble.
+* **Comprueba tu régimen antes de apoyarte en un resultado publicado.** **Los resultados favorables más citados se obtuvieron en condiciones filtradas que pueden no ser las tuyas.**
 
 ---
 
 # Supuestos y advertencias
 
-* **El modelo de ruido se rechaza y las dos explicaciones posibles no son distinguibles.** *Q*/gl ≈ 1.93. Puede ser que las impresiones no sean independientes, o que variaran campos que el archivo no publica. Ambas quedan declaradas; ninguna se elige por conveniencia.
+* **El modelo de ruido se rechaza y las dos explicaciones posibles no son distinguibles.** *Q*/gl ≈ 1.93. Puede ser que las impresiones no sean independientes, o que variaran campos que el archivo no publica. Ambas quedan declaradas.
 
-* **La exclusión del 30.6% por fallo de aleatorización se verificó, no se heredó.** Los CSV públicos no marcan las pruebas afectadas, así que la ventana se determinó con una prueba estadística propia. Ante la duda sobre cuándo se creó un experimento, se excluye.
+* **La exclusión del 30.6% se verificó, no se heredó.** Los CSV no marcan las pruebas afectadas, así que la ventana se determinó con una prueba propia. Ante la duda sobre cuándo se creó un experimento, se excluye.
 
-* **Apliqué un factor de varianza al nivel equivocado y fabriqué un resultado falso.** Reporté primero que contraer **perjudica** la decisión en 0.27 pp. Era mío: usé el factor de diseño 1.94, medido para comparaciones entre variantes, sobre la ganancia entre experimentos. Lo detecté con una referencia que no usa la varianza —una covarianza que estima la dispersión directamente— y que da ~1.09 para ese nivel. Con el peso correcto el perjuicio desaparece y queda el empate. **El factor de diseño no transfiere entre niveles.**
+* **Apliqué un factor de varianza al nivel equivocado y fabriqué un resultado falso.** Reporté primero que contraer **perjudica** el orden en 0.27 pp. Usé el factor de diseño 1.94, medido para comparaciones entre variantes, sobre la ganancia entre experimentos. Lo detecté con una referencia que no usa la varianza —una covarianza que estima la dispersión directamente— y que da ~1.09 para ese nivel. **El factor de diseño no transfiere entre niveles.**
 
-* **Escribí una interpretación antes de ver los números y los números la contradijeron.** Afirmé que el peso de contracción era ~0.95 en todos los casos; medido, iba de 0.413 a 1.000. Queda registrado en el historial de git.
+* **Escribí una interpretación antes de ver los números y los números la contradijeron.** Afirmé que el peso de contracción era ~0.95 en todos los casos; medido, iba de 0.413 a 1.000.
 
-* **El primer titular de la comparación con la literatura no sobrevivió a su propio intervalo de confianza.** Leí «el signo cambia entre regímenes»; con 40 particiones e intervalo, el régimen filtrado no se distingue de cero. Lo que queda es un límite de validez, que es menos vistoso y es lo que los datos aguantan.
+* **Un primer titular no sobrevivió a su propio intervalo de confianza.** Leí «el signo cambia entre regímenes»; con 40 particiones e intervalo, el régimen filtrado no se distingue de cero. Queda el límite de validez, que es menos vistoso y es lo que los datos aguantan.
 
-* **La ganancia estimada es un estadístico seleccionado, y eso rompe el método si no se trata.** Con dos particiones la dispersión entre experimentos se estimaba en cero, porque la ventaja del máximo ya incorpora la selección. Se resolvió partiendo en tres tercios: uno elige, otro estima, otro evalúa.
+* **La previa normal está mal especificada por construcción.** La asimetría de la ganancia es +1.19 cuando la normal supone 0, porque es la ventaja de una variante ya seleccionada. Por eso el orden por media posterior no alcanza su óptimo teórico, y por eso se implementó BHS.
 
-* **La previa normal está mal especificada por construcción.** La asimetría de la ganancia es +1.19 cuando la normal supone 0, porque es la ventaja de una variante ya seleccionada. Por eso el orden por media posterior no alcanza su óptimo teórico.
+* **Un solo medio, una sola métrica, 2013–2015, datos agregados.** Ninguna cifra de este documento debe usarse como expectativa para otra plataforma. **Transfiere el procedimiento, no los números.**
 
-* **Un solo medio, una sola métrica, 2013–2015, datos agregados.** No hay nivel de persona ni segmentos. **El procedimiento transfiere; los números no.** Ninguna cifra de este documento debe usarse como expectativa para otra plataforma.
+* **Lo que no se implementó, con su razón.** La contracción binomial directa queda fuera **por diagnóstico**: n·p mediana = 40 y 0.1% de variantes bajo 10, así que la aproximación gaussiana no es el problema aquí. La implementación de referencia de Chen está en R y este proyecto es Python: **costo operativo declarado**, no omisión — su diagnóstico sí se corrió, y es el que explica el resultado principal.
 
-* **Lo que no se implementó, con su razón.** `close` (la implementación de referencia de Chen) está en R y este proyecto es Python: costo operativo declarado, no omisión. Su **diagnóstico** sí se corrió, y es el que explica el resultado principal.
+---
+
+# Sobre qué se apoya todo esto
+
+Cada pieza del procedimiento tiene una fuente, y vale decir cuál sostiene qué.
+
+**El marco de la decisión.** Que las tasas de error, la exactitud de estimación y el arrepentimiento son **riesgos distintos**, y que el método apropiado se sigue de los riesgos que un programa necesita controlar, es de [Schultzberg y Frånberg (Spotify, ago-2026)](https://arxiv.org/abs/2608.12949). Su jerarquía de tres niveles organiza las configuraciones bayesianas por la fuerza de su control de error y establece que el Bayes empírico es el único camino al tercero. Este proyecto mide en un corpus real las cuatro ramas que ellos comparan en simulación — y resuelve con partición en tres tercios el bloqueo de los corpus seleccionados por el ganador, que ellos enuncian y demuestran.
+
+**Los métodos.**
+
+| Pieza | Fuente |
+|---|---|
+| La contracción misma | Stein (1956), James y Stein (1961); Robbins le dio el nombre, Efron y Morris la desarrollaron en los setenta |
+| Dispersión estimada en conjunto | DerSimonian y Laird; Paule y Mandel |
+| Auditar el ruido con A/A | *Q* de Cochran (1954) |
+| Evaluación fuera de muestra | *Data thinning*, [Neufeld, Dharamshi, Gao y Witten (*JMLR* 2024)](https://jmlr.org/papers/v25/23-0446.html) |
+| Factores locales por experimento | *Bayesian Hybrid Shrinkage*, [Mudd, Friedberg, Gorbachev, Nassif y Zaidi (Meta, 2025)](https://arxiv.org/abs/2511.06318) |
+| Regla de probabilidad de cola, y que la función de pérdida cambia el orden óptimo | [Gu y Koenker (*Econometrica*, 2023)](https://www.econometricsociety.org/publications/econometrica/2023/01/01/invidious-comparisons-ranking-and-selection-as-compound-decisions) |
+| Que la independencia previa puede fallar y empeorar el cribado | [Chen (*Econometrica* 94(2), 2026)](https://arxiv.org/abs/2212.14444) |
+| El régimen donde la aproximación gaussiana flaquea | Chen y Lei (dic-2025) |
+| Que seleccionar es más fácil que estimar | [Coey y Hung (Meta)](https://arxiv.org/abs/2210.03905) |
+| Ranking y umbral como sesgos distintos | La literatura de genética los separa: sesgo de ranking y sesgo de selección |
+| Los datos | [Matias, Munger, Aubin Le Quéré y Ebersole (*Scientific Data*, 2021)](https://www.nature.com/articles/s41597-021-00934-7) |
+
+**Y el problema de fondo**, documentado en subastas desde 1971, en genética, en ensayos clínicos de dosis, en evaluación docente y en selección de gestores de inversión. Es el mismo problema con seis nombres; lo que cambia es qué se elige y cuánto cuesta equivocarse.
