@@ -1,0 +1,28 @@
+{
+  "exploratorio": {
+    "muestra": "exploratorio",
+    "exclusion": {
+      "ventana": "2013-06-01 a 2014-02-01",
+      "brazos_antes": 22666,
+      "brazos_despues": 16629,
+      "experimentos_antes": 4873,
+      "experimentos_despues": 3380,
+      "fraccion_conservada": 0.6936
+    },
+    "panel": {
+      "brazos": 16629,
+      "experimentos": 3380,
+      "impresiones": 58769384,
+      "clics": 749878,
+      "tasa_global": 0.0127596709198109,
+      "brazos_por_experimento_min": 2,
+      "brazos_por_experimento_max": 14,
+      "brazos_por_experimento_media": 4.9198224852071,
+      "impresiones_por_brazo_mediana": 3136.0,
+      "semanas": 68,
+      "experimentos_aa": 295,
+      "experimentos_solo_titular": 1589,
+      "error_estandar_brazo_tipico": 0.002047840242791259
+    }
+  }
+}

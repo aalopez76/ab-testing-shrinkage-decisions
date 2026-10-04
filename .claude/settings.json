@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "language": "spanish",
+  "permissions": {
+    "allow": [
+      "Bash(./.venv/Scripts/python.exe *)",
+      "Bash(.venv/Scripts/python.exe *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git add *)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(mkdir -p *)",
+      "Read",
+      "Edit(src/**)",
+      "Edit(scripts/**)",
+      "Edit(tests/**)",
+      "Edit(reports/**)",
+      "Edit(.claude/**)",
+      "Edit(README.md)",
+      "Edit(articulo_divulgacion.md)",
+      "Edit(HANDOFF.md)",
+      "Edit(CLAUDE.md)",
+      "Edit(requirements.txt)",
+      "WebFetch(domain:osf.io)",
+      "WebFetch(domain:api.osf.io)"
+    ],
+    "deny": [
+      "Edit(data/**)",
+      "Edit(reports/results/METODO_CONGELADO.json)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/venv_guard.py\"",
+            "timeout": 10,
+            "statusMessage": "Comprobando que se use el venv"
+          },
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/freeze_guard.py\"",
+            "timeout": 10,
+            "statusMessage": "Protegiendo la muestra confirmatoria"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/test_critico.py\"",
+            "timeout": 120,
+            "statusMessage": "Corriendo la prueba crítica de la partición"
+          }
+        ]
+      }
+    ]
+  }
+}
