@@ -249,7 +249,13 @@ Tres consecuencias prácticas:
 2. **Sí corrige la promesa.** Un 24% menos de error, y eso es lo que evita prometer mejoras que no llegan.
 3. **Antes de adoptarla, comprueba la independencia previa.** Aquí falla, y por eso el canje que hace sale mal. Es una correlación que se mide en tres líneas.
 
-Y una advertencia sobre el alcance: esto es **un corpus, de un medio digital, entre 2013 y 2015**. No cierra la discusión entre quienes adoptan la corrección y quienes la rechazan. Aporta el primer dato público y reproducible donde solo había evidencia privada.
+Y una advertencia sobre el alcance: esto es **un corpus, de un medio digital, entre 2013 y 2015**, y no cierra la discusión entre quienes adoptan la corrección y quienes la rechazan.
+
+Tampoco es terreno virgen, y conviene decir quién llegó antes. **Coey y Hung** (Meta), en *Empirical Bayes Selection for Value Maximization*, hacen esta misma pregunta —Bayes empírico para **seleccionar**, no para estimar— con cotas de arrepentimiento demostradas, usan **este mismo archivo** y publicaron su código. Su tesis, en el abstract: *«seleccionar las mejores unidades es fundamentalmente más fácil que estimar sus valores»*.
+
+Lo que mido aquí **es un caso de eso**: la contracción mejora la estimación un 24% y no mueve la selección, porque la selección ya era la parte fácil. Encontré su artículo después de medir, y la correspondencia es a favor suyo, no mío.
+
+Queda una diferencia de método que sí separa los dos trabajos, y vale decirla con precisión. Ellos ajustan una previa al archivo y **simulan** desde ella para ilustrar su teorema, filtrando a los brazos con 1 000 impresiones y 100 clics como mínimo «para asegurar que las aproximaciones de normalidad sean razonables», y reduciendo cada experimento a **una pareja arbitraria** —el brazo con más impresiones contra el segundo— descartando los demás. Aquí no hay simulación: la evaluación es contra el resultado real de una partición reservada, se conserva el máximo sobre 2 a 20 brazos —que es donde vive la maldición del ganador— y el régimen incómodo no se filtra, se diagnostica.
 
 ## Lo que queda fuera
 
