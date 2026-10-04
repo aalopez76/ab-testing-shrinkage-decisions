@@ -1,0 +1,30 @@
+{
+  "fecha": "2026-10-03",
+  "commit": "69dfd977071c57f50b951eccbeda6cdc1cadb39d",
+  "criterio_de_exito": "ganancia realizada fuera de muestra de lo seleccionado; NO la reducción del error de estimación",
+  "declarado_antes_de": "correr la muestra confirmatoria",
+  "metodos": {
+    "referencia_1": "azar",
+    "referencia_2": "cruda (argmax de la estimación directa)",
+    "contraccion": "Bayes empírico, media posterior, tau2 en conjunto por momento",
+    "alternativa": "probabilidad de cola posterior"
+  },
+  "niveles": [
+    "dentro del experimento (qué brazo desplegar)",
+    "entre experimentos (qué experimentos desplegar, con presupuesto)"
+  ],
+  "particion": {
+    "tipo": "data thinning hipergeométrico",
+    "tercios": "A1 elige, A2 estima, B evalúa",
+    "particiones": 30,
+    "fraccion": "1/3 cada tercio"
+  },
+  "presupuestos": [0.05, 0.10, 0.25, 0.5, 1.0],
+  "factor_v": "1.0 para delta entre experimentos; el 1.940 del paso 1 NO transfiere a ese nivel (verificado por Cov(delta_A2, delta_B))",
+  "exclusion": "experimentos creados entre 2013-06-01 y 2014-02-01",
+  "metodos_descartados": {
+    "contraccion_binomial_directa_Chen_Lei": "descartada por DIAGNÓSTICO, no por supuesto: n·p mediana = 40 y 0% de brazos con n·p < 10, así que la aproximación gaussiana no es el problema aquí",
+    "optimizacion_a_nivel_de_programa_Netflix": "descartada por ALCANCE: optimiza qué experimentos correr y cuándo lanzar, no qué elegir dentro de una cartera dada",
+    "close_de_Chen": "no implementado: implementación de referencia en R y el proyecto es Python. COSTO OPERATIVO declarado, no omitido. Su diagnóstico sí se corrió: la dependencia precisión-parámetro existe (-0.14, sobrevive al control)"
+  }
+}

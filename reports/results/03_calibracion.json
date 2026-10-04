@@ -15,5 +15,22 @@
       "impresiones no independientes dentro del brazo (agrupamiento)",
       "variación en campos no publicados por el archivo"
     ]
+  },
+  "confirmatorio": {
+    "muestra": "confirmatorio",
+    "tolerancia": 0.15,
+    "experimentos": 1279,
+    "brazos": 6296,
+    "grados_libertad": 5017,
+    "Q_total": 9669.946831,
+    "razon_Q_gl": 1.927436,
+    "mediana_Q_gl": 1.475196,
+    "fraccion_p_005": 0.258014,
+    "factor_diseno": 1.927436,
+    "aprobada": false,
+    "explicaciones_no_distinguibles": [
+      "impresiones no independientes dentro del brazo (agrupamiento)",
+      "variación en campos no publicados por el archivo"
+    ]
   }
 }

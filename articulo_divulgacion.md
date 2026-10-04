@@ -18,7 +18,7 @@ Y entonces: **de la ventaja que mostró la variante ganadora, ¿cuánto es efect
 
 Las organizaciones que deciden así no corren un experimento: corren muchos en paralelo. Cada ajuste de un sistema de recomendación, cada rediseño, cada campaña pasa por una prueba antes de desplegarse. En las plataformas grandes eso significa **miles de experimentos concurrentes**, según describe el equipo de experimentación de Meta Platforms.
 
-Y la mayoría no encuentra una mejora. Las cifras las publicaron quienes dirigieron esas plataformas:
+Y la mayoría no encuentra una mejora:
 
 | Organización | Resultado | Fuente |
 |---|---|---|
@@ -138,76 +138,118 @@ Hay además 295 experimentos donde **nada cambiaba entre variantes**: comparacio
 
 ## El recorrido
 
-### Primero: comprobar que el sorteo fue un sorteo
+Seis pasos. El detalle de cada uno —notación, estimadores, inferencia— está en el `README.md` del repositorio; aquí va lo que cambia el resultado.
 
-Antes de estimar nada hay que verificar que la asignación aleatoria funcionó. Es una comprobación que parece burocrática y en este caso no lo es.
+**Comprobar que el sorteo fue un sorteo.** El equipo del archivo advirtió en junio de 2024 que una mala configuración de la caché de Cloudflare, el 25 de junio de 2013, hizo que durante meses se mostrara una sola variante. Afecta a ~22% de las pruebas y desaconsejan usarlas para inferencia causal. Los CSV públicos no traen la columna que las marca, así que se verificó desde cero con una prueba de bondad de ajuste de las impresiones por brazo. Reproduce el fallo mes a mes —22.3% en junio de 2013, 86.4% en diciembre, 11.0% en enero de 2014, y entre 0.0% y 0.9% después— y se excluye esa ventana. Queda el 69.4% del archivo, y el periodo conservado corre a la tasa que se esperaría por azar.
 
-En junio de 2024, el equipo que mantiene el archivo publicó una advertencia: una mala configuración de la caché de Cloudflare, el 25 de junio de 2013, provocó que durante meses se mostrara **una sola variante** a los visitantes hasta que la caché expiraba. Afecta a cerca del 22% de las pruebas, y sus responsables **desaconsejan expresamente usarlas para inferencia causal**. Añadieron una columna que las marca.
+**Comprobar que el ruido está bien medido.** Toda contracción depende de la varianza de cada medición, y aquí hay una vara independiente: los experimentos donde **nada varía entre brazos**. Ahí la diferencia verdadera es cero por construcción, así que la dispersión observada debería igualar la calculada. No lo hace: la *Q* de Cochran vale **1.94 veces** sus grados de libertad en el exploratorio y 1.93 en el confirmatorio. El modelo binomial subestima el ruido cerca del doble. Dos explicaciones —impresiones no independientes, o variación en campos que el archivo no publica— que **no son distinguibles** con estos datos, y las dos se declaran.
 
-Los archivos públicos, descargados, son de 2020 y 2021 y no traen esa columna. Así que la verificación se hizo desde cero, con una prueba de bondad de ajuste de las impresiones por variante contra una asignación uniforme. El resultado reproduce el fallo documentado mes a mes:
+**Contraer.** Un promedio ponderado entre lo que dice cada medición y el centro de su grupo, con un peso que compara el ruido contra la dispersión real. Esa dispersión no se observa y, con 2 a 14 brazos por experimento, estimarla dentro de cada uno sería usar un dato ruidoso para decidir cuánto confiar en datos ruidosos. Se estima **en conjunto**, con los métodos que el meta-análisis desarrolló para combinar muchos estudios.
+
+**Medir sin hacer trampa.** Para saber cuánto se infló el ganador hay que medirlo donde no participó en ser elegido. La muestra de reserva del archivo no sirve —son experimentos *distintos*, comprobado en la documentación— así que se parte cada brazo: de sus impresiones, una parte elige y el resto evalúa, repartiendo los clics de forma hipergeométrica. Para la familia a la que pertenece la binomial eso produce **dos partes independientes** que suman la observación original; es exacto. Se llama *data thinning* (Neufeld y coautores, *JMLR* 2024), y no es *data fission*, que para la binomial no da partes independientes.
+
+Y hubo que partir en **tres** tercios —uno elige, otro estima, otro evalúa— porque con dos la dispersión se estimaba en cero: el máximo de un experimento ya es un estadístico seleccionado, y el Bayes empírico supone una estimación que no lo sea.
+
+**Comparar decisiones, no estimaciones.** Cuatro reglas: al azar, el máximo sin corregir, el máximo contraído y la probabilidad de cola posterior. Todas eligen con un tercio y se miden en otro. Con el criterio declarado antes de mirar: **gana la que decide mejor fuera de muestra**, no la que reduce el error.
+
+**Y después explicar.** Los diagnósticos van al final, para entender el resultado y no para filtrar candidatos de entrada.
+
+## El resultado
+
+El método se congeló el 3 de octubre de 2026 —con el commit de git que lo respalda— y entonces se corrió la muestra confirmatoria, **una sola vez**. Lo que sigue son las dos muestras, lado a lado.
+
+### Primero: la maldición del ganador es real y está medida
+
+| | Exploratorio | Confirmatorio |
+|---|---|---|
+| Experimentos | 3 380 | 15 787 |
+| **Inflación de la variante ganadora** | **0.236 pp** | **0.237 pp** |
+
+Sobre una tasa base de 1.28%, eso es una **sobreestimación del 18% relativo**: la variante que un equipo desplegaría promete casi un 20% más de lo que entrega.
+
+Y es un efecto de **selección**, no de medición: elegir una variante al azar da una inflación cien veces menor. Si no se selecciona, no hay maldición.
+
+### Y ahora la pregunta del proyecto
+
+| | Exploratorio | Confirmatorio |
+|---|---|---|
+| Error cuadrático medio, cruda → contraída | **-24.0%** | **-24.0%** |
+| Correlación de orden con lo realizado | +0.3608 → +0.3662 | +0.3601 → +0.3656 |
+| Ganancia realizada al 5% de presupuesto | 1.073 → 1.029 pp | 1.086 → 1.033 pp |
+
+> **La contracción reduce el error de estimación un 24% y deja la decisión donde estaba.**
+
+Idéntico en las dos muestras, con la segunda 4.7 veces más grande y jamás tocada durante el desarrollo.
+
+La curva completa por presupuesto, en el confirmatorio (puntos porcentuales de ganancia realizada):
 
 ```
-feb–may 2013   2–5%     línea base esperada
-jun 2013      21.8%     comienza (el fallo fue el día 25)
-jul–dic 2013  56–88%    ventana del fallo
-ene 2014      15.1%     se corrige a mitad de mes
-feb 2014+     0.0–0.5%  tasa nominal: el resto del archivo está limpio
+regla             5%       10%       25%       50%
+azar          0.259    0.261    0.261    0.261
+cruda         1.086    0.859    0.602    0.427
+contraída     1.033    0.829    0.592    0.427
+cola          0.862    0.731    0.556    0.421
+oráculo       1.776    1.436    1.006    0.678
 ```
 
-Se excluyen los experimentos creados entre junio de 2013 y enero de 2014. Queda cerca del 78% del archivo, y el periodo conservado **es** limpio: corre a la tasa que se esperaría por puro azar.
+## Por qué, en los dos niveles
 
-### Segundo: comprobar que el ruido está bien medido
+**Dentro de un experimento no puede cambiar la decisión, y eso se demuestra.** La contracción es θ̃ = (1−α)·θ̂ + α·centro. Si α y el centro son iguales para los brazos de un experimento, es una función monótona creciente de θ̂ y **conserva el orden**. Medido: α varía 0.009 entre los brazos de un mismo experimento, porque reciben tráfico parejo por diseño (razón de impresiones 1.04).
 
-Toda contracción depende de una cantidad: cuánta suerte trae la medición de cada variante. Para una proporción esa cantidad tiene fórmula cerrada, pero conviene comprobar que la fórmula describe **estos** datos.
+No es un fallo del método: es que **con brazos balanceados no había un problema de selección que mejorar**. Y es un caso que la literatura ya describe — Gu y Koenker (*Econometrica*, 2023) señalan que con varianza homogénea la media posterior, la probabilidad de cola y la expectativa de cola **dan el mismo orden**.
 
-Ahí entran los 295 experimentos sin variación. Si no hay diferencia real entre variantes, toda la dispersión observada debe corresponder exactamente a la suerte calculada. Si resulta mayor, el modelo subestima el ruido — que es precisamente el escenario de mala calibración que Spotify advierte.
+**Entre experimentos sí reordena, y ahí queda en empate.** La precisión varía 7 veces en impresiones y 2.6 en error estándar, así que α varía de verdad (media 0.43, desviación 0.17) y la contracción cambia el 23.4% de la selección. Pero la ganancia realizada no mejora.
 
-Es una comprobación barata que rara vez se hace, y la diferencia entre aplicar una fórmula y saber si sus insumos valen. **Si falla, se reporta antes de seguir.**
+## Dónde falla, y es la parte que lo explica
 
-### Tercero: contraer, de dos maneras y hacia dos sitios
+Con un presupuesto del 10%, estos son los experimentos que la contracción cambia:
 
-La contracción es un promedio ponderado entre lo que dice cada variante y lo que dice el conjunto, con un peso que depende de una comparación: **cuánta suerte trae la medición, frente a cuánto difieren realmente las variantes entre sí.** Si la suerte domina, se le hace más caso al conjunto; si las diferencias reales dominan, a cada medición.
+| | Descarta | Añade |
+|---|---|---|
+| Ganancia realizada | **0.643 pp** | 0.530 pp |
+| α | 0.695 | 0.320 |
+| Impresiones | 4,161 | 7,283 |
 
-El problema práctico está en el segundo término: cuánto difieren realmente las variantes no se observa, hay que estimarlo. Y con 2 a 14 variantes por experimento, estimarlo dentro de cada experimento es usar un dato ruidoso para decidir cuánto confiar en datos ruidosos. La salida viene del meta-análisis, que enfrenta lo mismo desde los años ochenta: **se estima una sola dispersión con todos los experimentos juntos** (DerSimonian y Laird; Paule y Mandel).
+**Contraer descarta los experimentos imprecisos y añade los precisos.** Eso es exactamente lo que la teoría dice que hace —bajo restricción de capacidad, la media posterior favorece a los de menor varianza— y en este corpus los que descarta tenían **más** ganancia real.
 
-Sobre esa base se cruzan los dos ejes del trabajo:
+¿Por qué sale mal el canje? Porque **la independencia previa falla.** La contracción supone que el valor verdadero de un experimento es independiente de la precisión con que se midió. Medido:
 
-- **Qué método**: la contracción estándar contra una alternativa.
-- **Hacia dónde**: el promedio de **todos** los experimentos, o el de **los parecidos** — los de semanas cercanas o titulares similares. Es el contraste de Li y el aporte de Meta, y con 68 semanas consecutivas se puede medir.
+```
+correlación entre impresiones y tasa    cruda       -0.140
+                                        por semana  -0.098
+                                        por tipo    -0.138
+```
 
-El ancho del vecindario es un parámetro que la fórmula no resuelve: se declara de antemano y se reporta cómo cambia el resultado al moverlo. Elegirlo mirando los datos de evaluación convertiría la validación en un ajuste.
+**Sobrevive al control** por periodo y por tipo de experimento. En estos datos los experimentos con menos impresiones tienen tasas **más altas**, así que despreciar a los imprecisos —justo lo que hace la contracción— empuja sistemáticamente hacia los peores.
 
-### Cuarto: medir sin hacer trampa
+Es el modo de falla que la literatura documenta: los métodos que dependen de la independencia previa pueden dar peores medias posteriores, y **el cribado basado en ellas puede ser peor que con las estimaciones crudas**. Chen lo publicó en *Econometrica* en marzo de 2026; aquí está medido.
 
-Para saber cuánto se infló la ganadora hace falta medirla en datos que no participaron en elegirla. El archivo tiene una muestra de reserva, y parecería el lugar natural. **No lo es**: la documentación oficial confirma que la reserva son experimentos *distintos*, no más datos de los mismos.
+## Los métodos que quedaron fuera, con su razón
 
-La solución es un resultado reciente. De las impresiones de cada variante se toma una parte para elegir y el resto para evaluar, repartiendo los clics de forma hipergeométrica. Para la familia de distribuciones a la que pertenece la binomial, eso produce **dos partes independientes** que suman la observación original; es exacto, no una aproximación. Se llama **data thinning** (Neufeld y coautores, JMLR 2024).
+| Método | Por qué no | Tipo de descarte |
+|---|---|---|
+| Contracción binomial directa (Chen y Lei, dic-2025) | n·p mediana = 40 y **0%** de brazos bajo n·p < 10: la aproximación gaussiana no es el problema aquí | **Diagnóstico** |
+| Optimización a nivel de programa (Netflix, dic-2024) | Optimiza qué experimentos correr y cuándo lanzar, no qué elegir dentro de una cartera dada | **Alcance** |
+| `close` (Chen, *Econometrica*, mar-2026) | Implementación de referencia en R; el proyecto es Python. **Su diagnóstico sí se corrió**, y es el que explica el resultado | **Costo operativo** |
+| Probabilidad de cola posterior | Pierde en los dos criterios, también en potencia. Consistente con que prefiera a los de **mayor** varianza, mal negocio cuando lo que se paga es la ganancia realizada | **No sobrevive la comparación** |
 
-Conviene señalar una confusión fácil, porque casi se cuela aquí: existe una técnica hermana, *data fission*, que para la binomial **no** sirve — produce componentes que no son independientes, y la independencia es justo lo que se necesita.
+## Dos errores propios, por si sirven más que el resultado
 
-Con eso, la cantidad principal queda definida sin ambigüedad: **la diferencia entre lo que la variante elegida prometió en la mitad que la eligió, y lo que entregó en la mitad que no participó.**
+**El factor de diseño no transfiere entre niveles.** El paso 1 midió que el modelo de ruido binomial subestima la dispersión un 94% (Q/gl = 1.94 en el exploratorio, 1.93 en el confirmatorio — replica). Apliqué ese factor a δ entre experimentos y **fabriqué un resultado falso**: que contraer *perjudica* la decisión en 0.27 puntos. Lo detecté con una referencia que no usa la varianza en absoluto —Cov(δ̂, δ realizado) estima Var(δ) directamente— y que da un factor de ~1.09 para δ. Con α correcto el perjuicio desaparece y queda el empate.
 
-### Quinto: comparar decisiones, no estimaciones
+**Y τ² se estimaba en cero.** Porque δ = máximo − media **ya es un estadístico seleccionado**, y el Bayes empírico supone una estimación que no lo sea. Se resolvió partiendo en tres tercios: uno elige, otro estima, otro evalúa.
 
-Se comparan las reglas eligiendo con una mitad y evaluando en la otra: elegir al azar —la referencia que hay que ganar—, elegir el máximo sin corregir, y elegir el máximo con cada corrección, global y local.
+## Qué se lleva un equipo de experimentación
 
-Y se miden tres cosas: lo que rindió la variante elegida, cuánto se perdió frente a la mejor variante disponible, y cómo cambia todo si solo se puede desplegar en una fracción de los experimentos.
+> **La contracción de Bayes empírico corrige la cifra que le reportas al negocio, no cuál variante lanzas.**
 
-Con el criterio declarado de antemano: **gana el método que decide mejor fuera de muestra.** No el que reduce el error de estimación — eso ya está medido por los trabajos citados. **Si ninguna corrección mejora la decisión, el resultado de este trabajo será que no la mejora**, y eso le daría la razón a Spotify sobre estos datos.
+Tres consecuencias prácticas:
 
-### Sexto: explicar el resultado
+1. **Si tus experimentos están balanceados, no esperes que corrija la elección.** No puede: hay una razón algebraica, no un problema de implementación.
+2. **Sí corrige la promesa.** Un 24% menos de error, y eso es lo que evita prometer mejoras que no llegan.
+3. **Antes de adoptarla, comprueba la independencia previa.** Aquí falla, y por eso el canje que hace sale mal. Es una correlación que se mide en tres líneas.
 
-Recién aquí entran los diagnósticos, y su papel es entender lo que pasó:
-
-- **El régimen de la proporción.** Chen y Lei muestran que el caso binomial no se comporta como el gaussiano, y que con proporciones y muestras pequeñas conviene trabajar la binomial directamente. Estos datos están en ese régimen.
-- **La dependencia entre parámetro y precisión.** La contracción estándar supone que el valor verdadero de una variante es independiente de cuántas impresiones recibió. Chen (*Econometrica*, 2026) muestra que ese supuesto suele fallar, porque el tamaño de muestra puede seleccionar sobre el parámetro. En estos datos las impresiones no se repartieron al azar entre experimentos: fueron una decisión de la plataforma. Medirlo es directo, y hay que hacerlo con cuidado de no confundirlo con efectos de periodo.
-- **La calibración**, del paso 2.
-
-Ninguno de los tres decide qué método se usa: todos sirven para explicar por qué el que ganó, ganó.
-
-### Y lo que no es opcional: dónde falla
-
-La contracción mejora el conjunto y, en casos concretos, perjudica. Interesa en qué fracción de experimentos la corrección elige peor que no corregir, y qué caracteriza a esos experimentos. Omitirlo sería contar la mitad — y sería darle la razón a Spotify sin haberla medido.
+Y una advertencia sobre el alcance: esto es **un corpus, de un medio digital, entre 2013 y 2015**. No cierra la discusión entre quienes adoptan la corrección y quienes la rechazan. Aporta el primer dato público y reproducible donde solo había evidencia privada.
 
 ## Lo que queda fuera
 

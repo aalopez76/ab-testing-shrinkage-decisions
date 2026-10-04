@@ -166,14 +166,38 @@ Reporté primero que contraer **perjudicaba** la decisión (−0.27 pp). Era art
 
 **El factor de diseño no transfiere entre niveles.** Eso vale más que el número que corrigió.
 
-## Qué sigue — fases F y G
+## Fases F y G: TERMINADAS (3-oct-2026). Proyecto cerrado.
 
-El resultado está completo. Falta:
+**F — dónde falla, y explica el resultado.** Al 10% de presupuesto la contracción cambia el 23.4% de la selección: **descarta** experimentos con α 0.695 y 4 161 impresiones, **añade** otros con α 0.320 y 7 283. Es decir, descarta imprecisos y añade precisos — lo que la teoría dice que hace. Pero los que descarta tenían **más** ganancia real (0.643 contra 0.530 pp).
 
-1. **Dónde falla**, con su caracterización (fase F).
-2. **Congelar** el método, correr el confirmatorio **una sola vez**, y escribir el análisis de 2 000 a 3 000 palabras (fase G).
+El motivo: **la independencia previa falla.** Correlación impresiones-tasa: −0.140 cruda, −0.098 dentro de semana, −0.138 dentro de tipo. **Sobrevive al control.** Los experimentos imprecisos tienen tasas más altas, así que despreciarlos empuja hacia los peores.
 
-**Titular propuesto, pendiente de visto bueno:** *la contracción de Bayes empírico reduce el error de estimación un 24% y deja la decisión donde estaba; si se adoptó para decidir mejor, se midió lo que no era.*
+Diagnóstico que descarta un método por evidencia: **n·p mediana = 40 y 0% de brazos bajo 10**, así que la aproximación gaussiana no es el problema y Chen y Lei queda fuera por diagnóstico, no por supuesto.
+
+**G — congelado y confirmado.** `reports/results/METODO_CONGELADO.json` con fecha, commit `69dfd977`, criterio y métodos descartados con su razón. El confirmatorio se corrió **una sola vez**.
+
+```
+                              exploratorio   confirmatorio
+experimentos                       3 380         15 787
+inflación del ganador             0.236 pp       0.237 pp
+error cuadrático medio            −24.0%         −24.0%
+correlación de orden        +0.3608→+0.3662  +0.3601→+0.3656
+ganancia 5%: cruda→contraída  1.073→1.029     1.086→1.033
+calibración del ruido (Q/gl)       1.940          1.927
+```
+
+**Replica en una muestra 4.7 veces más grande y nunca tocada.**
+
+## Lo único pendiente: la extensión del artículo
+
+`articulo_divulgacion.md` está en **4 241 palabras** y el límite declarado era 2 000–3 000. Ya se recortó `El recorrido` de 1 121 a 535 palabras.
+
+**Decisión pendiente del usuario**, porque es su portafolio y las dos salidas son legítimas:
+
+- **Recortar más**, sacrificando el estado del arte o el «por qué importa» — que él pidió expresamente.
+- **Revisar el límite** a ~4 000 y declarar por qué: el artículo carga el encuadre de industria, nueve referencias, el método, resultados en dos muestras, dónde falla, los diagnósticos, los descartes con su razón y dos errores propios.
+
+No se resolvió unilateralmente: pasarse del propio límite sin decirlo es la falla que el límite existe para evitar.
 
 ## Decisiones tomadas que no hay que volver a discutir
 

@@ -24,5 +24,31 @@
       "experimentos_solo_titular": 1589,
       "error_estandar_brazo_tipico": 0.002047840242791259
     }
+  },
+  "confirmatorio": {
+    "muestra": "confirmatorio",
+    "exclusion": {
+      "ventana": "2013-06-01 a 2014-02-01",
+      "brazos_antes": 105551,
+      "brazos_despues": 77446,
+      "experimentos_antes": 22743,
+      "experimentos_despues": 15787,
+      "fraccion_conservada": 0.6941
+    },
+    "panel": {
+      "brazos": 77446,
+      "experimentos": 15787,
+      "impresiones": 273495317,
+      "clics": 3492259,
+      "tasa_global": 0.0127689901176626,
+      "brazos_por_experimento_min": 2,
+      "brazos_por_experimento_max": 20,
+      "brazos_por_experimento_media": 4.905681890162792,
+      "impresiones_por_brazo_mediana": 3129.0,
+      "semanas": 68,
+      "experimentos_aa": 1279,
+      "experimentos_solo_titular": 7678,
+      "error_estandar_brazo_tipico": 0.0020706758678036737
+    }
   }
 }
