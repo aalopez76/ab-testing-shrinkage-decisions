@@ -251,11 +251,37 @@ Tres consecuencias prácticas:
 
 Y una advertencia sobre el alcance: esto es **un corpus, de un medio digital, entre 2013 y 2015**, y no cierra la discusión entre quienes adoptan la corrección y quienes la rechazan.
 
-Tampoco es terreno virgen, y conviene decir quién llegó antes. **Coey y Hung** (Meta), en *Empirical Bayes Selection for Value Maximization*, hacen esta misma pregunta —Bayes empírico para **seleccionar**, no para estimar— con cotas de arrepentimiento demostradas, usan **este mismo archivo** y publicaron su código. Su tesis, en el abstract: *«seleccionar las mejores unidades es fundamentalmente más fácil que estimar sus valores»*.
+## Quién llegó antes, y qué queda por medir
 
-Lo que mido aquí **es un caso de eso**: la contracción mejora la estimación un 24% y no mueve la selección, porque la selección ya era la parte fácil. Encontré su artículo después de medir, y la correspondencia es a favor suyo, no mío.
+**Coey y Hung** (Meta), en *Empirical Bayes Selection for Value Maximization*, hacen esta misma pregunta —Bayes empírico para **seleccionar**, no para estimar—, con cotas de arrepentimiento demostradas, **sobre este mismo archivo**, y publicaron su código. Su tesis, en el abstract: *«seleccionar las mejores unidades es fundamentalmente más fácil que estimar sus valores»*.
 
-Queda una diferencia de método que sí separa los dos trabajos, y vale decirla con precisión. Ellos ajustan una previa al archivo y **simulan** desde ella para ilustrar su teorema, filtrando a los brazos con 1 000 impresiones y 100 clics como mínimo «para asegurar que las aproximaciones de normalidad sean razonables», y reduciendo cada experimento a **una pareja arbitraria** —el brazo con más impresiones contra el segundo— descartando los demás. Aquí no hay simulación: la evaluación es contra el resultado real de una partición reservada, se conserva el máximo sobre 2 a 20 brazos —que es donde vive la maldición del ganador— y el régimen incómodo no se filtra, se diagnostica.
+La pregunta no es mía y el teorema tampoco. Lo que encontré al buscar es que **su montaje impone dos condiciones**, descritas en su apéndice:
+
+> *«Filtramos los pares artículo-paquete con menos de 1 000 impresiones o 100 clics, para asegurar que las aproximaciones de normalidad sean razonables.»*
+>
+> *«Consideramos **arbitrariamente** el de más impresiones como grupo de control y el de segundas más impresiones como tratamiento, **omitiendo cualquier otro paquete** de ese artículo.»*
+
+La segunda importa más de lo que parece: elegir «el de más impresiones» **no es seleccionar por resultado**, así que su montaje —por construcción— no contiene la maldición del ganador. Y evalúan contra una verdad **simulada** desde una previa ajustada, no contra resultados reales.
+
+La primera condición conserva el **6.9%** de los brazos del archivo. Así que la pregunta es verificable: **¿su conclusión vale fuera de ese 6.9%?**
+
+| Al 5% de presupuesto | Su régimen | Archivo completo |
+|---|---|---|
+| Experimentos | 1,277 | 15,787 |
+| n·p mediana | 131 | 40 |
+| Error cuadrático medio | -32.8% | -23.9% |
+| **Ganancia, contraída − cruda** | **+0.0148 pp** | **-0.0556 pp** |
+| IC 95% | [-0.0153, +0.0448] | [-0.0619, -0.0493] |
+| Contraer gana en | 55% de las particiones | 0% |
+| ¿Se distingue de cero? | **No** | **Sí** |
+
+**En el régimen que ellos conservan, contraer es neutro para la decisión** —el intervalo cruza el cero y gana en la mitad de las particiones—, que es lo que su teorema predice: si seleccionar ya es fácil, mejorar el estimador no cambia la selección.
+
+**Fuera de él, en el 93% del archivo que su filtro descarta, degrada la selección de forma medible**: pierde en las 40 particiones, y el intervalo no toca el cero.
+
+No es un cambio de signo —y conviene no venderlo así—, es un **límite de validez**. Y tiene el mecanismo ya medido detrás: la independencia previa falla (−0.14, sobrevive al control), y el régimen de pocas impresiones es justo donde la precisión varía más, así que es ahí donde despreciar a los imprecisos hace más daño.
+
+Lo que aporta este trabajo, entonces, no es la pregunta ni la teoría. Es **medirla donde sus autores no la midieron**: contra resultados reales reservados en lugar de simulados, conservando el máximo sobre 2 a 20 brazos —donde vive la maldición— y sin filtrar el régimen incómodo, sino diagnosticándolo.
 
 ## Lo que queda fuera
 

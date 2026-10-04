@@ -1,0 +1,37 @@
+{
+  "confirmatorio": {
+    "regimen_filtrado": {
+      "experimentos": 1277,
+      "brazos": 4689,
+      "n_por_p_mediana": 130.70194449046213,
+      "diferencia_media": 0.00014757134532490074,
+      "ic95": [
+        -0.0001529672872522132,
+        0.0004481099779020147
+      ],
+      "contraer_gana_en": 0.55,
+      "se_distingue_de_cero": false,
+      "mse_cambio_relativo": -0.32827968171326805
+    },
+    "archivo_completo": {
+      "experimentos": 15787,
+      "brazos": 77446,
+      "n_por_p_mediana": 39.95417007816627,
+      "diferencia_media": -0.0005560958191271328,
+      "ic95": [
+        -0.0006193085990584475,
+        -0.0004928830391958181
+      ],
+      "contraer_gana_en": 0.0,
+      "se_distingue_de_cero": true,
+      "mse_cambio_relativo": -0.23910007466052452
+    },
+    "filtro": {
+      "min_impresiones": 1000,
+      "min_clics": 100,
+      "fraccion_de_brazos_que_pasa": 0.0685897270356119
+    },
+    "particiones": 40,
+    "presupuesto": 0.05
+  }
+}
