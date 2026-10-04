@@ -1,0 +1,131 @@
+{
+  "exploratorio": {
+    "muestra": "exploratorio",
+    "particiones": 20,
+    "metodo_tau2": "paule-mandel",
+    "resultados": {
+      "ingenuo": {
+        "factor_v": 1.0,
+        "reglas": {
+          "azar": {
+            "valor": {
+              "media": 0.013314577874014175,
+              "de_entre_particiones": 5.7653829648960506e-05
+            },
+            "arrepentimiento": {
+              "media": 0.004563659581674484,
+              "de_entre_particiones": 5.8152796666136694e-05
+            },
+            "inflacion": {
+              "media": 1.564912522277454e-05,
+              "de_entre_particiones": 9.111291941807082e-05
+            },
+            "experimentos": 3379
+          },
+          "crudo": {
+            "valor": {
+              "media": 0.015508798539262977,
+              "de_entre_particiones": 5.350311661229237e-05
+            },
+            "arrepentimiento": {
+              "media": 0.002369438916425679,
+              "de_entre_particiones": 4.914991266198207e-05
+            },
+            "inflacion": {
+              "media": 0.002367269056221132,
+              "de_entre_particiones": 9.50440406126365e-05
+            },
+            "experimentos": 3379
+          },
+          "contraido_global": {
+            "valor": {
+              "media": 0.01550937074551409,
+              "de_entre_particiones": 5.215183331803774e-05
+            },
+            "arrepentimiento": {
+              "media": 0.0023688667101745666,
+              "de_entre_particiones": 4.7563354111439e-05
+            },
+            "inflacion": {
+              "media": 0.0023662749092168986,
+              "de_entre_particiones": 9.385713503764652e-05
+            },
+            "experimentos": 3379
+          }
+        },
+        "contraccion": {
+          "tau2": 7.190709759794252e-06,
+          "raiz_tau2": 0.0026813514263152264,
+          "alpha_media": 0.47373139654640795,
+          "alpha_mediana": 0.4787046565063373
+        },
+        "donde_falla": {
+          "fraccion_peor": 0.001006223617435801,
+          "fraccion_mejor": 0.0011838128474709973,
+          "fraccion_igual": 0.9978099635350933
+        }
+      },
+      "corregido": {
+        "factor_v": 1.9399138649270857,
+        "reglas": {
+          "azar": {
+            "valor": {
+              "media": 0.013314577874014175,
+              "de_entre_particiones": 5.7653829648960506e-05
+            },
+            "arrepentimiento": {
+              "media": 0.004563659581674484,
+              "de_entre_particiones": 5.8152796666136694e-05
+            },
+            "inflacion": {
+              "media": 1.564912522277454e-05,
+              "de_entre_particiones": 9.111291941807082e-05
+            },
+            "experimentos": 3379
+          },
+          "crudo": {
+            "valor": {
+              "media": 0.015508798539262977,
+              "de_entre_particiones": 5.350311661229237e-05
+            },
+            "arrepentimiento": {
+              "media": 0.002369438916425679,
+              "de_entre_particiones": 4.914991266198207e-05
+            },
+            "inflacion": {
+              "media": 0.002367269056221132,
+              "de_entre_particiones": 9.50440406126365e-05
+            },
+            "experimentos": 3379
+          },
+          "contraido_global": {
+            "valor": {
+              "media": 0.015509344830408753,
+              "de_entre_particiones": 5.229736984431305e-05
+            },
+            "arrepentimiento": {
+              "media": 0.0023688926252799043,
+              "de_entre_particiones": 4.760577827902268e-05
+            },
+            "inflacion": {
+              "media": 0.002366120417119662,
+              "de_entre_particiones": 9.407677124785109e-05
+            },
+            "experimentos": 3379
+          }
+        },
+        "contraccion": {
+          "tau2": 7.412872289848266e-07,
+          "raiz_tau2": 0.0008581097491059135,
+          "alpha_media": 0.9278555877619832,
+          "alpha_mediana": 0.9453486538873357
+        },
+        "donde_falla": {
+          "fraccion_peor": 0.001820087010443601,
+          "fraccion_mejor": 0.0018053028745967105,
+          "fraccion_igual": 0.9963746101149598
+        }
+      }
+    }
+  }
+}

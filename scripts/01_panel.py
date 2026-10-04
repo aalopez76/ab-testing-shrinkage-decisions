@@ -10,6 +10,7 @@ import argparse
 import json
 from pathlib import Path
 
+from wcab import consola
 from wcab import panel
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -17,6 +18,7 @@ SALIDA = RAIZ / "reports" / "results" / "01_panel.json"
 
 
 def main() -> None:
+    consola.preparar()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--muestra", default="exploratorio",
                     choices=["exploratorio", "confirmatorio"])

@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from wcab import consola
 from wcab import panel
 from wcab.diagnostics import srm
 
@@ -37,6 +38,7 @@ def sin_exclusion(muestra: str) -> pd.DataFrame:
 
 
 def main() -> None:
+    consola.preparar()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--muestra", default="exploratorio",
                     choices=["exploratorio", "confirmatorio"])

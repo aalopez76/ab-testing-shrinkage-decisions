@@ -56,13 +56,40 @@ La tabla del paso 0, por el código:
 | 840 A/A | **295** (definición estricta: ningún campo público varía) |
 | 2 307 solo titular | **1 589** |
 
-## Qué sigue — fase B
+## Fases B, C y D: TERMINADAS (3-oct-2026)
 
-1. `src/wcab/diagnostics/noise.py` — la calibración contra los A/A, como módulo.
-2. `scripts/03_calibracion.py` — **el veredicto sobre `v`**, con el factor de diseño.
-3. Decidir, con ese número, si el paso 2 usa `v` ingenuo, corregido, o ambos en comparación.
+**B — el modelo de ruido está mal, medido.** `Q/gl = 1.940` sobre los 295 A/A del panel (confirma el 1.927 de la auditoría). Factor de diseño 1.940. Las dos explicaciones —agrupamiento de impresiones o variación no publicada— **no son distinguibles** y las dos quedan declaradas.
 
-La auditoría previa ya anticipó el resultado (Q/gl = 1.927), pero hay que producirlo con el código y sobre el panel con exclusión aplicada, que es un universo distinto del que usé en la auditoría.
+**C — la partición, verificada.** `thinning.py` con 14 pruebas. La crítica: **correlación entre las dos mitades = +0.0013** contra un tope de 0.023, y ambas insesgadas. Hay una prueba de contraste que documenta por qué no se usa *data fission*.
+
+**D — la primera cifra, y cambia el proyecto.**
+
+```
+regla                  valor    arrepent.  inflación
+azar                 0.01331     0.00456    0.00002
+crudo                0.01551     0.00237    0.00237
+contraído global     0.01551     0.00237    0.00237
+```
+
+Tres cosas:
+
+1. **La maldición del ganador es real y está cuantificada.** El ganador promete 1.551% y entrega 1.314%: **sobreestima un 15.3% relativo**.
+2. **Es un efecto de selección**, confirmado internamente: elegir al azar da inflación 0.00002, cien veces menor.
+3. **La contracción global NO cambia la decisión** — 99.8% de los experimentos eligen lo mismo.
+
+**Y el por qué es una propiedad matemática, no un accidente.** `v` se calcula con la tasa agrupada del experimento, así que dentro de un experimento depende solo de `n`; y como los brazos reciben impresiones parecidas por diseño, **α es casi uniforme** (rango mediano 0.009 sobre α≈0.47). Con α uniforme, θ̃ = (1−α)θ̂ + α·centro es monótona creciente en θ̂ y **conserva el orden**.
+
+Está fijado en `tests/test_decision.py::test_la_contraccion_uniforme_NO_puede_cambiar_el_maximo`.
+
+**Consecuencia para la fase E, que deja de ser opcional:** solo puede mejorar la decisión un método cuyo **objetivo difiera entre brazos** —contraer hacia un vecindario de experimentos parecidos, no hacia el centro del propio experimento— o cuya **α difiera materialmente** entre brazos. Eso es exactamente el eje global contra local.
+
+## Qué sigue — fase E
+
+1. `src/wcab/shrinkage/neighborhood.py` — τ² y centro sobre un vecindario: núcleo en `semana` y, por separado, similitud de titular.
+2. Añadir la alternativa de método. Con el hallazgo de D, la candidata con sentido es la que rompe la uniformidad de α.
+3. Volver a correr `04_decisiones.py` con las seis configuraciones.
+
+**Decisión pendiente que D obliga a tomar:** si contraer hacia el centro del propio experimento no puede reordenar, el eje «global» del plan hay que redefinirlo como *hacia el promedio de todos los experimentos* (que sí difiere de la media interna) en lugar de *hacia la media del propio experimento*. Hay que escribirlo antes de implementar.
 
 ## Decisiones tomadas que no hay que volver a discutir
 
