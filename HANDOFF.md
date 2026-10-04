@@ -83,13 +83,50 @@ Está fijado en `tests/test_decision.py::test_la_contraccion_uniforme_NO_puede_c
 
 **Consecuencia para la fase E, que deja de ser opcional:** solo puede mejorar la decisión un método cuyo **objetivo difiera entre brazos** —contraer hacia un vecindario de experimentos parecidos, no hacia el centro del propio experimento— o cuya **α difiera materialmente** entre brazos. Eso es exactamente el eje global contra local.
 
-## Qué sigue — fase E
+## Fase E: TERMINADA (3-oct-2026) — resultado negativo, y limpio
 
-1. `src/wcab/shrinkage/neighborhood.py` — τ² y centro sobre un vecindario: núcleo en `semana` y, por separado, similitud de titular.
-2. Añadir la alternativa de método. Con el hallazgo de D, la candidata con sentido es la que rompe la uniformidad de α.
-3. Volver a correr `04_decisiones.py` con las seis configuraciones.
+El dilema de la fase D se resolvió en la literatura: la condición que hace real un problema de selección es la **precisión heterogénea** (Gu y Koenker, *Invidious Comparisons*, 2020-21). Medida en el panel:
 
-**Decisión pendiente que D obliga a tomar:** si contraer hacia el centro del propio experimento no puede reordenar, el eje «global» del plan hay que redefinirlo como *hacia el promedio de todos los experimentos* (que sí difiere de la media interna) en lugar de *hacia la media del propio experimento*. Hay que escribirlo antes de implementar.
+```
+dentro de un experimento   razón n_max/n_min: mediana 1.040, p99 1.094  → HOMOGÉNEA
+entre experimentos         impresiones p99/p01 = 7.1, error estándar p90/p10 = 2.63  → heterogénea
+```
+
+Así que el nivel correcto es **entre** experimentos — y resulta ser el que la industria plantea: Meta habla de «los experimentos seleccionados para lanzamiento», Netflix de *cuándo* lanzar.
+
+### La decisión y el resultado
+
+Con presupuesto limitado, qué experimentos desplegar. Ganancia realizada media, en puntos porcentuales:
+
+```
+regla         5%      10%     25%     50%    100%
+azar        0.236   0.242   0.246   0.249   0.254
+cruda       1.073   0.864   0.605   0.425   0.254
+contraída   0.800   0.690   0.544   0.411   0.254
+cola        0.723   0.642   0.519   0.406   0.254
+oráculo     1.765   1.429   1.001   0.672   0.254
+```
+
+**La regla cruda gana en todos los presupuestos.** Contraer empeora la decisión (−0.27 pp al 5%), y la regla de probabilidad de cola empeora más (−0.35 pp).
+
+**Y no es artefacto del factor de diseño**, comprobado: la dirección se mantiene incluso con factor 1.0 (α=0.41, −0.078 pp). Lo que sí depende del factor es la magnitud —de −0.08 a −0.80 según α— y hay que declararlo.
+
+### El mecanismo
+
+Contraer comprime todo hacia el centro. Eso baja el error cuadrático, pero **comprime también las diferencias de las que depende el orden**. Y solo paga si la heterogeneidad de precisión es grande, porque lo que aporta es despreciar a los imprecisos. Con 2.6× de dispersión en el error estándar y una ventaja real chica frente al ruido, la compresión cuesta más de lo que el descuento diferencial aporta.
+
+**Es la advertencia documentada:** los métodos que dependen de la independencia previa pueden dar peores medias posteriores, y **las decisiones de cribado basadas en ellas pueden ser peores que las tomadas con las estimaciones sin contraer.**
+
+### Dos arreglos que salieron construyendo
+
+1. **τ² salía cero con dos mitades.** Porque δ̂ = θ̂(máximo) − media **ya es un estadístico seleccionado**, y Bayes empírico supone una estimación no seleccionada. Se resolvió con `thinning.partir_tres`: un tercio elige, otro estima, otro evalúa. Así δ̂ es la ventaja de un brazo **ya fijado** y la contracción se le puede aplicar.
+2. **Escribí la interpretación de la sensibilidad antes de ver los números**, y la contradecían. Queda anotado: es el fallo que la regla de evidencia §3 existe para evitar.
+
+## Qué sigue — fase F
+
+1. Dónde falla, en los dos niveles: qué experimentos pierde la contracción y qué los caracteriza.
+2. Explicar: el régimen de la proporción (Chen y Lei), la dependencia parámetro-precisión (Chen), la calibración del paso 1.
+3. Con esto, el enunciado del proyecto ya está casi completo y **es negativo en las dos decisiones**. Hay que escribirlo tal cual.
 
 ## Decisiones tomadas que no hay que volver a discutir
 

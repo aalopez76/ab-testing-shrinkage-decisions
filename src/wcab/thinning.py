@@ -121,3 +121,30 @@ def comprobar_suma(panel: pd.DataFrame, p: Particion) -> bool:
         p.estimacion["clics"] + p.evaluacion["clics"], panel["clics"].to_numpy()
     )
     return bool(n_ok and c_ok)
+
+
+def partir_tres(
+    panel: pd.DataFrame,
+    semilla: int = 0,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Parte en tres tercios independientes: elegir, estimar, evaluar.
+
+    Hace falta porque un estadístico **seleccionado** —el máximo de un
+    experimento— no se comporta como una estimación ruidosa cualquiera: su
+    distribución está corrida y su varianza no es la ingenua, así que la
+    maquinaria de Bayes empírico aplicada sobre él da resultados sin sentido
+    (en la práctica, un τ² estimado en cero).
+
+    La salida es separar los papeles:
+
+        A1  elige el brazo         (y nada más)
+        A2  estima su ventaja      (sin haber participado en elegirlo)
+        B   mide lo que rindió     (sin haber participado en nada)
+
+    Así δ̂ deja de ser un máximo y pasa a ser la ventaja de un brazo **ya
+    fijado**, que sí es una estimación insesgada y a la que la contracción se
+    puede aplicar como corresponde.
+    """
+    primero = partir(panel, fraccion=2.0 / 3.0, semilla=semilla)
+    segundo = partir(primero.estimacion, fraccion=0.5, semilla=semilla + 10_000)
+    return segundo.estimacion, segundo.evaluacion, primero.evaluacion
