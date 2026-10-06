@@ -1,4 +1,4 @@
-"""El panel es la única puerta a los data, así que se comprueba su contrato."""
+"""The panel is the single gateway to the data, so its contract is tested."""
 
 import pandas as pd
 import pytest
@@ -11,56 +11,56 @@ def p():
     return panel.load("exploratory")
 
 
-def test_tiene_las_columnas_del_contrato(p):
+def test_it_has_the_contracted_columns(p):
     assert list(p.columns) == panel.COLUMNS
 
 
-def test_la_exclusion_viene_aplicada(p):
-    """Ningún brazo del panel puede caer en la ventana del fallo."""
+def test_the_exclusion_has_been_applied(p):
+    """No arm in the panel may fall inside the failure window."""
     f = pd.to_datetime(p["date"])
-    dentro = (f >= pd.Timestamp("2013-06-01")) & (f < pd.Timestamp("2014-02-01"))
-    assert not dentro.any()
+    inside = (f >= pd.Timestamp("2013-06-01")) & (f < pd.Timestamp("2014-02-01"))
+    assert not inside.any()
     assert p["date"].notna().all()
 
 
-def test_sin_brazos_vacios(p):
+def test_no_empty_arms(p):
     assert (p["impressions"] > 0).all()
     assert (p["clicks"] >= 0).all()
     assert (p["clicks"] <= p["impressions"]).all()
 
 
-def test_theta_y_v_son_coherentes(p):
-    esperado = p["clicks"] / p["impressions"]
-    assert (p["theta_hat"] - esperado).abs().max() < 1e-12
+def test_theta_and_v_are_coherent(p):
+    expected = p["clicks"] / p["impressions"]
+    assert (p["theta_hat"] - expected).abs().max() < 1e-12
     v = p["theta_hat"] * (1 - p["theta_hat"]) / p["impressions"]
     assert (p["v"] - v).abs().max() < 1e-15
     assert (p["v"] >= 0).all()
 
 
-def test_los_aa_no_varian_en_ningun_campo(p):
-    """Un experimento marcado A/A no puede tener variación registrada."""
+def test_aa_experiments_vary_in_no_field(p):
+    """An experiment marked A/A cannot carry any recorded variation."""
     aa = p.loc[p["is_aa"]]
     assert not aa["varies_headline"].any()
     assert not aa["varies_image"].any()
 
 
-def test_hay_aa_suficientes_para_calibrar(p):
-    """Si no hay A/A, el paso 1 del plan no se puede correr.
+def test_there_are_enough_aa_experiments_to_calibrate(p):
+    """Without A/A experiments, step 1 of the plan cannot be run.
 
-    El umbral es 100 experiments: con 2 a 14 arms cada uno, da cientos de
-    grados de libertad para la Q de Cochran, que es de sobra. No se pone más
-    alto para no clavar en el test una expectativa mía en lugar de un requisito.
+    The threshold is 100 experiments: with 2 to 14 arms each, that gives hundreds
+    of degrees of freedom for Cochran's Q, which is ample. It is not set higher so
+    as not to encode an expectation in the test in place of a requirement.
     """
     assert p.loc[p["is_aa"], "experiment_id"].nunique() >= 100
 
 
-def test_el_resumen_trae_las_cifras_que_citan_los_documentos(p):
+def test_the_summary_carries_the_figures_the_documents_cite(p):
     r = panel.summary(p)
-    for clave in (
+    for key in (
         "arms", "experiments", "impressions", "global_rate",
-        "brazos_por_experimento_max", "impresiones_por_brazo_mediana",
-        "semanas", "experimentos_aa",
+        "arms_per_experiment_max", "median_impressions_per_arm",
+        "weeks", "aa_experiments",
     ):
-        assert clave in r
-    assert 2 <= r["brazos_por_experimento_min"]
+        assert key in r
+    assert 2 <= r["arms_per_experiment_min"]
     assert 0 < r["global_rate"] < 1

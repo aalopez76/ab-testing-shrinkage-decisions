@@ -16,7 +16,7 @@ from pathlib import Path
 
 import numpy as np
 
-from wcab import consola, panel, portfolio, shrinkage, thinning
+from wcab import console, panel, portfolio, shrinkage, thinning
 from wcab.shrinkage import bhs
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,7 +25,7 @@ BUDGETS = (0.05, 0.10, 0.25)
 
 
 def main() -> None:
-    consola.prepare()
+    console.prepare()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--sample", default="confirmatory",
                     choices=["exploratory", "confirmatory"])

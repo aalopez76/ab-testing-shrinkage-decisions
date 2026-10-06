@@ -1,11 +1,11 @@
-"""Descarga de los CSV públicos del OSF.
+"""Download of the public CSV files from OSF.
 
-Archivo: Upworthy Research Archive (Matias, Munger, Aubin Le Quere y Ebersole,
-*Scientific Data*, 2021) — https://osf.io/jd64p/
+Archive: Upworthy Research Archive (Matias, Munger, Aubin Le Quere and Ebersole,
+*Scientific Data*, 2021) - https://osf.io/jd64p/
 
-Solo se descargan el exploratory y el confirmatory. La sample de reserva del
-archivo son experiments *distintos*, no más data de los mismos, así que no
-sirve para validar decisiones y no se usa (ver README, paso 4).
+Only the exploratory and confirmatory samples are downloaded. The archive's
+held-out sample contains *different* experiments rather than more data on the
+same ones, so it cannot serve to validate decisions and is not used.
 """
 
 from __future__ import annotations
@@ -23,13 +23,13 @@ TARGETS = {
 }
 
 
-def download(destino: Path, tiempo_limite: int = 300) -> dict[str, Path]:
-    """Descarga los CSV que faltan en `destino`. Devuelve las rutas."""
-    destino.mkdir(parents=True, exist_ok=True)
-    with urllib.request.urlopen(API, timeout=tiempo_limite) as r:
-        listado = json.load(r)
+def download(target: Path, timeout: int = 300) -> dict[str, Path]:
+    """Download any missing CSV files into `target`. Returns the paths."""
+    target.mkdir(parents=True, exist_ok=True)
+    with urllib.request.urlopen(API, timeout=timeout) as r:
+        listing = json.load(r)
 
-    rutas: dict[str, Path] = {}
+    paths: dict[str, Path] = {}
     for entrada in listado["data"]:
         nombre = entrada["attributes"]["name"]
         for clave, local in TARGETS.items():
@@ -39,7 +39,7 @@ def download(destino: Path, tiempo_limite: int = 300) -> dict[str, Path]:
                 if output.exists():
                     continue
                 url = entrada["links"]["download"]
-                with urllib.request.urlopen(url, timeout=tiempo_limite) as resp:
+                with urllib.request.urlopen(url, timeout=timeout) as resp:
                     output.write_bytes(resp.read())
     faltan = set(TARGETS) - set(rutas)
     if faltan:

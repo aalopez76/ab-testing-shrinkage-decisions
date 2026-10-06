@@ -17,7 +17,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from wcab import consola, decision, panel, portfolio, shrinkage, thinning
+from wcab import console, decision, panel, portfolio, shrinkage, thinning
 from wcab.diagnostics import noise
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -336,7 +336,7 @@ def fig_bhs() -> None:
 
 # --------------------------------------------------------------------------
 def main() -> None:
-    consola.prepare()
+    console.prepare()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--sample", default="confirmatory",
                     choices=["exploratory", "confirmatory"])

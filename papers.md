@@ -174,7 +174,7 @@ arXiv: [2512.25042](https://arxiv.org/abs/2512.25042) (31 December 2025)
 
 > Treats the binomial directly rather than approximating it by a normal, which matters for small proportions and small samples.
 >
-> **Ruled out by diagnostic, not by assumption:** in these data n·p has a median of 40 and only 0.1% of variants falls below 10, so the Gaussian approximation is not the source of the problem. The check is in `scripts/06_donde_falla.py`.
+> **Ruled out by diagnostic, not by assumption:** in these data n·p has a median of 40 and only 0.1% of variants falls below 10, so the Gaussian approximation is not the source of the problem. The check is in `scripts/06_where_it_fails.py`.
 
 **Leiner, J., Duan, B., Tibshirani, R. and Ramdas, A.** *Data fission: splitting a single data point*. **JASA**.
 arXiv: [2112.11079](https://arxiv.org/abs/2112.11079)

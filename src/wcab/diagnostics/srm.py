@@ -1,14 +1,14 @@
-"""Paso 0: comprobar que el sorteo fue un sorteo.
+"""Step 0: establish that the draw was in fact a draw.
 
-Si la asignación aleatoria funcionó, las impressions deberían repartirse entre
-los arms de un experimento de forma aproximadamente uniforme. Un desbalance
-sistemático —*sample ratio mismatch*— indica que la asignación no fue aleatoria,
-y analizar esos experiments contamina todo lo que venga después.
+If random assignment worked, impressions should be distributed approximately
+uniformly across an experiment's arms. A systematic imbalance — *sample ratio
+mismatch* — indicates that assignment was not random, and analysing those
+experiments contaminates everything downstream.
 
-Se usa para reproducir month a month el fallo de Cloudflare que el equipo del
-archivo reportó en junio de 2024, y así justificar la exclusión con evidencia
-propia en lugar de confiar en la marca del archivo (que además no viene en los
-CSV públicos de 2020-2021).
+It is used to reproduce, month by month, the Cloudflare failure the archive's
+team reported in June 2024, so that the exclusion rests on evidence gathered here
+rather than on the archive's own flag, which in any case is absent from the
+public 2020-2021 CSV files.
 """
 
 from __future__ import annotations
@@ -21,10 +21,10 @@ THRESHOLD = 1e-3
 
 
 def per_experiment(data: pd.DataFrame) -> pd.DataFrame:
-    """χ² de impressions por brazo contra asignación uniforme, por experimento.
+    """Chi-squared of impressions per arm against uniform assignment.
 
-    Espera columnas `experiment_id`, `impressions` y `date`. Devuelve una fila
-    por experimento con el estadístico, su p-value y si desbalancea.
+    Expects the columns `experiment_id`, `impressions` and `date`. Returns one row
+    per experiment with the statistic, its p-value and whether it is imbalanced.
     """
     filas = []
     for eid, blk in data.groupby("experiment_id", sort=False):

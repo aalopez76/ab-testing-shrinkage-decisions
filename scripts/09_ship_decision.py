@@ -30,7 +30,7 @@ from pathlib import Path
 import numpy as np
 
 from wcab import panel, portfolio, shrinkage, thinning
-from wcab.consola import prepare
+from wcab.console import prepare
 
 prepare()
 ROOT = Path(__file__).resolve().parents[1]

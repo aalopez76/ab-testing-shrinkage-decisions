@@ -25,7 +25,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from wcab import consola, panel, portfolio, shrinkage, thinning
+from wcab import console, panel, portfolio, shrinkage, thinning
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "reports" / "results" / "08_regimen.json"
@@ -72,7 +72,7 @@ def measure(p: pd.DataFrame, partitions: int, budget: float) -> dict:
 
 
 def main() -> None:
-    consola.prepare()
+    console.prepare()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--sample", default="confirmatory",
                     choices=["exploratory", "confirmatory"])

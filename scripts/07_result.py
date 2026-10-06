@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 from scipy import stats
 
-from wcab import consola, decision, panel, portfolio, shrinkage, thinning
+from wcab import console, decision, panel, portfolio, shrinkage, thinning
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "reports" / "results" / "07_resultado.json"
@@ -25,7 +25,7 @@ BUDGETS = (0.05, 0.10, 0.25, 0.50)
 
 
 def main() -> None:
-    consola.prepare()
+    console.prepare()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--sample", default="exploratory",
                     choices=["exploratory", "confirmatory"])

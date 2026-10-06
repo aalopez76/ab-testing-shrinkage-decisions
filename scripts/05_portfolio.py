@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from wcab import consola, panel, portfolio, shrinkage, thinning
+from wcab import console, panel, portfolio, shrinkage, thinning
 from wcab.diagnostics import noise
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -62,7 +62,7 @@ def one_partition(p: pd.DataFrame, seed: int, variance_factor: float):
 
 
 def main() -> None:
-    consola.prepare()
+    console.prepare()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--sample", default="exploratory",
                     choices=["exploratory", "confirmatory"])

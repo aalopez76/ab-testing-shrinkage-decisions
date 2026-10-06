@@ -1,4 +1,4 @@
-"""Diagnósticos. Explican el resultado; no eligen el método.
+"""Diagnostics. They explain the result; they do not select the method.
 
-Ver `.claude/rules/method.md`: el orden es measure → explicar → descartar.
+The order is measure, then explain, then discard.
 """
