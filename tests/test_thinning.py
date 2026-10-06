@@ -1,16 +1,16 @@
-"""La prueba crítica del proyecto.
+"""The project's critical test.
 
-Si la partición está mal, **todas** las metrics quedan mal y nada en el
-resultado lo delata: la inflación medida sale sesgada y los números se ven
-perfectamente normales. Es el único módulo con esa propiedad.
+If the split is wrong, **every** figure is wrong and nothing in the results
+reveals it: the measured inflation comes out biased while the numbers look
+perfectly ordinary. This is the only module with that property.
 
-La propiedad que hay que defender es la **independencia marginal** de las dos
-mitades. Es exactamente lo que distingue *data thinning* (válido para la
-binomial) de *data fission* (que para la binomial no da partes independientes),
-y la confusión que casi se cuela en el planteamiento de este proyecto.
+The property to defend is the **marginal independence** of the two halves. That
+is exactly what distinguishes *data thinning* (valid for the binomial) from
+*data fission* (which for the binomial does not yield independent parts), and it
+is the confusion that very nearly made its way into this project's design.
 
-Hay un hook en `.claude/hooks/test_critico.py` que corre este archivo al editar
-la partición.
+A hook in `.claude/hooks/test_critico.py` runs this file whenever the split is
+edited.
 """
 
 import numpy as np
@@ -20,125 +20,126 @@ import pytest
 from wcab import thinning
 
 N_SIM = 30_000
-P_VERDADERA = 0.013      # la rate real del archivo, ~1.3%
-N_POR_BRAZO = 3_000      # la mediana real de impressions por brazo
+TRUE_P = 0.013          # the archive's real rate, about 1.3%
+N_PER_ARM = 3_000       # the real median of impressions per arm
 
 
 @pytest.fixture(scope="module")
-def mitades():
-    """Muchas realizaciones de X ~ Binomial(n, p), cada una partida en dos."""
+def halves():
+    """Many realisations of X ~ Binomial(n, p), each one split in two."""
     rng = np.random.default_rng(20261003)
-    x = rng.binomial(N_POR_BRAZO, P_VERDADERA, size=N_SIM)
-    n = np.full(N_SIM, N_POR_BRAZO, dtype=np.int64)
+    x = rng.binomial(N_PER_ARM, TRUE_P, size=N_SIM)
+    n = np.full(N_SIM, N_PER_ARM, dtype=np.int64)
     n_a, c_a, n_b, c_b = thinning.split_counts(n, x, 0.5, rng)
     return {"x": x, "n_a": n_a, "c_a": c_a, "n_b": n_b, "c_b": c_b}
 
 
 # --------------------------------------------------------------------------
-# 1. Exactitud: la partición no inventa ni pierde nada
+# 1. Exactness: the split neither invents nor loses anything
 # --------------------------------------------------------------------------
 
-def test_las_mitades_suman_el_original(mitades):
-    m = mitades
+def test_the_halves_sum_to_the_original(halves):
+    m = halves
     assert np.array_equal(m["c_a"] + m["c_b"], m["x"])
-    assert np.array_equal(m["n_a"] + m["n_b"], np.full(N_SIM, N_POR_BRAZO))
+    assert np.array_equal(m["n_a"] + m["n_b"], np.full(N_SIM, N_PER_ARM))
 
 
-def test_ninguna_mitad_queda_vacia(mitades):
-    assert (mitades["n_a"] >= 1).all()
-    assert (mitades["n_b"] >= 1).all()
+def test_neither_half_is_left_empty(halves):
+    assert (halves["n_a"] >= 1).all()
+    assert (halves["n_b"] >= 1).all()
 
 
-def test_los_clics_nunca_exceden_las_impresiones(mitades):
-    m = mitades
+def test_clicks_never_exceed_impressions(halves):
+    m = halves
     assert (m["c_a"] <= m["n_a"]).all() and (m["c_a"] >= 0).all()
     assert (m["c_b"] <= m["n_b"]).all() and (m["c_b"] >= 0).all()
 
 
 # --------------------------------------------------------------------------
-# 2. Insesgadez: cada mitad estima la rate verdadera
+# 2. Unbiasedness: each half estimates the true rate
 # --------------------------------------------------------------------------
 
-def test_cada_mitad_es_insesgada(mitades):
-    m = mitades
-    for lado in ("a", "b"):
-        rate = (m[f"c_{lado}"] / m[f"n_{lado}"]).mean()
-        error = abs(rate - P_VERDADERA)
-        # 4 errores estándar de la mean de N_SIM observaciones
-        tope = 4 * np.sqrt(P_VERDADERA * (1 - P_VERDADERA) / (N_POR_BRAZO / 2) / N_SIM)
-        assert error < tope, f"mitad {lado}: {rate:.6f} vs {P_VERDADERA}"
+def test_each_half_is_unbiased(halves):
+    m = halves
+    for side in ("a", "b"):
+        rate = (m[f"c_{side}"] / m[f"n_{side}"]).mean()
+        error = abs(rate - TRUE_P)
+        # four standard errors of the mean over N_SIM observations
+        bound = 4 * np.sqrt(TRUE_P * (1 - TRUE_P) / (N_PER_ARM / 2) / N_SIM)
+        assert error < bound, f"half {side}: {rate:.6f} vs {TRUE_P}"
 
 
-def test_la_varianza_de_cada_mitad_es_la_binomial_correcta(mitades):
-    """Si la mitad fuera Binomial(n_a, p), su varianza debe ser n_a·p·(1-p)."""
-    m = mitades
-    for lado in ("a", "b"):
-        esperada = (N_POR_BRAZO / 2) * P_VERDADERA * (1 - P_VERDADERA)
-        observada = m[f"c_{lado}"].var(ddof=1)
-        assert 0.9 < observada / esperada < 1.1, (
-            f"mitad {lado}: varianza {observada:.1f} vs esperada {esperada:.1f}"
+def test_each_halfs_variance_is_the_correct_binomial(halves):
+    """If a half were Binomial(n_a, p), its variance must be n_a * p * (1-p)."""
+    m = halves
+    for side in ("a", "b"):
+        expected = (N_PER_ARM / 2) * TRUE_P * (1 - TRUE_P)
+        observed = m[f"c_{side}"].var(ddof=1)
+        assert 0.9 < observed / expected < 1.1, (
+            f"half {side}: variance {observed:.1f} vs expected {expected:.1f}"
         )
 
 
 # --------------------------------------------------------------------------
-# 3. LA PRUEBA CRÍTICA: independencia marginal
+# 3. THE CRITICAL TEST: marginal independence
 # --------------------------------------------------------------------------
 
-def test_las_dos_mitades_son_independientes(mitades):
-    """El corazón del proyecto.
+def test_the_two_halves_are_independent(halves):
+    """The heart of the project.
 
-    Las tasas de las dos mitades deben ser incorreladas. Si estuvieran ligadas,
-    elegir el máximo en la mitad A arrastraría mecánicamente a la mitad B y la
-    inflación medida saldría sesgada, sin que nada lo delate.
+    The rates of the two halves must be uncorrelated. Were they linked, selecting
+    the maximum in half A would mechanically drag half B along with it and the
+    measured inflation would come out biased, with nothing to reveal it.
     """
-    m = mitades
+    m = halves
     theta_a = m["c_a"] / m["n_a"]
     theta_b = m["c_b"] / m["n_b"]
     r = float(np.corrcoef(theta_a, theta_b)[0, 1])
-    tope = 4 / np.sqrt(N_SIM)          # 4 errores estándar de una correlación nula
-    assert abs(r) < tope, (
-        f"correlación entre mitades = {r:+.4f}, debería ser ~0 (tope {tope:.4f}). "
-        "Si es muy negativa, la partición está condicionando mal: sería el "
-        "comportamiento de data fission, no de data thinning."
+    bound = 4 / np.sqrt(N_SIM)         # four standard errors of a null correlation
+    assert abs(r) < bound, (
+        f"correlation between halves = {r:+.4f}, should be about 0 (bound {bound:.4f}). "
+        "A strongly negative value would mean the split is conditioning wrongly: "
+        "that would be the behaviour of data fission, not of data thinning."
     )
 
 
-def test_contraste_la_particion_ingenua_esta_correlacionada():
-    """Documenta por qué la implementación es la que es.
+def test_contrast_the_naive_split_is_correlated():
+    """Documents why the implementation is what it is.
 
-    Una partición «ingenua» al estilo de *data fission* reparte la TASA en lugar
-    de los conteos: θ_A = θ + Z, θ_B = θ − Z. Su correlación es
+    A "naive" split in the style of *data fission* divides the RATE rather than
+    the counts: theta_A = theta + Z, theta_B = theta - Z. Its correlation is
 
-        corr(θ+Z, θ−Z) = (Var θ − Var Z) / (Var θ + Var Z)
+        corr(theta+Z, theta-Z) = (Var theta - Var Z) / (Var theta + Var Z)
 
-    que solo da cero en el punto exacto Var Z = Var θ y es negativa en cuanto el
-    ruido domina. Es decir: **la independencia dependería de acertar la varianza
-    del ruido**, que es precisamente la cantidad que el proyecto no conoce — por
-    eso se parten los conteos y no la rate.
+    which is zero only at the exact point Var Z = Var theta, and negative as soon
+    as the noise dominates. In other words, **independence would depend on
+    getting the noise variance right**, which is precisely the quantity this
+    project does not know — hence splitting the counts rather than the rate.
 
-    Aquí se usa Var Z ≈ 23 · Var θ, donde la anticorrelación es inequívoca.
+    Here Var Z is about 25 times Var theta, where the anticorrelation is
+    unambiguous.
     """
     rng = np.random.default_rng(1)
-    theta = rng.binomial(N_POR_BRAZO, P_VERDADERA, size=20_000) / N_POR_BRAZO
-    sd_theta = np.sqrt(P_VERDADERA * (1 - P_VERDADERA) / N_POR_BRAZO)
-    ruido = rng.normal(0, 5 * sd_theta, size=20_000)
+    theta = rng.binomial(N_PER_ARM, TRUE_P, size=20_000) / N_PER_ARM
+    sd_theta = np.sqrt(TRUE_P * (1 - TRUE_P) / N_PER_ARM)
+    noise = rng.normal(0, 5 * sd_theta, size=20_000)
 
-    r = float(np.corrcoef(theta + ruido, theta - ruido)[0, 1])
-    esperado = (sd_theta**2 - (5 * sd_theta) ** 2) / (
+    r = float(np.corrcoef(theta + noise, theta - noise)[0, 1])
+    expected = (sd_theta**2 - (5 * sd_theta) ** 2) / (
         sd_theta**2 + (5 * sd_theta) ** 2
     )
-    assert r < -0.8, f"el atajo ingenuo debería anticorrelacionar: r={r:+.3f}"
-    assert abs(r - esperado) < 0.05, (
-        f"la correlación observada ({r:+.3f}) debería seguir el álgebra "
-        f"({esperado:+.3f})"
+    assert r < -0.8, f"the naive shortcut should anticorrelate: r={r:+.3f}"
+    assert abs(r - expected) < 0.05, (
+        f"the observed correlation ({r:+.3f}) should follow the algebra "
+        f"({expected:+.3f})"
     )
 
 
 # --------------------------------------------------------------------------
-# 4. La interfaz sobre el panel
+# 4. The panel-level interface
 # --------------------------------------------------------------------------
 
-def _panel_minimo(n=(3000, 3000, 5000), c=(40, 35, 70)):
+def _minimal_panel(n=(3000, 3000, 5000), c=(40, 35, 70)):
     d = pd.DataFrame(
         {
             "experiment_id": ["e1", "e1", "e2"],
@@ -153,21 +154,21 @@ def _panel_minimo(n=(3000, 3000, 5000), c=(40, 35, 70)):
     return d
 
 
-def test_partir_conserva_el_panel_y_recalcula():
-    p = _panel_minimo()
+def test_split_preserves_the_panel_and_recomputes():
+    p = _minimal_panel()
     out = thinning.split(p, fraction=0.5, seed=3)
     assert thinning.check_sum(p, out)
-    for mitad in (out.estimation, out.evaluation):
-        assert list(mitad.columns) == list(p.columns)
-        assert np.allclose(mitad["theta_hat"], mitad["clicks"] / mitad["impressions"])
-        v = mitad["theta_hat"] * (1 - mitad["theta_hat"]) / mitad["impressions"]
-        assert np.allclose(mitad["v"], v)
-    # las columnas descriptivas se arrastran sin changes
+    for half in (out.estimation, out.evaluation):
+        assert list(half.columns) == list(p.columns)
+        assert np.allclose(half["theta_hat"], half["clicks"] / half["impressions"])
+        v = half["theta_hat"] * (1 - half["theta_hat"]) / half["impressions"]
+        assert np.allclose(half["v"], v)
+    # descriptive columns are carried over unchanged
     assert list(out.estimation["experiment_id"]) == list(p["experiment_id"])
 
 
-def test_la_semilla_hace_reproducible_la_particion():
-    p = _panel_minimo()
+def test_the_seed_makes_the_split_reproducible():
+    p = _minimal_panel()
     a = thinning.split(p, seed=42).estimation["clicks"].tolist()
     b = thinning.split(p, seed=42).estimation["clicks"].tolist()
     c = thinning.split(p, seed=43).estimation["clicks"].tolist()
@@ -176,12 +177,12 @@ def test_la_semilla_hace_reproducible_la_particion():
 
 
 @pytest.mark.parametrize("fraction", [0.0, 1.0, -0.1, 1.5])
-def test_rechaza_fracciones_invalidas(fraction):
+def test_rejects_invalid_fractions(fraction):
     with pytest.raises(ValueError):
-        thinning.split(_panel_minimo(), fraction=fraction)
+        thinning.split(_minimal_panel(), fraction=fraction)
 
 
-def test_rechaza_datos_imposibles():
+def test_rejects_impossible_data():
     with pytest.raises(ValueError):
         thinning.split_counts([100], [200], 0.5, np.random.default_rng(0))
     with pytest.raises(ValueError):

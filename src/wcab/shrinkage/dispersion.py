@@ -1,25 +1,23 @@
-"""Cuánto difieren realmente las variantes: la estimación de τ².
+"""How far variants genuinely differ: estimating tau-squared.
 
-La contracción pesa dos cantidades: el ruido de cada medición (`v`) y la
-dispersión **real** entre las variantes de un experimento (τ²). La primera se
-calcula; la segunda no se observa y hay que estimarla.
+Shrinkage weighs two quantities: each measurement's noise (`v`) and the **real**
+dispersion between an experiment's variants (tau^2). The first is calculated; the
+second is not observed and must be estimated.
 
-Y aquí está el problema que obliga a estimarla en conjunto: con 2 a 14 arms
-por experimento, estimate τ² **dentro** de cada experimento es usar un dato
-ruidoso para decidir cuánto confiar en data ruidosos. La output viene del
-meta-análisis, que enfrenta lo mismo desde los años ochenta al combinar muchos
-estudios clínicos: **se estima una sola dispersión con todos los experiments
-juntos.**
+Here lies the problem that forces a pooled estimate: with 2 to 14 arms per
+experiment, estimating tau^2 **within** each experiment means using a noisy
+figure to decide how far to trust noisy figures. The solution comes from
+meta-analysis, which has faced the same difficulty since the 1980s when combining
+many clinical studies: **a single dispersion is estimated from all experiments
+together.**
 
-Dos estimadores clásicos, ambos sobre la Q de Cochran:
+Two classical estimators, both built on Cochran's Q:
 
-- **DerSimonian y Laird (1986):** forma cerrada. Despeja cuánta dispersión real
-  hace falta para explicar el exceso de Q sobre sus grados de libertad.
-- **Paule y Mandel (1982):** busca el τ² que hace que Q, con los pesos que ya
-  incluyen esa dispersión, valga exactamente lo esperado. No tiene solución
-  cerrada; se resuelve por bisección.
-
-*Referencias pendientes de verificación bibliográfica directa.*
+- **DerSimonian and Laird (1986):** closed form. It solves for how much real
+  dispersion is needed to explain Q's excess over its degrees of freedom.
+- **Paule and Mandel (1982):** finds the tau^2 at which Q, computed with weights
+  that already include that dispersion, equals exactly its expectation. It has no
+  closed form and is solved by bisection.
 """
 
 from __future__ import annotations
@@ -32,7 +30,7 @@ TOL = 1e-12
 
 
 def _per_experiment(panel: pd.DataFrame, variance_factor: float = 1.0):
-    """Itera (theta, v) por experimento, descartando los no informativos."""
+    """Iterate (theta, v) per experiment, skipping the uninformative ones."""
     for _, blk in panel.groupby("experiment_id", sort=False):
         if len(blk) < 2:
             continue
@@ -44,28 +42,28 @@ def _per_experiment(panel: pd.DataFrame, variance_factor: float = 1.0):
 
 
 def dersimonian_laird(panel: pd.DataFrame, variance_factor: float = 1.0) -> float:
-    """τ² en conjunto, forma cerrada. Nunca negativo.
+    """Pooled tau^2, closed form. Never negative.
 
-    Se acumulan numerador y denominador sobre todos los experiments antes de
-    dividir: así los experiments chicos no arrastran el promedio como lo
-    harían si se estimara τ² en cada uno y luego se promediara.
+    Numerator and denominator are accumulated across all experiments before
+    dividing, so that small experiments do not drag the average as they would if
+    tau^2 were estimated within each one and then averaged.
     """
-    exceso = 0.0
+    excess = 0.0
     denom = 0.0
     for theta, v in _per_experiment(panel, variance_factor):
         w = 1.0 / v
         sw = w.sum()
         pbar = float((w * theta).sum() / sw)
         Q = float((w * (theta - pbar) ** 2).sum())
-        exceso += Q - (len(theta) - 1)
+        excess += Q - (len(theta) - 1)
         denom += sw - (w**2).sum() / sw
     if denom <= 0:
         return 0.0
-    return max(0.0, exceso / denom)
+    return max(0.0, excess / denom)
 
 
 def _total_q(panel: pd.DataFrame, tau2: float, variance_factor: float) -> tuple[float, int]:
-    """Q acumulada con pesos que ya incluyen τ², y sus grados de libertad."""
+    """Accumulated Q with weights that already include tau^2, and its dof."""
     Q = 0.0
     dof = 0
     for theta, v in _per_experiment(panel, variance_factor):
@@ -80,13 +78,13 @@ def _total_q(panel: pd.DataFrame, tau2: float, variance_factor: float) -> tuple[
 def paule_mandel(
     panel: pd.DataFrame,
     variance_factor: float = 1.0,
-    tope: float | None = None,
+    upper: float | None = None,
 ) -> float:
-    """τ² en conjunto por el método de Paule y Mandel.
+    """Pooled tau^2 by the Paule and Mandel method.
 
-    Busca el τ² que iguala Q a sus grados de libertad. Q decrece de forma
-    monótona en τ², así que la bisección es segura. Si Q(0) ya no supera los
-    grados de libertad, no hay exceso que explicar y τ² = 0.
+    It seeks the tau^2 at which Q equals its degrees of freedom. Q decreases
+    monotonically in tau^2, so bisection is safe. If Q(0) already fails to exceed
+    the degrees of freedom there is no excess to explain and tau^2 is zero.
     """
     Q0, dof = _total_q(panel, 0.0, variance_factor)
     if dof == 0:
@@ -94,27 +92,27 @@ def paule_mandel(
     if Q0 <= dof:
         return 0.0
 
-    if tope is None:
-        # la varianza observada de todas las tasas es una cota superior holgada
-        tope = float(np.nanvar(panel["theta_hat"].to_numpy(dtype=float))) * 10 + 1e-9
+    if upper is None:
+        # the observed variance of all rates is a generous upper bound
+        upper = float(np.nanvar(panel["theta_hat"].to_numpy(dtype=float))) * 10 + 1e-9
 
-    lo, hi = 0.0, tope
+    lo, hi = 0.0, upper
     Qhi, _ = _total_q(panel, hi, variance_factor)
-    expansiones = 0
-    while Qhi > dof and expansiones < 40:
+    expansions = 0
+    while Qhi > dof and expansions < 40:
         hi *= 2.0
         Qhi, _ = _total_q(panel, hi, variance_factor)
-        expansiones += 1
+        expansions += 1
 
     for _ in range(MAX_ITER):
-        medio = 0.5 * (lo + hi)
-        Q, _ = _total_q(panel, medio, variance_factor)
+        mid = 0.5 * (lo + hi)
+        Q, _ = _total_q(panel, mid, variance_factor)
         if abs(Q - dof) < TOL or (hi - lo) < TOL:
-            return medio
+            return mid
         if Q > dof:
-            lo = medio
+            lo = mid
         else:
-            hi = medio
+            hi = mid
     return 0.5 * (lo + hi)
 
 
@@ -126,5 +124,5 @@ METHODS = {
 
 def estimate(panel: pd.DataFrame, method: str = "paule-mandel", variance_factor: float = 1.0) -> float:
     if method not in METHODS:
-        raise ValueError(f"método desconocido: {method!r}; use {list(METHODS)}")
+        raise ValueError(f"unknown method: {method!r}; use one of {list(METHODS)}")
     return float(METHODS[method](panel, variance_factor=variance_factor))

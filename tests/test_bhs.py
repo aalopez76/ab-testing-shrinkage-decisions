@@ -1,8 +1,8 @@
-"""BHS: que reproduzca su propio caso base, y que sepa decir «no hago falta».
+"""BHS: that it reproduces its own base case, and that it can say "not needed".
 
-La tercera prueba es la que importa. Si el ajuste pidiera flexibilidad local
-siempre, el resultado sobre data reales no significaría nada: habría que
-comprobar primero que el método discrimina.
+The third test is the one that matters. If the fit always called for local
+flexibility, the result on real data would mean nothing: one must first establish
+that the method discriminates.
 """
 
 import numpy as np
@@ -19,26 +19,26 @@ def data():
     return rng, n, s2
 
 
-def test_a_grande_reproduce_la_contraccion_global(data):
-    """El artículo llama a λᵢ=1 «Bayesian Global Shrinkage». Debe salir de BHS."""
+def test_large_a_reproduces_global_shrinkage(data):
+    """The paper calls lambda_i = 1 "Bayesian Global Shrinkage". BHS must yield it."""
     rng, n, s2 = data
     m0, tau = 0.0, 2e-5
     theta = rng.normal(m0, np.sqrt(tau), n) + rng.normal(0, np.sqrt(s2))
 
-    ajuste = bhs.BHSFit(m0=m0, tau=tau, a=5_000.0, log_likelihood=0.0,
-                           log_likelihood_global=0.0, experiments=n)
-    por_bhs = bhs.posterior_mean(theta, s2, ajuste)
+    fitted = bhs.BHSFit(m0=m0, tau=tau, a=5_000.0, log_likelihood=0.0,
+                        log_likelihood_global=0.0, experiments=n)
+    by_bhs = bhs.posterior_mean(theta, s2, fitted)
 
     alpha = s2 / (s2 + tau)
     global_ = (1.0 - alpha) * theta + alpha * m0
 
-    # escala de theta ~ sqrt(2e-5) ≈ 4.5e-3; una tolerance de 1e-5 es 0.2%
-    assert np.max(np.abs(por_bhs - global_)) < 1e-5
-    assert np.max(np.abs(bhs.effective_alpha(theta, s2, ajuste) - alpha)) < 1e-3
+    # theta is on the scale of sqrt(2e-5) ~ 4.5e-3, so a 1e-5 tolerance is 0.2%
+    assert np.max(np.abs(by_bhs - global_)) < 1e-5
+    assert np.max(np.abs(bhs.effective_alpha(theta, s2, fitted) - alpha)) < 1e-3
 
 
-def test_recupera_los_grados_de_libertad_de_una_previa_t(data):
-    """Con una previa t de 3 dof construida a mano, â debe caer cerca de 3."""
+def test_recovers_the_degrees_of_freedom_of_a_t_prior(data):
+    """Given a hand-built t prior with 3 dof, the fitted a should land near 3."""
     rng, n, s2 = data
     m0, tau, dof = 0.0, 2e-5, 3.0
     theta = m0 + np.sqrt(tau) * rng.standard_t(dof, n) + rng.normal(0, np.sqrt(s2))
@@ -48,34 +48,34 @@ def test_recupera_los_grados_de_libertad_de_una_previa_t(data):
     assert r.requires_local_flexibility
 
 
-def test_con_previa_normal_NO_pide_flexibilidad_local(data):
-    """La prueba decisiva: el método tiene que saber decir que no hace falta."""
+def test_with_a_normal_prior_it_does_NOT_require_local_flexibility(data):
+    """The decisive test: the method must be able to say it is not needed."""
     rng, n, s2 = data
     m0, tau = 0.0, 2e-5
     theta = rng.normal(m0, np.sqrt(tau), n) + rng.normal(0, np.sqrt(s2))
 
     r = bhs.fit(theta, s2)
     assert not r.requires_local_flexibility, (
-        f"con previa normal pidió flexibilidad local: a={r.a:.1f}, "
-        f"razón de verosimilitudes={r.beats_global:.1f}"
+        f"local flexibility was requested for a normal prior: a={r.a:.1f}, "
+        f"likelihood ratio={r.beats_global:.1f}"
     )
 
 
-def test_el_peso_efectivo_queda_en_el_intervalo_valido(data):
+def test_the_effective_weight_stays_in_the_valid_interval(data):
     rng, n, s2 = data
     theta = rng.normal(0.0, 4e-3, n)
-    ajuste = bhs.BHSFit(m0=0.0, tau=2e-5, a=3.0, log_likelihood=0.0,
-                           log_likelihood_global=0.0, experiments=n)
-    alpha = bhs.effective_alpha(theta, s2, ajuste)
+    fitted = bhs.BHSFit(m0=0.0, tau=2e-5, a=3.0, log_likelihood=0.0,
+                        log_likelihood_global=0.0, experiments=n)
+    alpha = bhs.effective_alpha(theta, s2, fitted)
     assert np.all(alpha > 0.0) and np.all(alpha < 1.0)
 
 
-def test_contrae_menos_a_los_datos_lejanos_del_centro(data):
-    """La robustez de BHS: colas pesadas ⇒ menos contracción lejos del center."""
+def test_it_shrinks_observations_far_from_the_centre_less(data):
+    """The robustness of BHS: heavy tails mean less shrinkage far from the centre."""
     _, _, _ = data
     s2 = np.full(5, 1e-5)
     theta = np.array([0.0, 2e-3, 5e-3, 1e-2, 5e-2])
-    ajuste = bhs.BHSFit(m0=0.0, tau=1e-5, a=2.5, log_likelihood=0.0,
-                           log_likelihood_global=0.0, experiments=5)
-    alpha = bhs.effective_alpha(theta, s2, ajuste)
-    assert np.all(np.diff(alpha) < 0), f"el peso no decrece con la distancia: {alpha}"
+    fitted = bhs.BHSFit(m0=0.0, tau=1e-5, a=2.5, log_likelihood=0.0,
+                        log_likelihood_global=0.0, experiments=5)
+    alpha = bhs.effective_alpha(theta, s2, fitted)
+    assert np.all(np.diff(alpha) < 0), f"the weight does not decrease with distance: {alpha}"

@@ -1,15 +1,13 @@
-"""La rule de exclusión. Vive aquí y en ningún otro lado.
+"""The exclusion rule. It lives here and nowhere else.
 
-El archivo de Upworthy tiene un fallo de aleatorización documentado: una mala
-configuración de la caché de Cloudflare el 25 de junio de 2013 hizo que durante
-meses se mostrara una sola variante hasta que la caché expiraba. Afecta a ~22%
-de las pruebas y sus responsables desaconsejan usarlas para inferencia causal.
+The Upworthy archive has a documented randomisation failure: a Cloudflare caching
+misconfiguration on 25 June 2013 meant that a single variant was shown for months
+until the cache expired. It affects approximately 22% of the tests, and the
+archive's maintainers advise against using them for causal inference.
 
-Los CSV públicos del OSF son de 2020-2021 y **no traen la columna que las
-marca**, así que la exclusión se deriva por date. Verificado de forma
-independiente month a month (ver `diagnostics/srm.py`).
-
-Regla: `.claude/rules/data.md`.
+The public OSF files date from 2020-2021 and **carry no column marking them**, so
+the exclusion is derived from the creation date. It was verified independently,
+month by month (see `diagnostics/srm.py`).
 """
 
 from __future__ import annotations
@@ -18,77 +16,78 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-#: Ventana excluida: desde el inicio de junio de 2013 hasta el fin de enero de 2014.
-#: Cerrada por la izquierda, abierta por la derecha.
+#: Excluded window: from the start of June 2013 to the end of January 2014.
+#: Closed on the left, open on the right.
 WINDOW_START = pd.Timestamp("2013-06-01")
 WINDOW_END = pd.Timestamp("2014-02-01")
 
 
 @dataclass(frozen=True)
 class ExclusionResult:
-    """Qué se excluyó, para poder reportarlo."""
+    """What was excluded, so that it can be reported."""
 
-    brazos_antes: int
-    brazos_despues: int
-    experimentos_antes: int
-    experimentos_despues: int
+    arms_before: int
+    arms_after: int
+    experiments_before: int
+    experiments_after: int
 
     @property
     def excluded_arms(self) -> int:
-        return self.brazos_antes - self.brazos_despues
+        return self.arms_before - self.arms_after
 
     @property
     def excluded_experiments(self) -> int:
-        return self.experimentos_antes - self.experimentos_despues
+        return self.experiments_before - self.experiments_after
 
     @property
     def retained_fraction(self) -> float:
-        if self.experimentos_antes == 0:
+        if self.experiments_before == 0:
             return 0.0
-        return self.experimentos_despues / self.experimentos_antes
+        return self.experiments_after / self.experiments_before
 
     def __str__(self) -> str:
         return (
-            f"exclusión {WINDOW_START.date()} a {WINDOW_END.date()}: "
-            f"{self.excluded_experiments:,} de {self.experimentos_antes:,} "
-            f"experiments fuera ({1 - self.retained_fraction:.1%}); "
-            f"quedan {self.experimentos_despues:,} "
+            f"exclusion {WINDOW_START.date()} to {WINDOW_END.date()}: "
+            f"{self.excluded_experiments:,} of {self.experiments_before:,} "
+            f"experiments removed ({1 - self.retained_fraction:.1%}); "
+            f"{self.experiments_after:,} remain "
             f"({self.retained_fraction:.1%})"
         )
 
 
-def in_failure_window(fechas: pd.Series) -> pd.Series:
-    """True para las filas creadas dentro de la ventana del fallo.
+def in_failure_window(dates: pd.Series) -> pd.Series:
+    """True for rows created within the failure window.
 
-    Las fechas que no se pueden interpretar devuelven True (se excluyen): ante
-    la duda sobre cuándo se creó un experimento, no se usa para inferencia.
+    Dates that cannot be parsed return True and are therefore excluded: where
+    there is doubt about when an experiment was created, it is not used for
+    inference.
     """
-    f = pd.to_datetime(fechas, errors="coerce", utc=False)
+    f = pd.to_datetime(dates, errors="coerce", utc=False)
     if getattr(f.dtype, "tz", None) is not None:
         f = f.dt.tz_localize(None)
-    dentro = (f >= WINDOW_START) & (f < WINDOW_END)
-    return dentro | f.isna()
+    inside = (f >= WINDOW_START) & (f < WINDOW_END)
+    return inside | f.isna()
 
 
 def apply(
     df: pd.DataFrame,
-    col_fecha: str = "created_at",
-    col_experimento: str = "clickability_test_id",
+    date_col: str = "created_at",
+    experiment_col: str = "clickability_test_id",
 ) -> tuple[pd.DataFrame, ExclusionResult]:
-    """Quita las filas de la ventana del fallo y reporta cuánto quitó.
+    """Remove the rows in the failure window and report how many were removed.
 
-    Devuelve siempre el par (data, resultado) para que quien la llame no pueda
-    apply la exclusión sin tener a mano la cuenta de lo que se fue.
+    This always returns the pair (data, result) so that a caller cannot apply the
+    exclusion without having the count of what was dropped to hand.
     """
-    antes_brazos = len(df)
-    antes_exp = df[col_experimento].nunique()
+    arms_before = len(df)
+    experiments_before = df[experiment_col].nunique()
 
-    conservar = ~in_failure_window(df[col_fecha])
-    out = df.loc[conservar].copy()
+    keep = ~in_failure_window(df[date_col])
+    out = df.loc[keep].copy()
 
     return out, ExclusionResult(
-        brazos_antes=antes_brazos,
-        brazos_despues=len(out),
-        experimentos_antes=antes_exp,
-        experimentos_despues=out[col_experimento].nunique(),
+        arms_before=arms_before,
+        arms_after=len(out),
+        experiments_before=experiments_before,
+        experiments_after=out[experiment_col].nunique(),
     )
