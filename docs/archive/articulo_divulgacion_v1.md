@@ -1,3 +1,8 @@
+> **Archived.** Written in Spanish before the final methodological revision, and
+> retained for provenance. It predates the four-decision framing, the BHS
+> extension and the cluster-bootstrap intervals, so its conclusions do not match
+> the current `README.md`. Superseded, not corrected.
+
 # Pruebas A/B: el problema oculto
 
 *La variante que gana un experimento casi siempre promete más de lo que entrega. Hay varias formas de corregirlo, publicadas en los últimos catorce meses, y no está claro cuál conviene. Esto es el trabajo de averiguarlo.*

@@ -5,8 +5,27 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "wcab"
 version = "0.1.0"
-description = "La maldición del ganador en pruebas A/B: comparación de correcciones por calidad de decisión"
+description = "The winner's curse in A/B tests: comparing corrections by decision quality"
 requires-python = ">=3.11"
+
+# Runtime dependencies. Ranges, not pins: this declares what the package is
+# compatible with. The exact environment that produced the published figures is
+# recorded separately in requirements-lock.txt.
+dependencies = [
+    "pyarrow>=16,<22",        # parquet, for the canonical panel
+    "pandas>=2.2,<3",
+    "numpy>=1.26,<3",
+    "scipy>=1.13,<2",
+    "statsmodels>=0.14,<1",
+    "scikit-learn>=1.5,<2",
+    "matplotlib>=3.9,<4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0,<9",
+    "ruff>=0.6",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -14,3 +33,15 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+[tool.ruff]
+exclude = [".venv", "_borradores", "docs/archive"]
+
+# A deliberately narrow contract. Ruff's defaults enable all of Pyflakes plus
+# part of pycodestyle, which would turn "stop undefined names reaching main"
+# into "clean every lint warning in the repository". The two rules selected are
+# the ones that catch the defect class this project actually suffered:
+#   F821 — undefined name                        (io.py's listado/destino/rutas)
+#   F823 — local variable referenced before assignment
+[tool.ruff.lint]
+select = ["F821", "F823"]

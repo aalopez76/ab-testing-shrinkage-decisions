@@ -6,3 +6,9 @@ __pycache__/
 
 # borradores de trabajo, no forman parte del entregable
 _borradores/
+
+# harness de desarrollo, no forma parte del entregable
+.claude/
+
+# evaluaciones de trabajo, no forman parte del entregable
+Evaluaci*.txt
