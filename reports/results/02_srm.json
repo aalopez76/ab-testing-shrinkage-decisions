@@ -1,0 +1,253 @@
+{
+  "exploratory": {
+    "sample": "exploratory",
+    "experiments_evaluated": 4873,
+    "p_threshold": 0.001,
+    "global_imbalance_fraction": 0.15452493330597167,
+    "by_month": [
+      {
+        "month": "2013-06",
+        "experiments": 148,
+        "imbalance_fraction": 0.223
+      },
+      {
+        "month": "2013-07",
+        "experiments": 176,
+        "imbalance_fraction": 0.5909
+      },
+      {
+        "month": "2013-08",
+        "experiments": 178,
+        "imbalance_fraction": 0.6011
+      },
+      {
+        "month": "2013-09",
+        "experiments": 178,
+        "imbalance_fraction": 0.6629
+      },
+      {
+        "month": "2013-10",
+        "experiments": 152,
+        "imbalance_fraction": 0.7566
+      },
+      {
+        "month": "2013-11",
+        "experiments": 142,
+        "imbalance_fraction": 0.8451
+      },
+      {
+        "month": "2013-12",
+        "experiments": 147,
+        "imbalance_fraction": 0.8639
+      },
+      {
+        "month": "2014-01",
+        "experiments": 146,
+        "imbalance_fraction": 0.1096
+      },
+      {
+        "month": "2014-02",
+        "experiments": 168,
+        "imbalance_fraction": 0.006
+      },
+      {
+        "month": "2014-03",
+        "experiments": 164,
+        "imbalance_fraction": 0.0
+      },
+      {
+        "month": "2014-04",
+        "experiments": 182,
+        "imbalance_fraction": 0.0055
+      },
+      {
+        "month": "2014-05",
+        "experiments": 168,
+        "imbalance_fraction": 0.0
+      },
+      {
+        "month": "2014-06",
+        "experiments": 227,
+        "imbalance_fraction": 0.0088
+      },
+      {
+        "month": "2014-07",
+        "experiments": 247,
+        "imbalance_fraction": 0.0
+      },
+      {
+        "month": "2014-08",
+        "experiments": 287,
+        "imbalance_fraction": 0.0035
+      },
+      {
+        "month": "2014-09",
+        "experiments": 353,
+        "imbalance_fraction": 0.0
+      },
+      {
+        "month": "2014-10",
+        "experiments": 381,
+        "imbalance_fraction": 0.0026
+      },
+      {
+        "month": "2014-11",
+        "experiments": 272,
+        "imbalance_fraction": 0.0
+      },
+      {
+        "month": "2014-12",
+        "experiments": 252,
+        "imbalance_fraction": 0.0
+      },
+      {
+        "month": "2015-01",
+        "experiments": 187,
+        "imbalance_fraction": 0.0
+      },
+      {
+        "month": "2015-02",
+        "experiments": 171,
+        "imbalance_fraction": 0.0
+      },
+      {
+        "month": "2015-03",
+        "experiments": 156,
+        "imbalance_fraction": 0.0064
+      },
+      {
+        "month": "2015-04",
+        "experiments": 149,
+        "imbalance_fraction": 0.0
+      }
+    ]
+  },
+  "confirmatory": {
+    "sample": "confirmatory",
+    "experiments_evaluated": 22741,
+    "p_threshold": 0.001,
+    "global_imbalance_fraction": 0.1552262433490172,
+    "by_month": [
+      {
+        "month": "2013-05",
+        "experiments": 80,
+        "imbalance_fraction": 0.05
+      },
+      {
+        "month": "2013-06",
+        "experiments": 695,
+        "imbalance_fraction": 0.2173
+      },
+      {
+        "month": "2013-07",
+        "experiments": 809,
+        "imbalance_fraction": 0.6106
+      },
+      {
+        "month": "2013-08",
+        "experiments": 837,
+        "imbalance_fraction": 0.5532
+      },
+      {
+        "month": "2013-09",
+        "experiments": 833,
+        "imbalance_fraction": 0.6531
+      },
+      {
+        "month": "2013-10",
+        "experiments": 692,
+        "imbalance_fraction": 0.776
+      },
+      {
+        "month": "2013-11",
+        "experiments": 686,
+        "imbalance_fraction": 0.8819
+      },
+      {
+        "month": "2013-12",
+        "experiments": 683,
+        "imbalance_fraction": 0.8199
+      },
+      {
+        "month": "2014-01",
+        "experiments": 673,
+        "imbalance_fraction": 0.1605
+      },
+      {
+        "month": "2014-02",
+        "experiments": 786,
+        "imbalance_fraction": 0.0013
+      },
+      {
+        "month": "2014-03",
+        "experiments": 765,
+        "imbalance_fraction": 0.0013
+      },
+      {
+        "month": "2014-04",
+        "experiments": 832,
+        "imbalance_fraction": 0.0036
+      },
+      {
+        "month": "2014-05",
+        "experiments": 806,
+        "imbalance_fraction": 0.0012
+      },
+      {
+        "month": "2014-06",
+        "experiments": 1049,
+        "imbalance_fraction": 0.0038
+      },
+      {
+        "month": "2014-07",
+        "experiments": 1138,
+        "imbalance_fraction": 0.0026
+      },
+      {
+        "month": "2014-08",
+        "experiments": 1360,
+        "imbalance_fraction": 0.0037
+      },
+      {
+        "month": "2014-09",
+        "experiments": 1663,
+        "imbalance_fraction": 0.0006
+      },
+      {
+        "month": "2014-10",
+        "experiments": 1756,
+        "imbalance_fraction": 0.0023
+      },
+      {
+        "month": "2014-11",
+        "experiments": 1268,
+        "imbalance_fraction": 0.0032
+      },
+      {
+        "month": "2014-12",
+        "experiments": 1175,
+        "imbalance_fraction": 0.0009
+      },
+      {
+        "month": "2015-01",
+        "experiments": 873,
+        "imbalance_fraction": 0.0023
+      },
+      {
+        "month": "2015-02",
+        "experiments": 798,
+        "imbalance_fraction": 0.0025
+      },
+      {
+        "month": "2015-03",
+        "experiments": 731,
+        "imbalance_fraction": 0.0
+      },
+      {
+        "month": "2015-04",
+        "experiments": 689,
+        "imbalance_fraction": 0.0029
+      }
+    ]
+  }
+}

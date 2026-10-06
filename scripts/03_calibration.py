@@ -1,9 +1,9 @@
-"""Paso 1: el veredicto sobre el modelo de ruido.
+"""Step 1: the verdict on the noise model.
 
-Contrasta v = p(1-p)/n contra la dispersión observada en los experiments A/A,
-donde la diferencia verdadera entre arms es cero por construcción.
+Tests v = p(1-p)/n against the dispersion observed in the A/A experiments, where
+the true difference between arms is zero by construction.
 
-Salida: reports/results/03_calibracion.json
+Output: reports/results/03_calibration.json
 """
 
 import argparse
@@ -15,7 +15,7 @@ from wcab import panel
 from wcab.diagnostics import noise
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "reports" / "results" / "03_calibracion.json"
+OUTPUT = ROOT / "reports" / "results" / "03_calibration.json"
 
 
 def main() -> None:
@@ -32,27 +32,27 @@ def main() -> None:
 
     if not cal.passed:
         print(
-            "\nEl modelo de ruido NO describe estos data. Dos explicaciones, y\n"
-            "no son distinguibles con este archivo:\n"
-            "  1. Las impressions de un brazo no son independientes (agrupamiento).\n"
-            "  2. Esos experiments varían en campos que el archivo no publica.\n"
-            "Las dos se declaran. El paso 2 compara v ingenuo contra v corregido."
+            "\nThe noise model does NOT describe these data. Two explanations, and\n"
+            "they are not distinguishable with this archive:\n"
+            "  1. An arm's impressions are not independent (clustering).\n"
+            "  2. Those experiments vary in fields the archive does not publish.\n"
+            "Both are declared. Step 2 compares naive v against corrected v."
         )
 
     metrics = {
         "sample": args.sample,
         "tolerance": args.tolerance,
         **cal.to_dict(),
-        "explicaciones_no_distinguibles": [
-            "impressions no independientes dentro del brazo (agrupamiento)",
-            "variación en campos no publicados por el archivo",
+        "indistinguishable_explanations": [
+            "impressions not independent within an arm (clustering)",
+            "variation in fields the archive does not publish",
         ],
     }
     previous = json.loads(OUTPUT.read_text(encoding="utf-8")) if OUTPUT.exists() else {}
     previous[args.sample] = metrics
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps(previous, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"\ncifras -> {OUTPUT.relative_to(ROOT)}")
+    print(f"\nfigures -> {OUTPUT.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

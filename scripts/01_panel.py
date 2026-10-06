@@ -1,9 +1,9 @@
-"""Construye el panel canónico y escribe sus metrics de escala.
+"""Build the canonical panel and write out its scale figures.
 
-Salida: data/derived/panel-<sample>.parquet  y  reports/results/01_panel.json
+Output: data/derived/panel-<sample>.parquet and reports/results/01_panel.json
 
-Toda cifra de escala que citen los documentos sale de este JSON. Si una cifra
-de un documento no está aquí, es huérfana (ver .claude/rules/evidencia.md).
+Every scale figure the documents cite comes from this JSON. A figure that appears
+in a document but not here is orphaned.
 """
 
 import argparse
@@ -25,12 +25,12 @@ def main() -> None:
     args = ap.parse_args()
 
     table, res = panel.build(args.sample)
-    destino = panel.save(table, args.sample)
+    target = panel.save(table, args.sample)
 
     metrics = {
         "sample": args.sample,
         "exclusion": {
-            "ventana": "2013-06-01 a 2014-02-01",
+            "window": "2013-06-01 to 2014-02-01",
             "arms_before": res.arms_before,
             "arms_after": res.arms_after,
             "experiments_before": res.experiments_before,
@@ -46,7 +46,7 @@ def main() -> None:
     OUTPUT.write_text(json.dumps(previous, indent=2, ensure_ascii=False), encoding="utf-8")
 
     print(res)
-    print(f"panel -> {destino.relative_to(ROOT)}")
+    print(f"panel -> {target.relative_to(ROOT)}")
     print(f"metrics -> {OUTPUT.relative_to(ROOT)}")
 
 

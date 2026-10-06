@@ -50,11 +50,11 @@ def per_experiment(data: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(filas)
 
 
-def by_month(srm: pd.DataFrame, minimo: int = 30) -> pd.DataFrame:
-    """Fracción de experiments con desbalance severo, por month.
+def by_month(srm: pd.DataFrame, minimum: int = 30) -> pd.DataFrame:
+    """Fraction of experiments with severe imbalance, by month.
 
-    `minimo` descarta los meses con pocos experiments, donde la fracción es
-    demasiado ruidosa para leerse.
+    `minimum` discards months with few experiments, where the fraction is
+    too noisy to read.
     """
     s = srm.dropna(subset=["date"]).copy()
     s["month"] = pd.to_datetime(s["date"]).dt.to_period("M").astype(str)
@@ -62,11 +62,11 @@ def by_month(srm: pd.DataFrame, minimo: int = 30) -> pd.DataFrame:
         experiments=("desbalance", "size"),
         imbalance_fraction=("desbalance", "mean"),
     )
-    return t.loc[t["experiments"] >= minimo].reset_index()
+    return t.loc[t["experiments"] >= minimum].reset_index()
 
 
 def summary(srm: pd.DataFrame) -> dict:
-    """Las metrics que el documento cita, en una sola fuente."""
+    """The figures the document cites, from a single source."""
     return {
         "experiments_evaluated": int(len(srm)),
         "p_threshold": THRESHOLD,

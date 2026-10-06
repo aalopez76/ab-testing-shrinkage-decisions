@@ -1,0 +1,260 @@
+{
+  "exploratory": {
+    "sample": "exploratory",
+    "partitions": 6,
+    "tau2_method": "paule-mandel",
+    "results": {
+      "naive": {
+        "variance_factor": 1.0,
+        "rules": {
+          "random": {
+            "value": {
+              "mean": 0.013285560607792471,
+              "sd_across_partitions": 5.619107241716659e-05
+            },
+            "regret": {
+              "mean": 0.004586574749757748,
+              "sd_across_partitions": 5.773766107038289e-05
+            },
+            "inflation": {
+              "mean": 1.479284534460561e-05,
+              "sd_across_partitions": 6.088553632184135e-05
+            },
+            "experiments": 3379
+          },
+          "raw": {
+            "value": {
+              "mean": 0.015519611204091502,
+              "sd_across_partitions": 4.7872806020283854e-05
+            },
+            "regret": {
+              "mean": 0.0023525241534587183,
+              "sd_across_partitions": 4.269351469397247e-05
+            },
+            "inflation": {
+              "mean": 0.002355931918512386,
+              "sd_across_partitions": 7.991093305023136e-05
+            },
+            "experiments": 3379
+          },
+          "shrunk_global": {
+            "value": {
+              "mean": 0.0155237681609015,
+              "sd_across_partitions": 4.2898256316417474e-05
+            },
+            "regret": {
+              "mean": 0.002348367196648719,
+              "sd_across_partitions": 3.880467354881567e-05
+            },
+            "inflation": {
+              "mean": 0.002351210375854998,
+              "sd_across_partitions": 7.450405406371236e-05
+            },
+            "experiments": 3379
+          }
+        },
+        "shrinkage": {
+          "tau2": 7.1872568195011385e-06,
+          "tau": 0.0026808062974920527,
+          "alpha_mean": 0.47369639887111786,
+          "alpha_median": 0.4787136337274842
+        },
+        "where_it_fails": {
+          "fraction_worse": 0.0007398638650488311,
+          "fraction_better": 0.0012824306994179736,
+          "fraction_equal": 0.9979777054355332
+        }
+      },
+      "corrected": {
+        "variance_factor": 1.9399138649270857,
+        "rules": {
+          "random": {
+            "value": {
+              "mean": 0.013285560607792471,
+              "sd_across_partitions": 5.619107241716659e-05
+            },
+            "regret": {
+              "mean": 0.004586574749757748,
+              "sd_across_partitions": 5.773766107038289e-05
+            },
+            "inflation": {
+              "mean": 1.479284534460561e-05,
+              "sd_across_partitions": 6.088553632184135e-05
+            },
+            "experiments": 3379
+          },
+          "raw": {
+            "value": {
+              "mean": 0.015519611204091502,
+              "sd_across_partitions": 4.7872806020283854e-05
+            },
+            "regret": {
+              "mean": 0.0023525241534587183,
+              "sd_across_partitions": 4.269351469397247e-05
+            },
+            "inflation": {
+              "mean": 0.002355931918512386,
+              "sd_across_partitions": 7.991093305023136e-05
+            },
+            "experiments": 3379
+          },
+          "shrunk_global": {
+            "value": {
+              "mean": 0.015521740093143223,
+              "sd_across_partitions": 4.252933929796474e-05
+            },
+            "regret": {
+              "mean": 0.0023503952644069966,
+              "sd_across_partitions": 3.935510890752648e-05
+            },
+            "inflation": {
+              "mean": 0.002353043988074677,
+              "sd_across_partitions": 7.470914383667065e-05
+            },
+            "experiments": 3379
+          }
+        },
+        "shrinkage": {
+          "tau2": 7.365764405852941e-07,
+          "tau": 0.0008564256969292313,
+          "alpha_mean": 0.928189828416144,
+          "alpha_median": 0.945628690588023
+        },
+        "where_it_fails": {
+          "fraction_worse": 0.0018743217914570388,
+          "fraction_better": 0.0018743217914570388,
+          "fraction_equal": 0.996251356417086
+        }
+      }
+    }
+  },
+  "confirmatory": {
+    "sample": "confirmatory",
+    "partitions": 20,
+    "tau2_method": "paule-mandel",
+    "results": {
+      "naive": {
+        "variance_factor": 1.0,
+        "rules": {
+          "random": {
+            "value": {
+              "mean": 0.01329188010832121,
+              "sd_across_partitions": 2.0774900586170984e-05
+            },
+            "regret": {
+              "mean": 0.004607442069122126,
+              "sd_across_partitions": 2.414193466949918e-05
+            },
+            "inflation": {
+              "mean": 1.4719068060110545e-05,
+              "sd_across_partitions": 2.327826238382387e-05
+            },
+            "experiments": 15786
+          },
+          "raw": {
+            "value": {
+              "mean": 0.01553686312953342,
+              "sd_across_partitions": 2.2409148361006245e-05
+            },
+            "regret": {
+              "mean": 0.0023624590479099164,
+              "sd_across_partitions": 2.352038744789885e-05
+            },
+            "inflation": {
+              "mean": 0.002374147192260247,
+              "sd_across_partitions": 3.525608132060153e-05
+            },
+            "experiments": 15786
+          },
+          "shrunk_global": {
+            "value": {
+              "mean": 0.015538247985977558,
+              "sd_across_partitions": 2.2426792646736423e-05
+            },
+            "regret": {
+              "mean": 0.002361074191465779,
+              "sd_across_partitions": 2.3970478593577217e-05
+            },
+            "inflation": {
+              "mean": 0.002372637257494724,
+              "sd_across_partitions": 3.505742885343174e-05
+            },
+            "experiments": 15786
+          }
+        },
+        "shrinkage": {
+          "tau2": 7.648593446358532e-06,
+          "tau": 0.0027655890096450583,
+          "alpha_mean": 0.46175344565607046,
+          "alpha_median": 0.46240105068538223
+        },
+        "where_it_fails": {
+          "fraction_worse": 0.0009534008921169275,
+          "fraction_better": 0.0010864401922470617,
+          "fraction_equal": 0.9979601589156359
+        }
+      },
+      "corrected": {
+        "variance_factor": 1.9274360834778093,
+        "rules": {
+          "random": {
+            "value": {
+              "mean": 0.01329188010832121,
+              "sd_across_partitions": 2.0774900586170984e-05
+            },
+            "regret": {
+              "mean": 0.004607442069122126,
+              "sd_across_partitions": 2.414193466949918e-05
+            },
+            "inflation": {
+              "mean": 1.4719068060110545e-05,
+              "sd_across_partitions": 2.327826238382387e-05
+            },
+            "experiments": 15786
+          },
+          "raw": {
+            "value": {
+              "mean": 0.01553686312953342,
+              "sd_across_partitions": 2.2409148361006245e-05
+            },
+            "regret": {
+              "mean": 0.0023624590479099164,
+              "sd_across_partitions": 2.352038744789885e-05
+            },
+            "inflation": {
+              "mean": 0.002374147192260247,
+              "sd_across_partitions": 3.525608132060153e-05
+            },
+            "experiments": 15786
+          },
+          "shrunk_global": {
+            "value": {
+              "mean": 0.015539180765912836,
+              "sd_across_partitions": 2.1947160304566013e-05
+            },
+            "regret": {
+              "mean": 0.0023601414115305,
+              "sd_across_partitions": 2.3410714876495668e-05
+            },
+            "inflation": {
+              "mean": 0.0023714909106928366,
+              "sd_across_partitions": 3.4649487292938923e-05
+            },
+            "experiments": 15786
+          }
+        },
+        "shrinkage": {
+          "tau2": 1.1390380907343605e-06,
+          "tau": 0.0010670932630841444,
+          "alpha_mean": 0.896823458977155,
+          "alpha_median": 0.9175808801170721
+        },
+        "where_it_fails": {
+          "fraction_worse": 0.001495032691244115,
+          "fraction_better": 0.0017737751274236606,
+          "fraction_equal": 0.9967311921813321
+        }
+      }
+    }
+  }
+}

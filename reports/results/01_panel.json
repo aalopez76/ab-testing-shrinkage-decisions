@@ -2,11 +2,11 @@
   "exploratory": {
     "sample": "exploratory",
     "exclusion": {
-      "ventana": "2013-06-01 a 2014-02-01",
-      "brazos_antes": 22666,
-      "brazos_despues": 16629,
-      "experimentos_antes": 4873,
-      "experimentos_despues": 3380,
+      "window": "2013-06-01 to 2014-02-01",
+      "arms_before": 22666,
+      "arms_after": 16629,
+      "experiments_before": 4873,
+      "experiments_after": 3380,
       "retained_fraction": 0.6936
     },
     "panel": {
@@ -14,25 +14,25 @@
       "experiments": 3380,
       "impressions": 58769384,
       "clicks": 749878,
-      "tasa_global": 0.0127596709198109,
-      "brazos_por_experimento_min": 2,
-      "brazos_por_experimento_max": 14,
-      "brazos_por_experimento_media": 4.9198224852071,
-      "impresiones_por_brazo_mediana": 3136.0,
-      "semanas": 68,
-      "experimentos_aa": 295,
-      "experimentos_solo_titular": 1589,
-      "error_estandar_brazo_tipico": 0.002047840242791259
+      "global_rate": 0.0127596709198109,
+      "arms_per_experiment_min": 2,
+      "arms_per_experiment_max": 14,
+      "arms_per_experiment_mean": 4.9198224852071,
+      "median_impressions_per_arm": 3136.0,
+      "weeks": 68,
+      "aa_experiments": 295,
+      "headline_only_experiments": 1589,
+      "typical_arm_standard_error": 0.002047840242791259
     }
   },
   "confirmatory": {
     "sample": "confirmatory",
     "exclusion": {
-      "ventana": "2013-06-01 a 2014-02-01",
-      "brazos_antes": 105551,
-      "brazos_despues": 77446,
-      "experimentos_antes": 22743,
-      "experimentos_despues": 15787,
+      "window": "2013-06-01 to 2014-02-01",
+      "arms_before": 105551,
+      "arms_after": 77446,
+      "experiments_before": 22743,
+      "experiments_after": 15787,
       "retained_fraction": 0.6941
     },
     "panel": {
@@ -40,15 +40,15 @@
       "experiments": 15787,
       "impressions": 273495317,
       "clicks": 3492259,
-      "tasa_global": 0.0127689901176626,
-      "brazos_por_experimento_min": 2,
-      "brazos_por_experimento_max": 20,
-      "brazos_por_experimento_media": 4.905681890162792,
-      "impresiones_por_brazo_mediana": 3129.0,
-      "semanas": 68,
-      "experimentos_aa": 1279,
-      "experimentos_solo_titular": 7678,
-      "error_estandar_brazo_tipico": 0.0020706758678036737
+      "global_rate": 0.0127689901176626,
+      "arms_per_experiment_min": 2,
+      "arms_per_experiment_max": 20,
+      "arms_per_experiment_mean": 4.905681890162792,
+      "median_impressions_per_arm": 3129.0,
+      "weeks": 68,
+      "aa_experiments": 1279,
+      "headline_only_experiments": 7678,
+      "typical_arm_standard_error": 0.0020706758678036737
     }
   }
 }

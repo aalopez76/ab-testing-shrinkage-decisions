@@ -146,8 +146,8 @@ def fig_cuatro_decisiones(p, partitions: int = 8) -> None:
     """La figura central: cuatro decisiones, cuatro respuestas, cada una en sus
     propias unidades. No se normalizan a un eje común a propósito — serían
     cantidades distintas disfrazadas de comparables."""
-    r = leer("07_resultado.json")["confirmatory"]
-    u = leer("09_decision_de_lanzar.json")["thresholds"]
+    r = leer("07_result.json")["confirmatory"]
+    u = leer("09_ship_decision.json")["thresholds"]
     g = r["gain"]
 
     # decisión 1: la rate que de hecho entrega la variante desplegada, con y sin
@@ -206,7 +206,7 @@ def fig_cuatro_decisiones(p, partitions: int = 8) -> None:
 # --------------------------------------------------------------------------
 def fig_umbral() -> None:
     """Donde shrink sí gana: la decisión de lanzar contra un umbral."""
-    d = leer("09_decision_de_lanzar.json")["thresholds"]
+    d = leer("09_ship_decision.json")["thresholds"]
     us = sorted(d, key=float)
     x = [float(k) for k in us]
     cru = [d[k]["accuracy_raw"] * 100 for k in us]
@@ -251,16 +251,16 @@ def fig_umbral() -> None:
 # --------------------------------------------------------------------------
 def fig_que_descarta() -> None:
     """El mecanismo del daño en la decisión 2."""
-    d = leer("06_donde_falla.json")
+    d = leer("06_where_it_fails.json")
     d = d.get("confirmatory", d["exploratory"])
     f, pp = d["where_it_fails"], d["precision_predicts_parameter"]
 
     fig, axes = plt.subplots(1, 4, figsize=(11.5, 3.5))
     campos = [
-        ("realised gain", "descartados_delta_realizado",
-         "anadidos_delta_realizado", 100, " pp"),
+        ("realised gain", "discarded_delta_realized",
+         "added_delta_realized", 100, " pp"),
         ("shrinkage weight", "discarded_alpha", "added_alpha", 1, ""),
-        ("impressions", "descartados_impresiones", "anadidos_impresiones", 1, ""),
+        ("impressions", "discarded_impressions", "added_impressions", 1, ""),
     ]
     for ax, (tit, ka, kb, esc, uni) in zip(axes, campos):
         va, vb = f[ka] * esc, f[kb] * esc
@@ -274,7 +274,7 @@ def fig_que_descarta() -> None:
 
     ax = axes[3]
     etq = ["unadj.", "within\nweek", "within\ntype"]
-    val = [pp["correlation_raw"], pp["correlacion_dentro_de_semana"],
+    val = [pp["correlation_raw"], pp["correlation_within_week"],
            pp["correlation_within_type"]]
     ax.bar(range(3), val, color=PERJUDICA, width=0.55)
     ax.axhline(0, lw=1, color="#333")

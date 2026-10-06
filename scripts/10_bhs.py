@@ -1,9 +1,9 @@
-"""Fase J: BHS, la variante de Meta de 2025, contra la version estandar.
+"""Phase J: BHS, Meta's 2025 variant, against the standard version.
 
-Ajusta el modelo jerarquico de `wcab.shrinkage.bhs` sobre la ventaja entre
-experiments y compara las tres rules en estimation y en decision.
+Fits the hierarchical model of `wcab.shrinkage.bhs` to the between-experiment
+advantage and compares the three rules on estimation and on decision.
 
-El parametro `a` es el diagnostico central: con `a` grande BHS reproduce la
+The parameter `a` is the central diagnostic: with a large `a`, BHS reproduces
 contraccion estandar, asi que ajustarlo es preguntarle a los data cuanta
 flexibilidad local necesitan.
 

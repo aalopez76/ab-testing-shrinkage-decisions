@@ -1,15 +1,15 @@
-"""Fase E: la decisión entre experiments, donde la precisión sí es heterogénea.
+"""Phase E: the decision between experiments, where precision is heterogeneous.
 
-Compara cuatro rules para priorizar qué experiments desplegar, con
-budget limitado. Las rules eligen con la mitad de estimación y se miden
-en la de evaluación.
+Compares four rules for prioritising which experiments to deploy under a limited
+budget. The rules select on the estimation half and are scored on the evaluation
+half.
 
-    random_rule       la referencia que hay que batir
-    raw      ordenar por la gain estimada — la práctica que se pone a prueba
-    contraída  la mean contraída entre experiments
-    cola       probabilidad posterior de gain positiva
+    random  the benchmark that must be beaten
+    raw     rank by estimated gain - the practice being put to the test
+    shrunk  the shrunken mean between experiments
+    tail    posterior probability of a positive gain
 
-Salida: reports/results/05_cartera.json
+Output: reports/results/05_portfolio.json
 """
 
 import argparse
@@ -23,14 +23,14 @@ from wcab import console, panel, portfolio, shrinkage, thinning
 from wcab.diagnostics import noise
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "reports" / "results" / "05_cartera.json"
+OUTPUT = ROOT / "reports" / "results" / "05_portfolio.json"
 BUDGETS = (0.05, 0.10, 0.25, 0.50, 1.00)
 
 
 def one_partition(p: pd.DataFrame, seed: int, variance_factor: float):
-    # Tres tercios: elegir, estimate, evaluate. Hace falta porque el máximo de un
-    # experimento es un estadístico SELECCIONADO y la contracción no se le puede
-    # apply directamente (con dos mitades, τ² se estimaba en cero).
+    # Three thirds: select, estimate, evaluate. Necessary because an experiment's
+    # maximum is a SELECTED statistic to which shrinkage cannot be applied
+    # directly (with two halves, tau squared was estimated as zero).
     el, es, ev = thinning.split_three_way(p, seed=seed)
     m = shrinkage.usable_mask(es)
     el = el.loc[m].reset_index(drop=True)
@@ -46,17 +46,17 @@ def one_partition(p: pd.DataFrame, seed: int, variance_factor: float):
         "random": rng.random(len(c)),
         "raw": portfolio.raw_priority(c),
         "shrunk": mean,
-        "cola": portfolio.tail_priority(c),
+        "tail": portfolio.tail_priority(c),
     }
     values = {k: portfolio.value_by_budget(c, v, BUDGETS)
                for k, v in rules.items()}
     values["oracle"] = portfolio.oracle(c, BUDGETS)
 
-    # ¿reordena de verdad? fracción de pares cuyo orden cambia frente a la raw
-    orden_crudo = np.argsort(-rules["raw"], kind="stable")
+    # does it genuinely reorder? fraction of positions that change versus raw
+    raw_order = np.argsort(-rules["raw"], kind="stable")
     changes = {
-        k: float(np.mean(np.argsort(-rules[k], kind="stable") != orden_crudo))
-        for k in ("shrunk", "cola")
+        k: float(np.mean(np.argsort(-rules[k], kind="stable") != raw_order))
+        for k in ("shrunk", "tail")
     }
     return values, tau2, changes, len(c)
 
@@ -71,46 +71,46 @@ def main() -> None:
 
     p = panel.load(args.sample)
     factor = noise.calibrate(p).design_factor
-    print(f"factor de diseño del paso 1: {factor:.3f}\n")
+    print(f"design factor from step 1: {factor:.3f}\n")
 
     acc: dict[str, dict[float, list[float]]] = {}
-    taus, cambios_acum, sizes = [], [], []
+    taus, change_acc, sizes = [], [], []
     for s in range(args.partitions):
         values, tau2, changes, n = one_partition(p, s, factor)
-        taus.append(tau2); cambios_acum.append(changes); sizes.append(n)
-        for rule, porb in values.items():
-            for b, v in porb.items():
+        taus.append(tau2); change_acc.append(changes); sizes.append(n)
+        for rule, by_budget in values.items():
+            for b, v in by_budget.items():
                 acc.setdefault(rule, {}).setdefault(b, []).append(v)
 
-    print(f"experiments en la cartera: {int(np.mean(sizes)):,}")
-    print(f"tau2 entre experiments = {np.mean(taus):.3e} "
+    print(f"experiments in the portfolio: {int(np.mean(sizes)):,}")
+    print(f"tau2 between experiments = {np.mean(taus):.3e} "
           f"(raíz {np.sqrt(np.mean(taus)):.5f})\n")
 
-    c = pd.DataFrame(cambios_acum)
-    print("¿reordena frente a la rule raw?")
+    c = pd.DataFrame(change_acc)
+    print("does it reorder against the raw rule?")
     for k in c.columns:
-        print(f"  {k:12} cambia la posición de {c[k].mean():.1%} de los experiments")
+        print(f"  {k:12} changes the position of {c[k].mean():.1%} of experiments")
 
     print("\nganancia realizada mean, por budget "
           "(puntos porcentuales de rate de clic)")
     cab = "  ".join(f"{int(b*100):>6}%" for b in BUDGETS)
     print(f"{'rule':12} {cab}")
     table = {}
-    for rule in ("random", "raw", "shrunk", "cola", "oracle"):
-        fila = [np.mean(acc[rule][b]) for b in BUDGETS]
+    for rule in ("random", "raw", "shrunk", "tail", "oracle"):
+        row = [np.mean(acc[rule][b]) for b in BUDGETS]
         table[rule] = {str(b): {"mean": float(np.mean(acc[rule][b])),
                                  "sd_across_partitions": float(np.std(acc[rule][b], ddof=1))}
                         for b in BUDGETS}
-        print(f"{rule:12} " + "  ".join(f"{v*100:6.3f}" for v in fila))
+        print(f"{rule:12} " + "  ".join(f"{v*100:6.3f}" for v in row))
 
-    print("\ndiferencia contra la rule raw (puntos porcentuales)")
+    print("\ndifference against the raw rule (percentage points)")
     print(f"{'rule':12} {cab}")
-    for rule in ("shrunk", "cola"):
+    for rule in ("shrunk", "tail"):
         dif = [np.mean(acc[rule][b]) - np.mean(acc["raw"][b]) for b in BUDGETS]
-        gana = [np.mean(np.array(acc[rule][b]) > np.array(acc["raw"][b]))
+        wins = [np.mean(np.array(acc[rule][b]) > np.array(acc["raw"][b]))
                 for b in BUDGETS]
         print(f"{rule:12} " + "  ".join(f"{d*100:+6.3f}" for d in dif))
-        print(f"{'  gana en':12} " + "  ".join(f"{g:5.0%} " for g in gana))
+        print(f"{'  wins in':12} " + "  ".join(f"{g:5.0%} " for g in wins))
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     previous = json.loads(OUTPUT.read_text(encoding="utf-8")) if OUTPUT.exists() else {}
@@ -118,12 +118,12 @@ def main() -> None:
         "partitions": args.partitions,
         "variance_factor": factor,
         "experiments": int(np.mean(sizes)),
-        "tau2_entre_experimentos": float(np.mean(taus)),
+        "tau2_between_experiments": float(np.mean(taus)),
         "reordering": {k: float(c[k].mean()) for k in c.columns},
         "value_by_budget": table,
     }
     OUTPUT.write_text(json.dumps(previous, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"\ncifras -> {OUTPUT.relative_to(ROOT)}")
+    print(f"\nfigures -> {OUTPUT.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

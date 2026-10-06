@@ -1,21 +1,22 @@
-"""Fase H: ¿la conclusión depende del régimen que la literatura filtra?
+"""Phase H: does the conclusion depend on the regime the literature filters out?
 
-Coey y Hung (*Empirical Bayes Selection for Value Maximization*, arXiv
-2210.03905) hacen esta misma pregunta sobre este mismo archivo. Su montaje,
-descrito en su apéndice B, impone dos condiciones:
+Coey and Hung (*Empirical Bayes Selection for Value Maximization*, arXiv
+2210.03905) ask this same question of this same archive. Their setup, described
+in their Appendix B, imposes two conditions:
 
-  1. descartan los arms con menos de 1 000 impressions o 100 clicks, «para
-     asegurar que las aproximaciones de normalidad sean razonables»;
-  2. reducen cada experimento a una pareja arbitraria —el brazo con más
-     impressions contra el de segundas más— omitiendo los demás.
+  1. they discard arms with fewer than 1,000 impressions or 100 clicks, "to
+     ensure normality approximations are reasonable";
+  2. they reduce each experiment to an arbitrary pair - the arm with the most
+     impressions against the second-most - omitting the rest.
 
-La segunda condición quita la selección por resultado, así que su montaje no
-contiene la maldición del ganador. La primera conserva el 6.9% de los arms.
+The second condition removes selection on outcome, so their setup does not
+contain the winner's curse. The first retains 6.9% of the arms.
 
-Este script mide lo mismo dentro y fuera de su filtro, con intervalo de
-confianza, para saber si su conclusión es general o propia de su régimen.
+This script measures the same quantity inside and outside their filter, with a
+confidence interval, to establish whether their conclusion is general or specific
+to their regime.
 
-Salida: reports/results/08_regimen.json
+Output: reports/results/08_regime.json
 """
 
 import argparse
@@ -28,9 +29,9 @@ import pandas as pd
 from wcab import console, panel, portfolio, shrinkage, thinning
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "reports" / "results" / "08_regimen.json"
+OUTPUT = ROOT / "reports" / "results" / "08_regime.json"
 
-# el filtro textual de su apéndice B
+# the filter exactly as stated in their Appendix B
 MIN_IMPRESSIONS, MIN_CLICKS = 1000, 100
 
 
@@ -65,7 +66,7 @@ def measure(p: pd.DataFrame, partitions: int, budget: float) -> dict:
         "median_n_times_p": float(np.median(p.impressions * rate)),
         "mean_difference": float(d.mean()),
         "ci95": [float(lo), float(hi)],
-        "contraer_gana_en": float(np.mean(d > 0)),
+        "shrunk_wins_in": float(np.mean(d > 0)),
         "differs_from_zero": bool(lo * hi > 0),
         "mse_relative_change": float(np.mean(mse_s) / np.mean(mse_c) - 1),
     }
@@ -81,36 +82,36 @@ def main() -> None:
     args = ap.parse_args()
 
     p = panel.load(args.sample)
-    pasa = (p.impressions >= MIN_IMPRESSIONS) & (p.clicks >= MIN_CLICKS)
-    print(f"el filtro de Coey y Hung (>={MIN_IMPRESSIONS} impressions y "
-          f">={MIN_CLICKS} clicks) conserva el {pasa.mean():.1%} de {len(p):,} arms\n")
+    passes = (p.impressions >= MIN_IMPRESSIONS) & (p.clicks >= MIN_CLICKS)
+    print(f"the Coey and Hung filter (>={MIN_IMPRESSIONS} impressions and "
+          f">={MIN_CLICKS} clicks) retains {passes.mean():.1%} of {len(p):,} arms\n")
 
-    casos = {
-        "filtered_regime": at_least_two_arms(p[pasa].reset_index(drop=True)),
+    cases = {
+        "filtered_regime": at_least_two_arms(p[passes].reset_index(drop=True)),
         "full_archive": p,
     }
     metrics = {}
-    for nombre, data in casos.items():
+    for name, data in cases.items():
         r = measure(data, args.partitions, args.budget)
-        metrics[nombre] = r
-        print(f"{nombre}  ({r['experiments']:,} experiments | "
-              f"n·p mediana {r['median_n_times_p']:.0f})")
-        print(f"  error cuadrático medio      {r['mse_relative_change']*100:+.1f}%")
-        print(f"  gain, contraída − raw {r['mean_difference']*100:+.4f} pp"
-              f"  IC95 [{r['ci95'][0]*100:+.4f}, {r['ci95'][1]*100:+.4f}]")
-        print(f"  shrink gana en            {r['contraer_gana_en']:.0%} de las partitions")
-        print(f"  ¿se distingue de cero?      "
-              f"{'SÍ' if r['differs_from_zero'] else 'NO'}\n")
+        metrics[name] = r
+        print(f"{name}  ({r['experiments']:,} experiments | "
+              f"median n*p {r['median_n_times_p']:.0f})")
+        print(f"  mean squared error          {r['mse_relative_change']*100:+.1f}%")
+        print(f"  gain, shrunk minus raw      {r['mean_difference']*100:+.4f} pp"
+              f"  95% CI [{r['ci95'][0]*100:+.4f}, {r['ci95'][1]*100:+.4f}]")
+        print(f"  shrinkage wins in           {r['shrunk_wins_in']:.0%} of partitions")
+        print(f"  does it differ from zero?   "
+              f"{'YES' if r['differs_from_zero'] else 'NO'}\n")
 
     a, b = metrics["filtered_regime"], metrics["full_archive"]
-    print("LECTURA")
+    print("READING")
     if not a["differs_from_zero"] and b["differs_from_zero"] and b["mean_difference"] < 0:
-        print("  En el régimen que ellos conservan, shrink es NEUTRO para la decisión,")
-        print("  consistente con su teorema. Fuera de él —el 93% del archivo— degrada la")
-        print("  selección de forma medible. Su conclusión vale donde la probaron.")
+        print("  In the regime they retain, shrinkage is NEUTRAL for the decision,")
+        print("  consistent with their theorem. Outside it - 93% of the archive - it")
+        print("  degrades selection measurably. Their conclusion holds where tested.")
 
-    metrics["filtro"] = {"min_impressions": MIN_IMPRESSIONS, "min_clicks": MIN_CLICKS,
-                        "fraccion_de_brazos_que_pasa": float(pasa.mean())}
+    metrics["filter"] = {"min_impressions": MIN_IMPRESSIONS, "min_clicks": MIN_CLICKS,
+                         "fraction_of_arms_retained": float(passes.mean())}
     metrics["partitions"] = args.partitions
     metrics["budget"] = args.budget
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)

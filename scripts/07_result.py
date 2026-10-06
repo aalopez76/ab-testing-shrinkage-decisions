@@ -1,13 +1,13 @@
-"""El resultado del proyecto, con el método congelado.
+"""The project's result, with the method frozen.
 
-Produce la table que el análisis escrito cita. Corre la especificación de
-`reports/results/METODO_CONGELADO.json` sin desviarse: 30 partitions en tres
-tercios, variance_factor = 1.0 para δ entre experiments, y las dos métricas que
-importan — el error de ESTIMACIÓN y el value de la DECISIÓN.
+Produces the table the written analysis cites. It runs the specification in
+`reports/results/FROZEN_METHOD.json` without deviation: 30 three-way splits, a
+variance factor of 1.0 for the between-experiment delta, and the two metrics that
+matter - ESTIMATION error and DECISION value.
 
-Sobre la sample confirmatoria se corre **una sola vez**.
+On the confirmatory sample it is run **once**.
 
-Salida: reports/results/07_resultado.json
+Output: reports/results/07_result.json
 """
 
 import argparse
@@ -20,7 +20,7 @@ from scipy import stats
 from wcab import console, decision, panel, portfolio, shrinkage, thinning
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "reports" / "results" / "07_resultado.json"
+OUTPUT = ROOT / "reports" / "results" / "07_result.json"
 BUDGETS = (0.05, 0.10, 0.25, 0.50)
 
 
@@ -34,18 +34,18 @@ def main() -> None:
 
     p = panel.load(args.sample)
     acc = {k: {b: [] for b in BUDGETS}
-            for k in ("random", "raw", "shrunk", "cola", "oracle")}
+            for k in ("random", "raw", "shrunk", "tail", "oracle")}
     infl, mse_c, mse_s, rho_c, rho_s, alphas, taus = [], [], [], [], [], [], []
 
     for s in range(args.partitions):
-        # --- nivel DENTRO del experimento: la inflación del ganador ---
-        dos = thinning.split(p, fraction=0.5, seed=s)
-        m2 = shrinkage.usable_mask(dos.estimation)
-        e2 = shrinkage.prepare(dos.estimation, m2)
-        v2 = dos.evaluation.loc[m2].reset_index(drop=True)
+        # --- WITHIN-experiment level: the winner's inflation ---
+        two = thinning.split(p, fraction=0.5, seed=s)
+        m2 = shrinkage.usable_mask(two.estimation)
+        e2 = shrinkage.prepare(two.estimation, m2)
+        v2 = two.evaluation.loc[m2].reset_index(drop=True)
         infl.append(decision.evaluate(e2, v2, rule="raw").inflation)
 
-        # --- nivel ENTRE experiments: estimación contra decisión ---
+        # --- BETWEEN-experiments level: estimation against decision ---
         el, es, ev = thinning.split_three_way(p, seed=s)
         m = shrinkage.usable_mask(es)
         el = el.loc[m].reset_index(drop=True)
@@ -64,27 +64,27 @@ def main() -> None:
 
         rng = np.random.default_rng(s)
         rules = {"random": rng.random(len(t)), "raw": d_a, "shrunk": mean,
-                  "cola": portfolio.tail_priority(c), "oracle": d_b}
+                  "tail": portfolio.tail_priority(c), "oracle": d_b}
         for k, pr in rules.items():
             for b, val in portfolio.value_by_budget(c, pr, BUDGETS).items():
                 acc[k][b].append(val)
 
     md = lambda x: float(np.mean(x))
-    print(f"MUESTRA: {args.sample}  ({args.partitions} partitions)\n")
-    print("EL ESTIMANDO — inflación del ganador dentro del experimento")
+    print(f"SAMPLE: {args.sample}  ({args.partitions} partitions)\n")
+    print("THE ESTIMAND - the winner's inflation within an experiment")
     print(f"  {md(infl)*100:.3f} puntos porcentuales\n")
-    print("LA PRUEBA DECISIVA — estimación contra decisión, entre experiments")
-    print(f"  error cuadrático medio    raw {md(mse_c):.4e} -> contraída "
+    print("THE DECISIVE TEST - estimation against decision, between experiments")
+    print(f"  mean squared error      raw {md(mse_c):.4e} -> shrunk "
           f"{md(mse_s):.4e}   {100*(md(mse_s)/md(mse_c)-1):+.1f}%")
-    print(f"  correlación de orden      raw {md(rho_c):+.4f}    -> contraída "
+    print(f"  rank correlation        raw {md(rho_c):+.4f}    -> shrunk "
           f"{md(rho_s):+.4f}      {md(rho_s)-md(rho_c):+.4f}")
     print(f"  alpha medio {md(alphas):.3f} | tau2 {md(taus):.3e}\n")
     cab = "  ".join(f"{int(b*100):>7}%" for b in BUDGETS)
     print(f"GANANCIA REALIZADA por budget (puntos porcentuales)\n{'rule':12}{cab}")
-    for k in ("random", "raw", "shrunk", "cola", "oracle"):
+    for k in ("random", "raw", "shrunk", "tail", "oracle"):
         print(f"{k:12}" + "  ".join(f"{md(acc[k][b])*100:7.3f}" for b in BUDGETS))
     print(f"\n{'vs raw':12}{cab}")
-    for k in ("shrunk", "cola"):
+    for k in ("shrunk", "tail"):
         print(f"{k:12}" + "  ".join(
             f"{(md(acc[k][b])-md(acc['raw'][b]))*100:+7.3f}" for b in BUDGETS))
         print(f"{'  gana en':12}" + "  ".join(
@@ -93,7 +93,7 @@ def main() -> None:
 
     metrics = {
         "sample": args.sample, "partitions": args.partitions,
-        "inflacion_del_ganador": md(infl),
+        "winner_inflation": md(infl),
         "estimation": {"mse_raw": md(mse_c), "mse_shrunk": md(mse_s),
                        "relative_change": md(mse_s) / md(mse_c) - 1,
                        "rho_raw": md(rho_c), "rho_shrunk": md(rho_s)},
@@ -101,7 +101,7 @@ def main() -> None:
         "gain": {k: {str(b): md(acc[k][b]) for b in BUDGETS} for k in acc},
         "beats_raw_in": {
             k: {str(b): float(np.mean(np.array(acc[k][b]) > np.array(acc["raw"][b])))
-                for b in BUDGETS} for k in ("shrunk", "cola")},
+                for b in BUDGETS} for k in ("shrunk", "tail")},
     }
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     previous = json.loads(OUTPUT.read_text(encoding="utf-8")) if OUTPUT.exists() else {}

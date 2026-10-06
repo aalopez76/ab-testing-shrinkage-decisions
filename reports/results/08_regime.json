@@ -1,0 +1,37 @@
+{
+  "confirmatory": {
+    "filtered_regime": {
+      "experiments": 1277,
+      "arms": 4689,
+      "median_n_times_p": 130.70194449046213,
+      "mean_difference": 0.00014757134532490074,
+      "ci95": [
+        -0.0001529672872522132,
+        0.0004481099779020147
+      ],
+      "shrunk_wins_in": 0.55,
+      "differs_from_zero": false,
+      "mse_relative_change": -0.32827968171326805
+    },
+    "full_archive": {
+      "experiments": 15787,
+      "arms": 77446,
+      "median_n_times_p": 39.95417007816627,
+      "mean_difference": -0.0005560958191271328,
+      "ci95": [
+        -0.0006193085990584475,
+        -0.0004928830391958181
+      ],
+      "shrunk_wins_in": 0.0,
+      "differs_from_zero": true,
+      "mse_relative_change": -0.23910007466052452
+    },
+    "filter": {
+      "min_impressions": 1000,
+      "min_clicks": 100,
+      "fraction_of_arms_retained": 0.0685897270356119
+    },
+    "partitions": 40,
+    "budget": 0.05
+  }
+}

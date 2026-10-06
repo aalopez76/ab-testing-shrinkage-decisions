@@ -1,0 +1,36 @@
+{
+  "exploratory": {
+    "sample": "exploratory",
+    "tolerance": 0.15,
+    "experiments": 295,
+    "arms": 1445,
+    "degrees_of_freedom": 1150,
+    "total_q": 2230.900945,
+    "q_over_dof": 1.939914,
+    "median_q_over_dof": 1.394101,
+    "fraction_p_005": 0.250847,
+    "design_factor": 1.939914,
+    "passed": false,
+    "indistinguishable_explanations": [
+      "impressions not independent within an arm (clustering)",
+      "variation in fields the archive does not publish"
+    ]
+  },
+  "confirmatory": {
+    "sample": "confirmatory",
+    "tolerance": 0.15,
+    "experiments": 1279,
+    "arms": 6296,
+    "degrees_of_freedom": 5017,
+    "total_q": 9669.946831,
+    "q_over_dof": 1.927436,
+    "median_q_over_dof": 1.475196,
+    "fraction_p_005": 0.258014,
+    "design_factor": 1.927436,
+    "passed": false,
+    "indistinguishable_explanations": [
+      "impressions not independent within an arm (clustering)",
+      "variation in fields the archive does not publish"
+    ]
+  }
+}

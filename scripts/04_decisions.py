@@ -1,15 +1,16 @@
-"""Pasos 4 y 5: la inflación del ganador y si corregirla improvement la decisión.
+"""Steps 4 and 5: the winner's inflation, and whether correcting it helps the decision.
 
-Esta es la primera cifra de punta a punta del proyecto, y la que puede
-terminarlo temprano: si ninguna corrección improvement la decisión, ése es el
-resultado y no hace falta build las configuraciones restantes.
+This is the project's first end-to-end figure, and the one that can end it early:
+if no correction improves the decision, that is the result and the remaining
+configurations need not be built.
 
-Las rules se comparan eligiendo con la mitad de estimación y midiendo en la de
-evaluación, que no participó en elegir. Cada partición se repite con varias
-semillas, y esa variación se reporta **por separado** de la incertidumbre
-muestral: son dos fuentes distintas y promediarlas juntas confundiría.
+Rules are compared by selecting on the estimation half and measuring on the
+evaluation half, which played no part in selecting. Each split is repeated with
+several seeds, and that variation is reported **separately** from sampling
+uncertainty: they are two distinct sources and averaging them together would
+confuse the two.
 
-Salida: reports/results/04_decisiones.json
+Output: reports/results/04_decisions.json
 """
 
 import argparse
@@ -24,21 +25,21 @@ from wcab.diagnostics import noise
 from wcab.shrinkage import dispersion
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "reports" / "results" / "04_decisiones.json"
+OUTPUT = ROOT / "reports" / "results" / "04_decisions.json"
 
 
 def one_partition(p: pd.DataFrame, seed: int, variance_factor: float, tau2_method: str):
-    """Corre todas las rules sobre una partición y devuelve sus results."""
+    """Run every rule over one split and return their results."""
     part = thinning.split(p, fraction=0.5, seed=seed)
 
-    # Una sola máscara para las DOS mitades: si cada una se filtrara por su
-    # cuenta se compareían arms distintos y nada lo delataría.
+    # A single mask for BOTH halves: were each filtered independently, different
+    # arms would be compared and nothing would reveal it.
     m = shrinkage.usable_mask(part.estimation)
     est = shrinkage.prepare(part.estimation, m)
     ev = part.evaluation.loc[m].reset_index(drop=True)
 
-    # tau2 se estima SOLO con la mitad de estimación: la de evaluación no
-    # participa en ninguna decisión, ni siquiera a través de la dispersión.
+    # tau2 is estimated from the estimation half ONLY: the evaluation half takes
+    # part in no decision, not even through the dispersion.
     tau2 = dispersion.estimate(est, method=tau2_method, variance_factor=variance_factor)
     contr = shrinkage.shrink(est, tau2, variance_factor=variance_factor, tau2_method=tau2_method)
 
@@ -56,41 +57,41 @@ def main() -> None:
     ap.add_argument("--sample", default="exploratory",
                     choices=["exploratory", "confirmatory"])
     ap.add_argument("--partitions", type=int, default=20)
-    ap.add_argument("--method-tau2", default="paule-mandel",
+    ap.add_argument("--tau2-method", default="paule-mandel",
                     choices=list(dispersion.METHODS))
-    ap.add_argument("--factor-v", type=float, default=None,
-                    help="factor de diseño; por omisión, el del paso 1")
+    ap.add_argument("--variance-factor", type=float, default=None,
+                    help="design factor; defaults to the one from step 1")
     args = ap.parse_args()
 
     p = panel.load(args.sample)
 
     if args.variance_factor is None:
         cal = noise.calibrate(p)
-        factores = {"ingenuo": 1.0, "corregido": cal.design_factor}
-        print(f"factor de diseño del paso 1: {cal.design_factor:.3f}\n")
+        factors = {"naive": 1.0, "corrected": cal.design_factor}
+        print(f"design factor from step 1: {cal.design_factor:.3f}\n")
     else:
-        factores = {"indicado": args.variance_factor}
+        factors = {"given": args.variance_factor}
 
     output = {"sample": args.sample, "partitions": args.partitions,
               "tau2_method": args.tau2_method, "results": {}}
 
-    for label, factor in factores.items():
+    for label, factor in factors.items():
         acc: dict[str, list[dict]] = {}
-        contracciones = []
-        fallos = []
+        shrinkages = []
+        failures = []
         for s in range(args.partitions):
             rules, contr = one_partition(p, s, factor, args.tau2_method)
-            contracciones.append(contr.summary())
+            shrinkages.append(contr.summary())
             for r in rules:
                 acc.setdefault(r.rule, []).append(r.summary())
-            porreg = {r.rule: r for r in rules}
-            fallos.append(
-                decision.where_it_fails(porreg["shrunk_global"], porreg["raw"],
-                                     "contraído", "raw")
+            by_rule = {r.rule: r for r in rules}
+            failures.append(
+                decision.where_it_fails(by_rule["shrunk_global"], by_rule["raw"],
+                                        "shrunk", "raw")
             )
 
         print(f"=== v {label} (factor {factor:.3f}) ===")
-        print(f"{'rule':20} {'value':>10} {'arrepent.':>11} {'inflación':>11}")
+        print(f"{'rule':20} {'value':>10} {'regret':>11} {'inflation':>11}")
         table = {}
         for rule, lst in acc.items():
             d = pd.DataFrame(lst)
@@ -102,22 +103,22 @@ def main() -> None:
             print(f"{rule:20} {d['value'].mean():10.5f} "
                   f"{d['regret'].mean():11.5f} {d['inflation'].mean():11.5f}")
 
-        f = pd.DataFrame(fallos)
-        print(f"\ncontraído peor que crudo en {f['fraccion_peor'].mean():.1%} de los "
-              f"experiments; mejor en {f['fraccion_mejor'].mean():.1%}; "
-              f"igual en {f['fraccion_igual'].mean():.1%}")
-        c = pd.DataFrame(contracciones)
-        print(f"tau2 medio = {c['tau2'].mean():.3e}  "
-              f"(raíz {np.sqrt(c['tau2'].mean()):.5f})   "
-              f"alpha medio = {c['alpha_mean'].mean():.3f}\n")
+        f = pd.DataFrame(failures)
+        print(f"\nshrunk worse than raw in {f['fraction_worse'].mean():.1%} of "
+              f"experiments; better in {f['fraction_better'].mean():.1%}; "
+              f"equal in {f['fraction_equal'].mean():.1%}")
+        c = pd.DataFrame(shrinkages)
+        print(f"mean tau2 = {c['tau2'].mean():.3e}  "
+              f"(root {np.sqrt(c['tau2'].mean()):.5f})   "
+              f"mean alpha = {c['alpha_mean'].mean():.3f}\n")
 
         output["results"][label] = {
             "variance_factor": factor,
             "rules": table,
-            "contraccion": {k: float(c[k].mean()) for k in
-                            ("tau2", "tau", "alpha_mean", "alpha_median")},
+            "shrinkage": {k: float(c[k].mean()) for k in
+                          ("tau2", "tau", "alpha_mean", "alpha_median")},
             "where_it_fails": {k: float(f[k].mean()) for k in
-                            ("fraccion_peor", "fraccion_mejor", "fraccion_igual")},
+                               ("fraction_worse", "fraction_better", "fraction_equal")},
         }
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
