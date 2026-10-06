@@ -48,6 +48,33 @@ class Portfolio:
         return len(self.table)
 
 
+def _require_alignment(*frames: pd.DataFrame) -> None:
+    """Reject splits that are not aligned row by row.
+
+    Equal length is not enough. Frames holding the same arms in a different
+    order pass a length check and then silently pair one experiment's estimate
+    with another's outcome — a corruption that produces plausible numbers and
+    announces nothing. The identity of each row is what must match.
+    """
+    first, *rest = frames
+    for position, other in enumerate(rest, start=2):
+        if len(other) != len(first):
+            raise ValueError(
+                f"split {position} has {len(other)} rows against {len(first)}"
+            )
+        for column in ("experiment_id", "arm_id"):
+            if column not in first.columns or column not in other.columns:
+                continue
+            a = first[column].to_numpy()
+            b = other[column].to_numpy()
+            if not (a == b).all():
+                bad = int(np.flatnonzero(a != b)[0])
+                raise ValueError(
+                    f"split {position} is misaligned on {column}: row {bad} holds "
+                    f"{b[bad]!r} where split 1 holds {a[bad]!r}"
+                )
+
+
 def build_three_way(
     selection: pd.DataFrame, estimation: pd.DataFrame, evaluation: pd.DataFrame
 ) -> Portfolio:
@@ -60,9 +87,7 @@ def build_three_way(
     rather than the maximum of an experiment, which is a selected statistic to
     which shrinkage cannot be applied directly.
     """
-    n = len(selection)
-    if not (len(estimation) == len(evaluation) == n):
-        raise ValueError("the three splits are not aligned")
+    _require_alignment(selection, estimation, evaluation)
 
     exp = selection["experiment_id"].to_numpy()
     th_e = selection["theta_hat"].to_numpy(dtype=float)
@@ -118,8 +143,7 @@ def build(estimation: pd.DataFrame, evaluation: pd.DataFrame) -> Portfolio:
     declared and used only as a scale for shrinkage, never as a confidence
     interval.
     """
-    if len(estimation) != len(evaluation):
-        raise ValueError("the two splits are not aligned")
+    _require_alignment(estimation, evaluation)
 
     exp = estimation["experiment_id"].to_numpy()
     th_a = estimation["theta_hat"].to_numpy(dtype=float)
@@ -230,3 +254,58 @@ def value_by_budget(
 def oracle(c: Portfolio, budgets: tuple[float, ...]) -> dict[float, float]:
     """The ceiling: ranking by the REALISED gain. Unattainable in practice."""
     return value_by_budget(c, c.table["delta_realized"].to_numpy(), budgets)
+
+
+# ---------------------------------------------------------------------------
+# The ship decision: a policy, scored by what it delivered
+# ---------------------------------------------------------------------------
+
+def threshold_adjusted_value(
+    c: Portfolio, priority: np.ndarray, threshold: float
+) -> dict[str, float]:
+    """Realised value of the policy "ship whenever the estimate clears `threshold`".
+
+        a_i = 1(priority_i > threshold)
+        V   = (1/N) sum_i a_i * (delta_realized_i - threshold)
+
+    **Why this and not accuracy.** Scoring the decision by how often
+    `estimate > u` agrees with `realized > u` is biased: the indicator of a noisy
+    quantity is not an unbiased estimate of the indicator of the truth. The value
+    above is different. Because `a_i` is fixed by the estimation split and
+    `delta_realized` comes from an independent evaluation split, the product has
+    the expectation one wants.
+
+    **The guarantee is model-based.** Under the binomial observation model, and
+    conditional on the estimation rule, the independent evaluation component is
+    an unbiased estimate of the selected arm's effect, so this estimates the
+    corresponding threshold-adjusted policy value without bias. The A/A
+    diagnostic shows overdispersion relative to that model, so the guarantee
+    should be read as model-based rather than assumption-free.
+
+    **Units and weighting, both assumptions.** `threshold` is expressed in the
+    units of `delta_estimated` and `delta_realized` — proportions, not
+    percentage points and not currency. A threshold of 0.004 means "I need at
+    least 0.4 percentage points of click rate for deployment to be worth it",
+    not "0.004 of money". Every experiment carries equal weight, and the
+    threshold is constant across them. Turning this into revenue would require
+    traffic, margin and deployment cost, which this archive does not carry.
+
+    Returns the value together with `ship_rate`, because two policies can reach
+    a similar value by shipping very different numbers of experiments.
+    """
+    priority = np.asarray(priority, dtype=float)
+    realized = c.table["delta_realized"].to_numpy(dtype=float)
+    if priority.shape[0] != realized.shape[0]:
+        raise ValueError(
+            f"priority has {priority.shape[0]} entries against {realized.shape[0]} experiments"
+        )
+
+    ship = priority > threshold
+    n = realized.shape[0]
+    return {
+        "value": float(np.sum(np.where(ship, realized - threshold, 0.0)) / n),
+        "ship_rate": float(ship.mean()),
+        "value_per_shipped": (
+            float(np.mean(realized[ship] - threshold)) if ship.any() else 0.0
+        ),
+    }

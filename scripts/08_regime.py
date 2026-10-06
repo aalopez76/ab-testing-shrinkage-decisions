@@ -26,7 +26,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from wcab import console, panel, portfolio, shrinkage, thinning
+from wcab import console, inference, panel, portfolio, shrinkage, thinning
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "reports" / "results" / "08_regime.json"
@@ -40,10 +40,16 @@ def at_least_two_arms(p: pd.DataFrame) -> pd.DataFrame:
     return p[p.experiment_id.isin(g[g >= 2].index)].reset_index(drop=True)
 
 
-def measure(p: pd.DataFrame, partitions: int, budget: float) -> dict:
-    dif, mse_c, mse_s = [], [], []
-    for s in range(partitions):
-        el, es, ev = thinning.split_three_way(p, seed=s)
+def make_statistic(budget: float):
+    """Gain difference and estimation error, from one portfolio build per replicate.
+
+    Both quantities come back together so the comparison stays paired: the two
+    rules act on the same resampled experiments, and running separate bootstraps
+    would ignore their correlation and inflate the difference's variance.
+    """
+
+    def statistic(sample: pd.DataFrame, seed: int) -> dict[str, float]:
+        el, es, ev = thinning.split_three_way(sample, seed=seed)
         m = shrinkage.usable_mask(es)
         c = portfolio.build_three_way(
             el.loc[m].reset_index(drop=True), shrinkage.prepare(es, m),
@@ -51,24 +57,48 @@ def measure(p: pd.DataFrame, partitions: int, budget: float) -> dict:
         mean, _ = portfolio.shrink_portfolio(c)
         d_a = c.table.delta_estimated.to_numpy()
         d_b = c.table.delta_realized.to_numpy()
-        mse_c.append(float(np.mean((d_a - d_b) ** 2)))
-        mse_s.append(float(np.mean((mean - d_b) ** 2)))
-        cru = portfolio.value_by_budget(c, d_a, [budget])[budget]
-        con = portfolio.value_by_budget(c, mean, [budget])[budget]
-        dif.append(con - cru)
-    d = np.array(dif)
-    ee = d.std(ddof=1) / np.sqrt(len(d))
-    lo, hi = d.mean() - 1.96 * ee, d.mean() + 1.96 * ee
+        raw = portfolio.value_by_budget(c, d_a, [budget])[budget]
+        shrunk = portfolio.value_by_budget(c, mean, [budget])[budget]
+        return {
+            "gain_raw": raw,
+            "gain_shrunk": shrunk,
+            "difference": shrunk - raw,
+            "mse_raw": float(np.mean((d_a - d_b) ** 2)),
+            "mse_shrunk": float(np.mean((mean - d_b) ** 2)),
+        }
+
+    return statistic
+
+
+def measure(p: pd.DataFrame, replicates: int, seeds: int, budget: float) -> dict:
+    """Cluster-bootstrap the regime comparison.
+
+    The earlier version divided the standard deviation across thinning seeds by
+    the square root of their count and called the result a 95% interval. That
+    measured how much the answer moves when the split moves — a quantity that
+    shrinks towards zero as seeds are added — rather than uncertainty about the
+    effect. The resampling unit is now the experiment.
+    """
+    boot = inference.cluster_bootstrap(
+        p, make_statistic(budget),
+        replicates=replicates, seeds_per_replicate=seeds, seed=0,
+    )
+    d = boot["difference"]
+    lo, hi = d.percentile_interval
     rate = float(p.clicks.sum() / p.impressions.sum())
     return {
         "experiments": int(p.experiment_id.nunique()),
         "arms": int(len(p)),
         "median_n_times_p": float(np.median(p.impressions * rate)),
-        "mean_difference": float(d.mean()),
-        "ci95": [float(lo), float(hi)],
-        "shrunk_wins_in": float(np.mean(d > 0)),
+        "difference": d.to_dict(),
+        "mean_difference": d.point_estimate,
+        "percentile_interval": [float(lo), float(hi)],
+        "basic_interval": list(d.basic_interval),
+        "intervals_agree": d.intervals_agree,
         "differs_from_zero": bool(lo * hi > 0),
-        "mse_relative_change": float(np.mean(mse_s) / np.mean(mse_c) - 1),
+        "mse_relative_change": float(
+            boot["mse_shrunk"].point_estimate / boot["mse_raw"].point_estimate - 1
+        ),
     }
 
 
@@ -77,7 +107,10 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--sample", default="confirmatory",
                     choices=["exploratory", "confirmatory"])
-    ap.add_argument("--partitions", type=int, default=40)
+    ap.add_argument("--replicates", type=int, default=300,
+                    help="bootstrap replicates; 2000 for published inference")
+    ap.add_argument("--seeds", type=int, default=3,
+                    help="thinning seeds averaged within each replicate")
     ap.add_argument("--budget", type=float, default=0.05)
     args = ap.parse_args()
 
@@ -92,14 +125,19 @@ def main() -> None:
     }
     metrics = {}
     for name, data in cases.items():
-        r = measure(data, args.partitions, args.budget)
+        r = measure(data, args.replicates, args.seeds, args.budget)
         metrics[name] = r
+        lo, hi = r["percentile_interval"]
         print(f"{name}  ({r['experiments']:,} experiments | "
               f"median n*p {r['median_n_times_p']:.0f})")
         print(f"  mean squared error          {r['mse_relative_change']*100:+.1f}%")
-        print(f"  gain, shrunk minus raw      {r['mean_difference']*100:+.4f} pp"
-              f"  95% CI [{r['ci95'][0]*100:+.4f}, {r['ci95'][1]*100:+.4f}]")
-        print(f"  shrinkage wins in           {r['shrunk_wins_in']:.0%} of partitions")
+        print(f"  gain, shrunk minus raw      {r['mean_difference']*100:+.4f} pp")
+        print(f"  95% cluster-bootstrap       [{lo*100:+.4f}, {hi*100:+.4f}] "
+              "percentile")
+        if not r["intervals_agree"]:
+            b_lo, b_hi = r["basic_interval"]
+            print(f"  basic interval             [{b_lo*100:+.4f}, {b_hi*100:+.4f}] "
+                  "— differs materially: asymmetry or displacement")
         print(f"  does it differ from zero?   "
               f"{'YES' if r['differs_from_zero'] else 'NO'}\n")
 
@@ -112,7 +150,9 @@ def main() -> None:
 
     metrics["filter"] = {"min_impressions": MIN_IMPRESSIONS, "min_clicks": MIN_CLICKS,
                          "fraction_of_arms_retained": float(passes.mean())}
-    metrics["partitions"] = args.partitions
+    metrics["replicates"] = args.replicates
+    metrics["seeds_per_replicate"] = args.seeds
+    metrics["interval_method"] = "cluster bootstrap over experiments, percentile"
     metrics["budget"] = args.budget
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     previous = json.loads(OUTPUT.read_text(encoding="utf-8")) if OUTPUT.exists() else {}

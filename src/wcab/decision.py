@@ -53,6 +53,31 @@ class Result:
         }
 
 
+def _require_alignment(estimation: pd.DataFrame, evaluation: pd.DataFrame) -> None:
+    """Reject halves that are not aligned row by row.
+
+    Equal length is not enough: two halves holding the same arms in a different
+    order would pass a length check and then pair one arm's estimate with
+    another's outcome. That corruption produces plausible numbers and announces
+    nothing, which makes it worse than a crash.
+    """
+    if len(estimation) != len(evaluation):
+        raise ValueError(
+            f"the two halves differ in length: {len(estimation)} and {len(evaluation)}"
+        )
+    for column in ("experiment_id", "arm_id"):
+        if column not in estimation.columns or column not in evaluation.columns:
+            continue
+        a = estimation[column].to_numpy()
+        b = evaluation[column].to_numpy()
+        if not (a == b).all():
+            bad = int(np.flatnonzero(a != b)[0])
+            raise ValueError(
+                f"the halves are misaligned on {column}: row {bad} holds {b[bad]!r} "
+                f"in the evaluation half against {a[bad]!r} in the estimation half"
+            )
+
+
 def _choose(priority: np.ndarray) -> int:
     """Index of the maximum. Ties resolve to the first, which is deterministic."""
     return int(np.argmax(priority))
@@ -75,8 +100,7 @@ def evaluate(
     The two halves must arrive aligned row by row, which is what `thinning.split`
     guarantees.
     """
-    if len(estimation) != len(evaluation):
-        raise ValueError("the two halves are not aligned")
+    _require_alignment(estimation, evaluation)
 
     rng = np.random.default_rng(seed)
     if rule == RANDOM:

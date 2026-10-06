@@ -4,34 +4,80 @@
       "experiments": 1277,
       "arms": 4689,
       "median_n_times_p": 130.70194449046213,
-      "mean_difference": 0.00014757134532490074,
-      "ci95": [
-        -0.0001529672872522132,
-        0.0004481099779020147
+      "difference": {
+        "point_estimate": -0.0004506334313326872,
+        "percentile_interval": [
+          -0.0018428973703763392,
+          0.0008472163915186392
+        ],
+        "basic_interval": [
+          -0.0017484832541840136,
+          0.0009416305077109648
+        ],
+        "bootstrap_se": 0.0008803253788215845,
+        "mc_variability": 0.0,
+        "bootstrap_mean": -0.00022130234765593924,
+        "bias": 0.00022933108367674798,
+        "intervals_agree": true,
+        "replicates": 10,
+        "seeds_per_replicate": 1
+      },
+      "mean_difference": -0.0004506334313326872,
+      "percentile_interval": [
+        -0.0018428973703763392,
+        0.0008472163915186392
       ],
-      "shrunk_wins_in": 0.55,
+      "basic_interval": [
+        -0.0017484832541840136,
+        0.0009416305077109648
+      ],
+      "intervals_agree": true,
       "differs_from_zero": false,
-      "mse_relative_change": -0.32827968171326805
+      "mse_relative_change": -0.33885429171528614
     },
     "full_archive": {
       "experiments": 15787,
       "arms": 77446,
       "median_n_times_p": 39.95417007816627,
-      "mean_difference": -0.0005560958191271328,
-      "ci95": [
-        -0.0006193085990584475,
-        -0.0004928830391958181
+      "difference": {
+        "point_estimate": -0.0005992929773966926,
+        "percentile_interval": [
+          -0.0010426528863978273,
+          -0.0002684999098019374
+        ],
+        "basic_interval": [
+          -0.0009300860449914478,
+          -0.0001559330683955579
+        ],
+        "bootstrap_se": 0.00026246538952032726,
+        "mc_variability": 0.0,
+        "bootstrap_mean": -0.0005915515474322786,
+        "bias": 7.741429964414027e-06,
+        "intervals_agree": false,
+        "replicates": 10,
+        "seeds_per_replicate": 1
+      },
+      "mean_difference": -0.0005992929773966926,
+      "percentile_interval": [
+        -0.0010426528863978273,
+        -0.0002684999098019374
       ],
-      "shrunk_wins_in": 0.0,
+      "basic_interval": [
+        -0.0009300860449914478,
+        -0.0001559330683955579
+      ],
+      "intervals_agree": false,
       "differs_from_zero": true,
-      "mse_relative_change": -0.23910007466052452
+      "mse_relative_change": -0.2427281754820957
     },
     "filter": {
       "min_impressions": 1000,
       "min_clicks": 100,
       "fraction_of_arms_retained": 0.0685897270356119
     },
-    "partitions": 40,
+    "replicates": 10,
+    "seeds_per_replicate": 1,
+    "interval_method": "cluster bootstrap over experiments, percentile",
     "budget": 0.05
   }
 }
