@@ -1,0 +1,54 @@
+name: CI
+
+# Four gates, each covering a failure mode the others cannot see.
+#
+# They exist because a translation of this repository once introduced eight
+# defects while every test stayed green: the suite covers src/, and nothing in
+# src/ reads command-line flags, JSON filenames or the figure generator. The
+# split below reflects what each tool can actually detect.
+#
+# Not covered here, and done by hand before a release: the cold start. Fetching
+# 180k rows from OSF on every push would be rude to the archive and slow, so
+# tests/test_io.py exercises that path against a stub instead.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # Installs from pyproject, not from requirements-lock.txt. The two answer
+      # different questions: this proves the declared ranges are installable,
+      # while the lock file records the exact environment that produced the
+      # published figures.
+      - name: Install
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+
+      # Undefined names, which is the class of defect that broke io.py.
+      # Deliberately narrow: see [tool.ruff.lint] in pyproject.toml.
+      - name: Lint
+        run: ruff check .
+
+      # Mathematical contracts, module interaction, and the JSON-to-figure
+      # contract that tests/test_figures_smoke.py pins down.
+      - name: Tests
+        run: pytest
+
+      # A separate guarantee from the tests: that the numbers the README states
+      # still match the committed artefacts. Reads versioned JSON only, so it
+      # needs no download and no recomputation.
+      - name: Verify reported results
+        run: python scripts/verify_reported_results.py

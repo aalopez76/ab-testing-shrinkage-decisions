@@ -26,28 +26,28 @@ def per_experiment(data: pd.DataFrame) -> pd.DataFrame:
     Expects the columns `experiment_id`, `impressions` and `date`. Returns one row
     per experiment with the statistic, its p-value and whether it is imbalanced.
     """
-    filas = []
+    rows = []
     for eid, blk in data.groupby("experiment_id", sort=False):
         obs = blk["impressions"].to_numpy(dtype=float)
         if len(obs) < 2 or obs.sum() <= 0:
             continue
-        esperado = np.full(len(obs), obs.mean())
-        chi2 = float(((obs - esperado) ** 2 / esperado).sum())
+        expected = np.full(len(obs), obs.mean())
+        chi2 = float(((obs - expected) ** 2 / expected).sum())
         dof = len(obs) - 1
         p = float(stats.chi2.sf(chi2, dof))
-        filas.append(
+        rows.append(
             {
                 "experiment_id": eid,
                 "arms": len(obs),
                 "impressions": float(obs.sum()),
                 "chi2": chi2,
                 "dof": dof,
-                "p": p,
-                "desbalance": p < THRESHOLD,
+                "p_value": p,
+                "imbalanced": p < THRESHOLD,
                 "date": blk["date"].iloc[0],
             }
         )
-    return pd.DataFrame(filas)
+    return pd.DataFrame(rows)
 
 
 def by_month(srm: pd.DataFrame, minimum: int = 30) -> pd.DataFrame:
@@ -59,8 +59,8 @@ def by_month(srm: pd.DataFrame, minimum: int = 30) -> pd.DataFrame:
     s = srm.dropna(subset=["date"]).copy()
     s["month"] = pd.to_datetime(s["date"]).dt.to_period("M").astype(str)
     t = s.groupby("month").agg(
-        experiments=("desbalance", "size"),
-        imbalance_fraction=("desbalance", "mean"),
+        experiments=("imbalanced", "size"),
+        imbalance_fraction=("imbalanced", "mean"),
     )
     return t.loc[t["experiments"] >= minimum].reset_index()
 
@@ -70,5 +70,5 @@ def summary(srm: pd.DataFrame) -> dict:
     return {
         "experiments_evaluated": int(len(srm)),
         "p_threshold": THRESHOLD,
-        "global_imbalance_fraction": float(srm["desbalance"].mean()),
+        "global_imbalance_fraction": float(srm["imbalanced"].mean()),
     }
