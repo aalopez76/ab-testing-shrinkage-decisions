@@ -1,6 +1,6 @@
-"""Las figuras del informe, generadas desde las cifras medidas.
+"""Las figuras del informe, generadas desde las metrics medidas.
 
-Cada figura se construye leyendo `reports/results/*.json` —las mismas cifras que
+Cada figura se construye leyendo `reports/results/*.json` —las mismas metrics que
 cita el README— o recalculando desde el panel. **Ningún número está escrito a
 mano en este archivo**: si una cifra cambia al re-correr el análisis, la figura
 cambia con ella.
@@ -20,9 +20,9 @@ import numpy as np
 from wcab import consola, decision, panel, portfolio, shrinkage, thinning
 from wcab.diagnostics import noise
 
-RAIZ = Path(__file__).resolve().parents[1]
-RES = RAIZ / "reports" / "results"
-FIG = RAIZ / "reports" / "figures"
+ROOT = Path(__file__).resolve().parents[1]
+RES = ROOT / "reports" / "results"
+FIG = ROOT / "reports" / "figures"
 
 # paleta: la práctica actual en gris cálido, las correcciones en azules,
 # el oráculo en gris claro, y verde/rojo solo para veredictos
@@ -49,7 +49,7 @@ def leer(nombre: str) -> dict:
     return json.loads((RES / nombre).read_text(encoding="utf-8"))
 
 
-def guardar(fig, nombre: str) -> None:
+def save(fig, nombre: str) -> None:
     FIG.mkdir(parents=True, exist_ok=True)
     fig.savefig(FIG / nombre)
     plt.close(fig)
@@ -57,19 +57,19 @@ def guardar(fig, nombre: str) -> None:
 
 
 # --------------------------------------------------------------------------
-def fig_maldicion(p, particiones: int = 8) -> None:
-    """Lo que promete la ganadora contra lo que entrega, y el control al azar."""
+def fig_maldicion(p, partitions: int = 8) -> None:
+    """Lo que promete la ganadora contra lo que entrega, y el control al random_rule."""
     prom_el, ent_el, prom_az, ent_az = [], [], [], []
-    for s in range(particiones):
-        dos = thinning.partir(p, fraccion=0.5, semilla=s)
-        m = shrinkage.mascara_utilizable(dos.estimacion)
-        est = shrinkage.preparar(dos.estimacion, m)
-        ev = dos.evaluacion.loc[m].reset_index(drop=True)
-        for regla, pr, en in (("crudo", prom_el, ent_el), ("azar", prom_az, ent_az)):
-            r = decision.evaluar(est, ev, regla=regla, semilla=s)
-            t = r.por_experimento
-            pr.append(t["prometido"].mean())
-            en.append(t["entregado"].mean())
+    for s in range(partitions):
+        dos = thinning.split(p, fraction=0.5, seed=s)
+        m = shrinkage.usable_mask(dos.estimation)
+        est = shrinkage.prepare(dos.estimation, m)
+        ev = dos.evaluation.loc[m].reset_index(drop=True)
+        for rule, pr, en in (("raw", prom_el, ent_el), ("random", prom_az, ent_az)):
+            r = decision.evaluate(est, ev, rule=rule, seed=s)
+            t = r.per_experiment
+            pr.append(t["promised"].mean())
+            en.append(t["delivered"].mean())
 
     fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.9), sharey=True)
     tope = max(np.mean(prom_el), np.mean(prom_az)) * 100
@@ -96,20 +96,20 @@ def fig_maldicion(p, particiones: int = 8) -> None:
     fig.suptitle("The winner's curse is a selection effect, not a measurement effect",
                  fontsize=11, weight="bold", y=1.02)
     fig.tight_layout()
-    guardar(fig, "01_winners_curse.png")
+    save(fig, "01_winners_curse.png")
 
 
 # --------------------------------------------------------------------------
 def fig_datos(p) -> None:
     """Las dos comprobaciones iniciales: aleatorización y modelo de ruido."""
-    srm = leer("02_srm.json")["confirmatorio"]
-    por_mes = sorted(srm["por_mes"], key=lambda r: r["mes"])
-    meses = [r["mes"] for r in por_mes]
-    tasas = [r["fraccion_desbalance"] for r in por_mes]
+    srm = leer("02_srm.json")["confirmatory"]
+    by_month = sorted(srm["by_month"], key=lambda r: r["month"])
+    meses = [r["month"] for r in by_month]
+    tasas = [r["imbalance_fraction"] for r in by_month]
 
-    cal = noise.calibrar(p)
-    tabla = noise.q_de_cochran(p[p["es_aa"]])
-    qs = (tabla["Q"] / tabla["gl"]).to_numpy()
+    cal = noise.calibrate(p)
+    table = noise.cochran_q(p[p["is_aa"]])
+    qs = (table["Q"] / table["dof"]).to_numpy()
     qs = qs[np.isfinite(qs)]
 
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(10.5, 3.6))
@@ -129,58 +129,58 @@ def fig_datos(p) -> None:
     a2.axvline(1.0, ls="--", lw=1.4, color="#333")
     a2.text(1.08, a2.get_ylim()[1] * 0.92, "1.0 = noise model\nis correct",
             fontsize=8.5)
-    a2.axvline(cal.razon_Q_gl, lw=1.6, color=PERJUDICA)
-    a2.text(cal.razon_Q_gl + 0.12, a2.get_ylim()[1] * 0.62,
-            f"measured: {cal.razon_Q_gl:.2f}×", fontsize=9, color=PERJUDICA, weight="bold")
+    a2.axvline(cal.q_over_dof, lw=1.6, color=PERJUDICA)
+    a2.text(cal.q_over_dof + 0.12, a2.get_ylim()[1] * 0.62,
+            f"measured: {cal.q_over_dof:.2f}×", fontsize=9, color=PERJUDICA, weight="bold")
     a2.set_xlabel("Cochran's Q / degrees of freedom, per A/A experiment")
     a2.set_ylabel(f"experiments  (n={len(qs):,})")
     a2.set_title("2. The noise model underestimates twofold")
 
     fig.suptitle("Two data problems, resolved before any measurement",
                  fontsize=11, weight="bold", y=1.04)
-    guardar(fig, "02_initial_checks.png")
+    save(fig, "02_initial_checks.png")
 
 
 # --------------------------------------------------------------------------
-def fig_cuatro_decisiones(p, particiones: int = 8) -> None:
+def fig_cuatro_decisiones(p, partitions: int = 8) -> None:
     """La figura central: cuatro decisiones, cuatro respuestas, cada una en sus
     propias unidades. No se normalizan a un eje común a propósito — serían
     cantidades distintas disfrazadas de comparables."""
-    r = leer("07_resultado.json")["confirmatorio"]
-    u = leer("09_decision_de_lanzar.json")["umbrales"]
-    g = r["ganancia"]
+    r = leer("07_resultado.json")["confirmatory"]
+    u = leer("09_decision_de_lanzar.json")["thresholds"]
+    g = r["gain"]
 
-    # decisión 1: la tasa que de hecho entrega la variante desplegada, con y sin
-    # corregir. Comparar "99.8% de decisiones idénticas" contra 100% sería
+    # decisión 1: la rate que de hecho entrega la variante desplegada, con y sin
+    # correct. Comparar "99.8% de decisiones idénticas" contra 100% sería
     # circular; esto está en las mismas unidades que el resto.
     ent_cru, ent_con = [], []
-    for s in range(particiones):
-        dos = thinning.partir(p, fraccion=0.5, semilla=s)
-        m = shrinkage.mascara_utilizable(dos.estimacion)
-        est = shrinkage.preparar(dos.estimacion, m)
-        ev = dos.evaluacion.loc[m].reset_index(drop=True)
-        con = shrinkage.contraer(est, tau2=None, metodo_tau2="paule-mandel")
-        ent_cru.append(decision.evaluar(est, ev, regla="crudo", semilla=s)
-                       .por_experimento["entregado"].mean())
-        ent_con.append(decision.evaluar(est, ev, prioridad=con.theta_tilde,
-                                        regla="contraido_global", semilla=s)
-                       .por_experimento["entregado"].mean())
+    for s in range(partitions):
+        dos = thinning.split(p, fraction=0.5, seed=s)
+        m = shrinkage.usable_mask(dos.estimation)
+        est = shrinkage.prepare(dos.estimation, m)
+        ev = dos.evaluation.loc[m].reset_index(drop=True)
+        con = shrinkage.shrink(est, tau2=None, tau2_method="paule-mandel")
+        ent_cru.append(decision.evaluate(est, ev, rule="raw", seed=s)
+                       .per_experiment["delivered"].mean())
+        ent_con.append(decision.evaluate(est, ev, priority=con.theta_tilde,
+                                        rule="shrunk_global", seed=s)
+                       .per_experiment["delivered"].mean())
 
     filas = [
         ("1. Which variant to deploy?", "click-through rate actually delivered",
          np.mean(ent_con) * 100, np.mean(ent_cru) * 100,
          "cannot change it: ordering is preserved", NO_PUEDE, "%", 3),
         ("2. Which experiments to prioritise?", "realised gain at a 5% budget",
-         g["contraida"]["0.05"] * 100, g["cruda"]["0.05"] * 100,
-         f"worse by {abs(g['contraida']['0.05']-g['cruda']['0.05'])*100:.3f} pp — "
+         g["shrunk"]["0.05"] * 100, g["raw"]["0.05"] * 100,
+         f"worse by {abs(g['shrunk']['0.05']-g['raw']['0.05'])*100:.3f} pp — "
          "loses in 40 of 40", PERJUDICA, " pp", 2),
         ("3. Ship or not?", "accuracy against realised, threshold > 0.6 pp",
-         u["0.6"]["acierto_contraida"] * 100, u["0.6"]["acierto_cruda"] * 100,
-         f"better by {u['0.6']['mejora']*100:+.2f} pp — wins in 20 of 20",
+         u["0.6"]["accuracy_shrunk"] * 100, u["0.6"]["accuracy_raw"] * 100,
+         f"better by {u['0.6']['improvement']*100:+.2f} pp — wins in 20 of 20",
          AYUDA, "%", 1),
         ("4. Which figure to report?", "mean squared error (lower is better)",
-         r["estimacion"]["mse_contraida"] * 1e5, r["estimacion"]["mse_cruda"] * 1e5,
-         f"{abs(r['estimacion']['cambio_relativo'])*100:.1f}% less error", AYUDA, " ×10⁻⁵", 2),
+         r["estimation"]["mse_shrunk"] * 1e5, r["estimation"]["mse_raw"] * 1e5,
+         f"{abs(r['estimation']['relative_change'])*100:.1f}% less error", AYUDA, " ×10⁻⁵", 2),
     ]
 
     fig, axes = plt.subplots(4, 1, figsize=(9.4, 7.4))
@@ -200,25 +200,25 @@ def fig_cuatro_decisiones(p, particiones: int = 8) -> None:
     fig.suptitle("The same correction, four decisions, four answers",
                  fontsize=12.5, weight="bold", y=1.0)
     fig.tight_layout(h_pad=2.2)
-    guardar(fig, "03_four_decisions.png")
+    save(fig, "03_four_decisions.png")
 
 
 # --------------------------------------------------------------------------
 def fig_umbral() -> None:
-    """Donde contraer sí gana: la decisión de lanzar contra un umbral."""
-    d = leer("09_decision_de_lanzar.json")["umbrales"]
+    """Donde shrink sí gana: la decisión de lanzar contra un umbral."""
+    d = leer("09_decision_de_lanzar.json")["thresholds"]
     us = sorted(d, key=float)
     x = [float(k) for k in us]
-    cru = [d[k]["acierto_cruda"] * 100 for k in us]
-    con = [d[k]["acierto_contraida"] * 100 for k in us]
+    cru = [d[k]["accuracy_raw"] * 100 for k in us]
+    con = [d[k]["accuracy_shrunk"] * 100 for k in us]
 
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(10.5, 3.8))
 
     a1.plot(x, cru, "o-", color=CRUDA, lw=2, ms=6, label="uncorrected")
     a1.plot(x, con, "o-", color=GLOBAL, lw=2, ms=6, label="shrunk")
     for xi, k in zip(x, us):
-        gana = d[k]["contraida_gana_en"]
-        a1.annotate(f"wins in\n{gana:.0%}", (xi, d[k]["acierto_contraida"] * 100),
+        gana = d[k]["shrunk_wins_in"]
+        a1.annotate(f"wins in\n{gana:.0%}", (xi, d[k]["accuracy_shrunk"] * 100),
                     textcoords="offset points", xytext=(0, 11), ha="center",
                     fontsize=8, color=AYUDA if gana > 0.9 else "#777",
                     weight="bold" if gana > 0.9 else "normal")
@@ -231,11 +231,11 @@ def fig_umbral() -> None:
 
     ancho = 0.26
     xi = np.arange(len(us))
-    a2.bar(xi - ancho, [d[k]["lanza_cruda"] * 100 for k in us], ancho,
+    a2.bar(xi - ancho, [d[k]["ships_raw"] * 100 for k in us], ancho,
            color=CRUDA, label="ships, uncorrected")
-    a2.bar(xi, [d[k]["lanza_contraida"] * 100 for k in us], ancho,
+    a2.bar(xi, [d[k]["ships_shrunk"] * 100 for k in us], ancho,
            color=GLOBAL, label="ships, shrunk")
-    a2.bar(xi + ancho, [d[k]["deberia_lanzar"] * 100 for k in us], ancho,
+    a2.bar(xi + ancho, [d[k]["should_ship"] * 100 for k in us], ancho,
            color=ORACULO, edgecolor="#999", label="should ship")
     a2.set_xticks(xi, [f"> {k}" for k in us])
     a2.set_xlabel("ship threshold (pp)")
@@ -245,21 +245,21 @@ def fig_umbral() -> None:
 
     fig.suptitle("Ranking is invariant to shrinkage; threshold comparison is not",
                  fontsize=11, weight="bold", y=1.04)
-    guardar(fig, "04_ship_decision.png")
+    save(fig, "04_ship_decision.png")
 
 
 # --------------------------------------------------------------------------
 def fig_que_descarta() -> None:
     """El mecanismo del daño en la decisión 2."""
     d = leer("06_donde_falla.json")
-    d = d.get("confirmatorio", d["exploratorio"])
-    f, pp = d["donde_falla"], d["precision_predice_parametro"]
+    d = d.get("confirmatory", d["exploratory"])
+    f, pp = d["where_it_fails"], d["precision_predicts_parameter"]
 
     fig, axes = plt.subplots(1, 4, figsize=(11.5, 3.5))
     campos = [
         ("realised gain", "descartados_delta_realizado",
          "anadidos_delta_realizado", 100, " pp"),
-        ("shrinkage weight", "descartados_alpha", "anadidos_alpha", 1, ""),
+        ("shrinkage weight", "discarded_alpha", "added_alpha", 1, ""),
         ("impressions", "descartados_impresiones", "anadidos_impresiones", 1, ""),
     ]
     for ax, (tit, ka, kb, esc, uni) in zip(axes, campos):
@@ -274,8 +274,8 @@ def fig_que_descarta() -> None:
 
     ax = axes[3]
     etq = ["unadj.", "within\nweek", "within\ntype"]
-    val = [pp["correlacion_cruda"], pp["correlacion_dentro_de_semana"],
-           pp["correlacion_dentro_de_tipo"]]
+    val = [pp["correlation_raw"], pp["correlacion_dentro_de_semana"],
+           pp["correlation_within_type"]]
     ax.bar(range(3), val, color=PERJUDICA, width=0.55)
     ax.axhline(0, lw=1, color="#333")
     ax.set_xticks(range(3), etq, fontsize=8.5)
@@ -288,62 +288,62 @@ def fig_que_descarta() -> None:
                  "better, because prior independence fails",
                  fontsize=11, weight="bold", y=1.04)
     fig.tight_layout()
-    guardar(fig, "05_where_it_fails.png")
+    save(fig, "05_where_it_fails.png")
 
 
 # --------------------------------------------------------------------------
 def fig_bhs() -> None:
     """La variante de 2025: estima mejor, no cambia el orden."""
-    b = leer("10_bhs.json")["confirmatorio"]
+    b = leer("10_bhs.json")["confirmatory"]
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(10.5, 3.8))
 
-    reglas = ["cruda", "global", "bhs"]
+    rules = ["raw", "global", "bhs"]
     etq = ["uncorrected", "standard", "BHS (2025)"]
-    val = [b["mse"][k] * 1e5 for k in reglas]
+    val = [b["mse"][k] * 1e5 for k in rules]
     a1.bar(range(3), val, color=[CRUDA, GLOBAL, BHS], width=0.58)
     a1.set_xticks(range(3), etq)
     a1.set_ylabel("mean squared error  (×10⁻⁵)")
     a1.set_title("Estimating: BHS improves on the standard version")
-    for i, k in enumerate(reglas):
-        c = b["mse_cambio_relativo"][k]
+    for i, k in enumerate(rules):
+        c = b["mse_relative_change"][k]
         a1.text(i, val[i] * 1.015, f"{val[i]:.3f}" +
-                ("" if k == "cruda" else f"\n{c*100:+.1f}%"),
+                ("" if k == "raw" else f"\n{c*100:+.1f}%"),
                 ha="center", fontsize=9,
-                color="#333" if k == "cruda" else AYUDA,
-                weight="normal" if k == "cruda" else "bold")
+                color="#333" if k == "raw" else AYUDA,
+                weight="normal" if k == "raw" else "bold")
     a1.set_ylim(0, max(val) * 1.3)
 
-    pres = sorted(b["ganancia"]["cruda"], key=float)
+    pres = sorted(b["gain"]["raw"], key=float)
     x = np.arange(len(pres))
-    for k, et, c in (("cruda", "uncorrected", CRUDA), ("global", "standard", GLOBAL),
+    for k, et, c in (("raw", "uncorrected", CRUDA), ("global", "standard", GLOBAL),
                      ("bhs", "BHS (2025)", BHS)):
-        a2.plot(x, [b["ganancia"][k][q] * 100 for q in pres], "o-",
+        a2.plot(x, [b["gain"][k][q] * 100 for q in pres], "o-",
                 color=c, lw=2, ms=6, label=et)
     a2.set_xticks(x, [f"{int(float(q)*100)}%" for q in pres])
     a2.set_xlabel("budget")
     a2.set_ylabel("realised gain (pp)")
     a2.set_title("Deciding: BHS does not change the ordering")
     a2.legend(frameon=False)
-    a2.text(0.98, 0.82, f"a = {b['a_medio']:.2f}\nlikelihood ratio "
-            f"= {b['razon_de_verosimilitudes']:.0f}\nthe data DO require\nlocal flexibility",
+    a2.text(0.98, 0.82, f"a = {b['a_mean']:.2f}\nlikelihood ratio "
+            f"= {b['likelihood_ratio']:.0f}\nthe data DO require\nlocal flexibility",
             transform=a2.transAxes, ha="right", fontsize=8.5, color="#444",
             bbox=dict(boxstyle="round,pad=0.45", fc="#f4f2ee", ec="#ccc"))
 
     fig.suptitle("BHS corrects the shape of the prior, not prior independence",
                  fontsize=11, weight="bold", y=1.04)
-    guardar(fig, "06_bhs.png")
+    save(fig, "06_bhs.png")
 
 
 # --------------------------------------------------------------------------
 def main() -> None:
-    consola.preparar()
+    consola.prepare()
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--muestra", default="confirmatorio",
-                    choices=["exploratorio", "confirmatorio"])
+    ap.add_argument("--sample", default="confirmatory",
+                    choices=["exploratory", "confirmatory"])
     args = ap.parse_args()
 
-    p = panel.cargar(args.muestra)
-    print(f"figuras -> reports/figures/  ({args.muestra})")
+    p = panel.load(args.sample)
+    print(f"figuras -> reports/figures/  ({args.sample})")
     fig_maldicion(p)
     fig_datos(p)
     fig_cuatro_decisiones(p)

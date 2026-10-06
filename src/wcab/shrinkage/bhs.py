@@ -19,19 +19,19 @@ entra en la escala de la previa. Se fija `b = a - 2`, que da E[λᵢ] = 1 y deja
     a chico ⇒  colas pesadas ⇒ robustez ante previa mal especificada
 
 Eso convierte a `a` en un diagnóstico por sí mismo: **cuánta flexibilidad local
-piden los datos.** Si â sale grande, los datos dicen que la versión global
+piden los data.** Si â sale grande, los data dicen que la versión global
 basta; si sale chico, piden las colas pesadas que BHS ofrece.
 
 **Por qué la previa marginal es una t de Student.** Una normal cuya varianza
 sigue una inversa-gamma es una mezcla de escalas: integrando λᵢ, la previa sobre
 θᵢ es t con `a` grados de libertad. De ahí sale la robustez que anuncia el
-artículo, y de ahí que el ajuste de `a` conteste si estos datos la necesitan.
+artículo, y de ahí que el ajuste de `a` conteste si estos data la necesitan.
 
 **Integración.** El artículo subraya que la posterior se estima sin integración
 numérica. Aquí se integra λᵢ sobre una rejilla logarítmica fija de forma
 vectorizada: es una cuadratura unidimensional por observación, exacta hasta la
 densidad de la rejilla, y cuesta un producto de matrices para los 15 787
-experimentos. Se prefiere la rejilla porque es auditable —`REJILLA` es un
+experiments. Se prefiere la rejilla porque es auditable —`GRID` es un
 parámetro visible— frente a una aproximación cerrada cuyo error no se ve.
 """
 
@@ -43,44 +43,44 @@ import numpy as np
 from scipy import optimize, special, stats
 
 # rejilla de λ: log-espaciada, cubre cinco órdenes de magnitud alrededor de 1
-REJILLA = 97
+GRID = 97
 LAMBDA_MIN, LAMBDA_MAX = 1e-3, 1e3
 A_MIN = 2.05  # a > 2 para que E[λ] exista
 
 # puntos de arranque para `a`. Varios reinicios porque la verosimilitud marginal
-# no es convexa en `a`; medido en el confirmatorio, â ≈ 2.6 en todas las
-# particiones, así que el arranque en 3.0 basta y los demás son red de seguridad.
-REINICIOS = (3.0,)
+# no es convexa en `a`; medido en el confirmatory, â ≈ 2.6 en todas las
+# partitions, así que el arranque en 3.0 basta y los demás son red de seguridad.
+RESTARTS = (3.0,)
 
 
 @dataclass(frozen=True)
-class AjusteBHS:
+class BHSFit:
     """Hiperparámetros ajustados y lo que dicen."""
 
     m0: float
     tau: float
     a: float
-    log_verosimilitud: float
-    log_verosimilitud_global: float
-    experimentos: int
+    log_likelihood: float
+    log_likelihood_global: float
+    experiments: int
 
     @property
     def b(self) -> float:
         return self.a - 2.0
 
     @property
-    def gana_a_la_global(self) -> float:
+    def beats_global(self) -> float:
         """Razón de verosimilitudes contra λᵢ = 1. Un grado de libertad."""
-        return 2.0 * (self.log_verosimilitud - self.log_verosimilitud_global)
+        return 2.0 * (self.log_likelihood - self.log_likelihood_global)
 
     @property
-    def p_valor(self) -> float:
-        """¿Piden los datos la flexibilidad local? Chi² con 1 gl."""
-        return float(stats.chi2.sf(max(self.gana_a_la_global, 0.0), df=1))
+    def p_value(self) -> float:
+        """¿Piden los data la flexibilidad local? Chi² con 1 dof."""
+        return float(stats.chi2.sf(max(self.beats_global, 0.0), df=1))
 
     @property
-    def pide_flexibilidad_local(self) -> bool:
-        return self.p_valor < 0.05
+    def requires_local_flexibility(self) -> bool:
+        return self.p_value < 0.05
 
     def to_dict(self) -> dict:
         return {
@@ -89,18 +89,18 @@ class AjusteBHS:
             "a": self.a,
             "b": self.b,
             "grados_de_libertad_previa_t": self.a,
-            "log_verosimilitud_bhs": self.log_verosimilitud,
-            "log_verosimilitud_global": self.log_verosimilitud_global,
-            "razon_de_verosimilitudes": self.gana_a_la_global,
-            "p_valor": self.p_valor,
-            "pide_flexibilidad_local": self.pide_flexibilidad_local,
-            "experimentos": self.experimentos,
+            "log_verosimilitud_bhs": self.log_likelihood,
+            "log_likelihood_global": self.log_likelihood_global,
+            "likelihood_ratio": self.beats_global,
+            "p_value": self.p_value,
+            "requires_local_flexibility": self.requires_local_flexibility,
+            "experiments": self.experiments,
         }
 
 
-def _rejilla(a: float) -> tuple[np.ndarray, np.ndarray]:
+def _grid(a: float) -> tuple[np.ndarray, np.ndarray]:
     """Nodos de λ y log-pesos de la inversa-gamma, normalizados sobre la rejilla."""
-    lam = np.geomspace(LAMBDA_MIN, LAMBDA_MAX, REJILLA)
+    lam = np.geomspace(LAMBDA_MIN, LAMBDA_MAX, GRID)
     alfa, beta = a / 2.0, (a - 2.0) / 2.0
     # log densidad InverseGamma(alfa, beta) por λ, más el jacobiano log de la
     # rejilla geométrica (d log λ constante ⇒ peso ∝ λ)
@@ -118,7 +118,7 @@ def _rejilla(a: float) -> tuple[np.ndarray, np.ndarray]:
 def _log_marginal(theta: np.ndarray, s2: np.ndarray, m0: float, tau: float,
                   a: float) -> np.ndarray:
     """log m(θ̂ᵢ) = log ∫ N(θ̂ᵢ; m₀, sᵢ² + λτ) · IG(λ) dλ, por experimento."""
-    lam, log_p = _rejilla(a)
+    lam, log_p = _grid(a)
     var = s2[:, None] + tau * lam[None, :]            # (n, rejilla)
     log_n = -0.5 * (np.log(2.0 * np.pi * var) + (theta[:, None] - m0) ** 2 / var)
     return special.logsumexp(log_n + log_p[None, :], axis=1)
@@ -131,7 +131,7 @@ def _log_marginal_global(theta: np.ndarray, s2: np.ndarray, m0: float,
     return -0.5 * (np.log(2.0 * np.pi * var) + (theta - m0) ** 2 / var)
 
 
-def ajustar(theta: np.ndarray, s2: np.ndarray) -> AjusteBHS:
+def fit(theta: np.ndarray, s2: np.ndarray) -> BHSFit:
     """Estima (m₀, τ, a) por máxima verosimilitud marginal.
 
     Devuelve también la verosimilitud del caso λᵢ = 1 con su propio τ óptimo,
@@ -161,35 +161,35 @@ def ajustar(theta: np.ndarray, s2: np.ndarray) -> AjusteBHS:
                            options={"xatol": 1e-10, "fatol": 1e-8, "maxiter": 4000})
 
     mejor = None
-    for a0 in REINICIOS:
+    for a0 in RESTARTS:
         p0 = np.array([rg.x[0], rg.x[1], np.log(max(a0 - A_MIN, 1e-3))])
         r = optimize.minimize(neg_bhs, p0, method="Nelder-Mead",
                               options={"xatol": 1e-10, "fatol": 1e-8, "maxiter": 8000})
         if mejor is None or r.fun < mejor.fun:
             mejor = r
 
-    return AjusteBHS(
+    return BHSFit(
         m0=float(mejor.x[0]),
         tau=float(np.exp(mejor.x[1])),
         a=float(A_MIN + np.exp(mejor.x[2])),
-        log_verosimilitud=float(-mejor.fun),
-        log_verosimilitud_global=float(-rg.fun),
-        experimentos=int(theta.size),
+        log_likelihood=float(-mejor.fun),
+        log_likelihood_global=float(-rg.fun),
+        experiments=int(theta.size),
     )
 
 
-def media_posterior(theta: np.ndarray, s2: np.ndarray, ajuste: AjusteBHS) -> np.ndarray:
+def posterior_mean(theta: np.ndarray, s2: np.ndarray, ajuste: BHSFit) -> np.ndarray:
     """E[θᵢ | θ̂ᵢ] bajo BHS, integrando el factor local λᵢ.
 
     E[θᵢ|θ̂ᵢ] = θ̂ᵢ − (θ̂ᵢ − m₀) · E[αᵢ(λ) | θ̂ᵢ],  con  αᵢ(λ) = sᵢ²/(sᵢ² + λτ)
 
     El peso de contracción ya no es un número por experimento: es el promedio
     de α sobre la posterior de λᵢ, y por eso BHS contrae **menos** a los
-    experimentos cuyo dato queda lejos del centro — ésa es su robustez.
+    experiments cuyo dato queda lejos del center — ésa es su robustez.
     """
     theta = np.asarray(theta, dtype=float)
     s2 = np.asarray(s2, dtype=float)
-    lam, log_p = _rejilla(ajuste.a)
+    lam, log_p = _grid(ajuste.a)
 
     var = s2[:, None] + ajuste.tau * lam[None, :]
     log_n = -0.5 * (np.log(2.0 * np.pi * var)
@@ -202,11 +202,11 @@ def media_posterior(theta: np.ndarray, s2: np.ndarray, ajuste: AjusteBHS) -> np.
     return theta - (theta - ajuste.m0) * alfa_esperado
 
 
-def alpha_efectivo(theta: np.ndarray, s2: np.ndarray, ajuste: AjusteBHS) -> np.ndarray:
+def effective_alpha(theta: np.ndarray, s2: np.ndarray, ajuste: BHSFit) -> np.ndarray:
     """E[αᵢ(λ) | θ̂ᵢ]: el peso de contracción que BHS aplica de hecho."""
     theta = np.asarray(theta, dtype=float)
     s2 = np.asarray(s2, dtype=float)
-    lam, log_p = _rejilla(ajuste.a)
+    lam, log_p = _grid(ajuste.a)
     var = s2[:, None] + ajuste.tau * lam[None, :]
     log_post = (-0.5 * (np.log(2.0 * np.pi * var)
                         + (theta[:, None] - ajuste.m0) ** 2 / var)) + log_p[None, :]

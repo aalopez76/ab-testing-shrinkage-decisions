@@ -1,6 +1,6 @@
 """La prueba crítica del proyecto.
 
-Si la partición está mal, **todas** las cifras quedan mal y nada en el
+Si la partición está mal, **todas** las metrics quedan mal y nada en el
 resultado lo delata: la inflación medida sale sesgada y los números se ven
 perfectamente normales. Es el único módulo con esa propiedad.
 
@@ -20,8 +20,8 @@ import pytest
 from wcab import thinning
 
 N_SIM = 30_000
-P_VERDADERA = 0.013      # la tasa real del archivo, ~1.3%
-N_POR_BRAZO = 3_000      # la mediana real de impresiones por brazo
+P_VERDADERA = 0.013      # la rate real del archivo, ~1.3%
+N_POR_BRAZO = 3_000      # la mediana real de impressions por brazo
 
 
 @pytest.fixture(scope="module")
@@ -30,7 +30,7 @@ def mitades():
     rng = np.random.default_rng(20261003)
     x = rng.binomial(N_POR_BRAZO, P_VERDADERA, size=N_SIM)
     n = np.full(N_SIM, N_POR_BRAZO, dtype=np.int64)
-    n_a, c_a, n_b, c_b = thinning.partir_conteos(n, x, 0.5, rng)
+    n_a, c_a, n_b, c_b = thinning.split_counts(n, x, 0.5, rng)
     return {"x": x, "n_a": n_a, "c_a": c_a, "n_b": n_b, "c_b": c_b}
 
 
@@ -56,17 +56,17 @@ def test_los_clics_nunca_exceden_las_impresiones(mitades):
 
 
 # --------------------------------------------------------------------------
-# 2. Insesgadez: cada mitad estima la tasa verdadera
+# 2. Insesgadez: cada mitad estima la rate verdadera
 # --------------------------------------------------------------------------
 
 def test_cada_mitad_es_insesgada(mitades):
     m = mitades
     for lado in ("a", "b"):
-        tasa = (m[f"c_{lado}"] / m[f"n_{lado}"]).mean()
-        error = abs(tasa - P_VERDADERA)
-        # 4 errores estándar de la media de N_SIM observaciones
+        rate = (m[f"c_{lado}"] / m[f"n_{lado}"]).mean()
+        error = abs(rate - P_VERDADERA)
+        # 4 errores estándar de la mean de N_SIM observaciones
         tope = 4 * np.sqrt(P_VERDADERA * (1 - P_VERDADERA) / (N_POR_BRAZO / 2) / N_SIM)
-        assert error < tope, f"mitad {lado}: {tasa:.6f} vs {P_VERDADERA}"
+        assert error < tope, f"mitad {lado}: {rate:.6f} vs {P_VERDADERA}"
 
 
 def test_la_varianza_de_cada_mitad_es_la_binomial_correcta(mitades):
@@ -114,7 +114,7 @@ def test_contraste_la_particion_ingenua_esta_correlacionada():
     que solo da cero en el punto exacto Var Z = Var θ y es negativa en cuanto el
     ruido domina. Es decir: **la independencia dependería de acertar la varianza
     del ruido**, que es precisamente la cantidad que el proyecto no conoce — por
-    eso se parten los conteos y no la tasa.
+    eso se parten los conteos y no la rate.
 
     Aquí se usa Var Z ≈ 23 · Var θ, donde la anticorrelación es inequívoca.
     """
@@ -141,48 +141,48 @@ def test_contraste_la_particion_ingenua_esta_correlacionada():
 def _panel_minimo(n=(3000, 3000, 5000), c=(40, 35, 70)):
     d = pd.DataFrame(
         {
-            "experimento_id": ["e1", "e1", "e2"],
-            "brazo_id": ["a", "b", "c"],
-            "impresiones": n,
-            "clics": c,
-            "es_aa": [False, False, False],
+            "experiment_id": ["e1", "e1", "e2"],
+            "arm_id": ["a", "b", "c"],
+            "impressions": n,
+            "clicks": c,
+            "is_aa": [False, False, False],
         }
     )
-    d["theta_hat"] = d.clics / d.impresiones
-    d["v"] = d.theta_hat * (1 - d.theta_hat) / d.impresiones
+    d["theta_hat"] = d.clicks / d.impressions
+    d["v"] = d.theta_hat * (1 - d.theta_hat) / d.impressions
     return d
 
 
 def test_partir_conserva_el_panel_y_recalcula():
     p = _panel_minimo()
-    out = thinning.partir(p, fraccion=0.5, semilla=3)
-    assert thinning.comprobar_suma(p, out)
-    for mitad in (out.estimacion, out.evaluacion):
+    out = thinning.split(p, fraction=0.5, seed=3)
+    assert thinning.check_sum(p, out)
+    for mitad in (out.estimation, out.evaluation):
         assert list(mitad.columns) == list(p.columns)
-        assert np.allclose(mitad["theta_hat"], mitad["clics"] / mitad["impresiones"])
-        v = mitad["theta_hat"] * (1 - mitad["theta_hat"]) / mitad["impresiones"]
+        assert np.allclose(mitad["theta_hat"], mitad["clicks"] / mitad["impressions"])
+        v = mitad["theta_hat"] * (1 - mitad["theta_hat"]) / mitad["impressions"]
         assert np.allclose(mitad["v"], v)
-    # las columnas descriptivas se arrastran sin cambios
-    assert list(out.estimacion["experimento_id"]) == list(p["experimento_id"])
+    # las columnas descriptivas se arrastran sin changes
+    assert list(out.estimation["experiment_id"]) == list(p["experiment_id"])
 
 
 def test_la_semilla_hace_reproducible_la_particion():
     p = _panel_minimo()
-    a = thinning.partir(p, semilla=42).estimacion["clics"].tolist()
-    b = thinning.partir(p, semilla=42).estimacion["clics"].tolist()
-    c = thinning.partir(p, semilla=43).estimacion["clics"].tolist()
+    a = thinning.split(p, seed=42).estimation["clicks"].tolist()
+    b = thinning.split(p, seed=42).estimation["clicks"].tolist()
+    c = thinning.split(p, seed=43).estimation["clicks"].tolist()
     assert a == b
     assert a != c
 
 
-@pytest.mark.parametrize("fraccion", [0.0, 1.0, -0.1, 1.5])
-def test_rechaza_fracciones_invalidas(fraccion):
+@pytest.mark.parametrize("fraction", [0.0, 1.0, -0.1, 1.5])
+def test_rechaza_fracciones_invalidas(fraction):
     with pytest.raises(ValueError):
-        thinning.partir(_panel_minimo(), fraccion=fraccion)
+        thinning.split(_panel_minimo(), fraction=fraction)
 
 
 def test_rechaza_datos_imposibles():
     with pytest.raises(ValueError):
-        thinning.partir_conteos([100], [200], 0.5, np.random.default_rng(0))
+        thinning.split_counts([100], [200], 0.5, np.random.default_rng(0))
     with pytest.raises(ValueError):
-        thinning.partir_conteos([1], [0], 0.5, np.random.default_rng(0))
+        thinning.split_counts([1], [0], 0.5, np.random.default_rng(0))

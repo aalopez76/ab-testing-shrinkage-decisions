@@ -1,19 +1,19 @@
 {
-  "exploratorio": {
-    "muestra": "exploratorio",
+  "exploratory": {
+    "sample": "exploratory",
     "exclusion": {
       "ventana": "2013-06-01 a 2014-02-01",
       "brazos_antes": 22666,
       "brazos_despues": 16629,
       "experimentos_antes": 4873,
       "experimentos_despues": 3380,
-      "fraccion_conservada": 0.6936
+      "retained_fraction": 0.6936
     },
     "panel": {
-      "brazos": 16629,
-      "experimentos": 3380,
-      "impresiones": 58769384,
-      "clics": 749878,
+      "arms": 16629,
+      "experiments": 3380,
+      "impressions": 58769384,
+      "clicks": 749878,
       "tasa_global": 0.0127596709198109,
       "brazos_por_experimento_min": 2,
       "brazos_por_experimento_max": 14,
@@ -25,21 +25,21 @@
       "error_estandar_brazo_tipico": 0.002047840242791259
     }
   },
-  "confirmatorio": {
-    "muestra": "confirmatorio",
+  "confirmatory": {
+    "sample": "confirmatory",
     "exclusion": {
       "ventana": "2013-06-01 a 2014-02-01",
       "brazos_antes": 105551,
       "brazos_despues": 77446,
       "experimentos_antes": 22743,
       "experimentos_despues": 15787,
-      "fraccion_conservada": 0.6941
+      "retained_fraction": 0.6941
     },
     "panel": {
-      "brazos": 77446,
-      "experimentos": 15787,
-      "impresiones": 273495317,
-      "clics": 3492259,
+      "arms": 77446,
+      "experiments": 15787,
+      "impressions": 273495317,
+      "clicks": 3492259,
       "tasa_global": 0.0127689901176626,
       "brazos_por_experimento_min": 2,
       "brazos_por_experimento_max": 20,

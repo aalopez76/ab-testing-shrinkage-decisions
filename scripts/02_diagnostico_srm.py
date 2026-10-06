@@ -1,9 +1,9 @@
-"""Paso 0: reproduce el fallo de aleatorización del archivo, mes a mes.
+"""Paso 0: reproduce el fallo de aleatorización del archivo, month a month.
 
 El equipo del archivo reportó en junio de 2024 que una mala configuración de la
 caché de Cloudflare afectó ~22% de las pruebas. Los CSV públicos no traen la
 columna que las marca, así que este script lo verifica desde cero y produce la
-tabla que justifica la exclusión.
+table que justifica la exclusión.
 
 Corre SIN exclusión a propósito: es el diagnóstico que la motiva.
 
@@ -20,54 +20,54 @@ from wcab import consola
 from wcab import panel
 from wcab.diagnostics import srm
 
-RAIZ = Path(__file__).resolve().parents[1]
-SALIDA = RAIZ / "reports" / "results" / "02_srm.json"
+ROOT = Path(__file__).resolve().parents[1]
+OUTPUT = ROOT / "reports" / "results" / "02_srm.json"
 
 
-def sin_exclusion(muestra: str) -> pd.DataFrame:
+def sin_exclusion(sample: str) -> pd.DataFrame:
     """El crudo, con las columnas que el diagnóstico necesita."""
-    crudo = panel._leer_crudo(muestra)
+    crudo = panel._read_raw(sample)
     crudo = crudo.loc[crudo["impressions"] > 0]
     return pd.DataFrame(
         {
-            "experimento_id": crudo["clickability_test_id"].astype(str),
-            "impresiones": crudo["impressions"].astype("int64"),
-            "fecha": pd.to_datetime(crudo["created_at"], errors="coerce"),
+            "experiment_id": crudo["clickability_test_id"].astype(str),
+            "impressions": crudo["impressions"].astype("int64"),
+            "date": pd.to_datetime(crudo["created_at"], errors="coerce"),
         }
     )
 
 
 def main() -> None:
-    consola.preparar()
+    consola.prepare()
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--muestra", default="exploratorio",
-                    choices=["exploratorio", "confirmatorio"])
-    ap.add_argument("--minimo-mes", type=int, default=30)
+    ap.add_argument("--sample", default="exploratory",
+                    choices=["exploratory", "confirmatory"])
+    ap.add_argument("--minimo-month", type=int, default=30)
     args = ap.parse_args()
 
-    datos = sin_exclusion(args.muestra)
-    tabla = srm.por_experimento(datos)
-    mensual = srm.por_mes(tabla, minimo=args.minimo_mes)
+    data = sin_exclusion(args.sample)
+    table = srm.per_experiment(data)
+    mensual = srm.by_month(table, minimo=args.minimo_mes)
 
-    print(f"{'mes':9} {'exp.':>6} {'desbalance':>11}")
+    print(f"{'month':9} {'exp.':>6} {'desbalance':>11}")
     for _, r in mensual.iterrows():
-        barra = "#" * int(r.fraccion_desbalance * 40)
-        print(f"{r.mes:9} {int(r.experimentos):6d} {r.fraccion_desbalance:10.1%}  {barra}")
+        barra = "#" * int(r.imbalance_fraction * 40)
+        print(f"{r.month:9} {int(r.experiments):6d} {r.imbalance_fraction:10.1%}  {barra}")
 
-    cifras = {
-        "muestra": args.muestra,
-        **srm.resumen(tabla),
-        "por_mes": [
-            {"mes": r.mes, "experimentos": int(r.experimentos),
-             "fraccion_desbalance": round(float(r.fraccion_desbalance), 4)}
+    metrics = {
+        "sample": args.sample,
+        **srm.summary(table),
+        "by_month": [
+            {"month": r.month, "experiments": int(r.experiments),
+             "imbalance_fraction": round(float(r.imbalance_fraction), 4)}
             for _, r in mensual.iterrows()
         ],
     }
-    previo = json.loads(SALIDA.read_text(encoding="utf-8")) if SALIDA.exists() else {}
-    previo[args.muestra] = cifras
-    SALIDA.parent.mkdir(parents=True, exist_ok=True)
-    SALIDA.write_text(json.dumps(previo, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"\ncifras -> {SALIDA.relative_to(RAIZ)}")
+    previous = json.loads(OUTPUT.read_text(encoding="utf-8")) if OUTPUT.exists() else {}
+    previous[args.sample] = metrics
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT.write_text(json.dumps(previous, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"\ncifras -> {OUTPUT.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

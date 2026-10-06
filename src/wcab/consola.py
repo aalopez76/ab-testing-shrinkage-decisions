@@ -2,10 +2,10 @@
 
 Los scripts imprimen en español, con tildes y flechas. La consola de Windows
 usa cp1252 por defecto y revienta con un UnicodeEncodeError ante un carácter
-que no esté en esa tabla — así que un script perfectamente correcto deja de
+que no esté en esa table — así que un script perfectamente correcto deja de
 correr por el terminal en el que se invoca, que es lo contrario de reproducible.
 
-`preparar()` pone la salida en UTF-8 y, si el terminal no lo admite, reemplaza
+`prepare()` pone la output en UTF-8 y, si el terminal no lo admite, reemplaza
 los caracteres imposibles en lugar de abortar.
 """
 
@@ -14,7 +14,7 @@ from __future__ import annotations
 import sys
 
 
-def preparar() -> None:
+def prepare() -> None:
     for flujo in (sys.stdout, sys.stderr):
         reconfigurar = getattr(flujo, "reconfigure", None)
         if reconfigurar is None:

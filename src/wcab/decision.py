@@ -1,21 +1,21 @@
-"""Paso 5: comparar decisiones, no estimaciones.
+"""Step 5: compare decisions, not estimates.
 
-Aquí se juega el criterio del proyecto: **los métodos se juzgan por las
-decisiones que producen, no por si cumplen sus propios supuestos.**
+This is where the project's criterion is settled: **methods are judged by the
+decisions they produce, not by whether they satisfy their own assumptions.**
 
-Cada regla elige una variante por experimento usando la mitad de estimación, y
-se mide lo que esa variante rindió en la mitad de evaluación — que no participó
-en elegirla. Las tres métricas:
+Each rule selects one variant per experiment using the estimation half, and what
+that variant delivered is measured on the evaluation half — which played no part
+in selecting it. Three metrics:
 
-- **valor**: la tasa realizada de la variante elegida.
-- **arrepentimiento**: cuánto se perdió frente a la mejor variante disponible,
-  medida también en la mitad de evaluación.
-- **inflación**: lo que la variante elegida prometió al elegirla menos lo que
-  entregó. Es el estimando principal del proyecto.
+- **value**: the realised rate of the selected variant.
+- **regret**: how much was lost against the best available variant, also measured
+  on the evaluation half.
+- **inflation**: what the selected variant promised at selection time minus what
+  it delivered. This is the project's principal estimand.
 
-La referencia que hay que batir es `azar`: elegir una variante al azar. Si una
-corrección no le gana a eso, no sirve para nada. Y `crudo` —elegir el máximo
-medido— es la práctica que el proyecto pone a prueba.
+The benchmark to beat is `random`: selecting a variant at random. A correction
+that cannot beat that is of no use. And `raw` — selecting the measured maximum —
+is the practice the project puts to the test.
 """
 
 from __future__ import annotations
@@ -25,141 +25,144 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
+RAW = "raw"
+RANDOM = "random"
+
 
 @dataclass(frozen=True)
-class Resultado:
-    """El rendimiento de una regla, con lo necesario para reportarlo."""
+class Result:
+    """A rule's performance, with what is needed to report it."""
 
-    regla: str
-    experimentos: int
-    valor: float               # tasa realizada media de lo elegido
-    arrepentimiento: float     # cuánto se dejó en la mesa
-    inflacion: float           # prometido − entregado
-    por_experimento: pd.DataFrame
+    rule: str
+    experiments: int
+    value: float               # mean realised rate of the selected variants
+    regret: float              # how much was left on the table
+    inflation: float           # promised - delivered
+    per_experiment: pd.DataFrame
 
-    def resumen(self) -> dict:
+    def summary(self) -> dict:
         return {
-            "regla": self.regla,
-            "experimentos": self.experimentos,
-            "valor": float(self.valor),
-            "arrepentimiento": float(self.arrepentimiento),
-            "inflacion": float(self.inflacion),
-            "fraccion_peor_que_oraculo": float(
-                (self.por_experimento["arrepentimiento"] > 0).mean()
+            "rule": self.rule,
+            "experiments": self.experiments,
+            "value": float(self.value),
+            "regret": float(self.regret),
+            "inflation": float(self.inflation),
+            "fraction_worse_than_oracle": float(
+                (self.per_experiment["regret"] > 0).mean()
             ),
         }
 
 
-def _elegir(prioridad: np.ndarray) -> int:
-    """Índice del máximo. Empates al primero, que es determinista."""
-    return int(np.argmax(prioridad))
+def _choose(priority: np.ndarray) -> int:
+    """Index of the maximum. Ties resolve to the first, which is deterministic."""
+    return int(np.argmax(priority))
 
 
-def evaluar(
-    estimacion: pd.DataFrame,
-    evaluacion: pd.DataFrame,
-    prioridad: pd.Series | np.ndarray | None = None,
-    regla: str = "crudo",
-    semilla: int = 0,
-) -> Resultado:
-    """Aplica una regla y mide lo que rindió.
+def evaluate(
+    estimation: pd.DataFrame,
+    evaluation: pd.DataFrame,
+    priority: pd.Series | np.ndarray | None = None,
+    rule: str = RAW,
+    seed: int = 0,
+) -> Result:
+    """Apply a rule and measure what it delivered.
 
-    `prioridad` es el criterio con el que se ordena dentro de cada experimento,
-    calculado sobre la mitad de **estimación**. Si es None y la regla es
-    `azar`, se sortea; si es None en cualquier otro caso, se usa `theta_hat`.
+    `priority` is the criterion by which variants are ranked within each
+    experiment, computed on the **estimation** half. If it is None and the rule is
+    `random`, priorities are drawn at random; if it is None in any other case,
+    `theta_hat` is used.
 
-    Las dos mitades deben venir alineadas fila a fila, que es lo que garantiza
-    `thinning.partir`.
+    The two halves must arrive aligned row by row, which is what `thinning.split`
+    guarantees.
     """
-    if len(estimacion) != len(evaluacion):
-        raise ValueError("las mitades no están alineadas")
+    if len(estimation) != len(evaluation):
+        raise ValueError("the two halves are not aligned")
 
-    rng = np.random.default_rng(semilla)
-    if regla == "azar":
-        prio = rng.random(len(estimacion))
-    elif prioridad is None:
-        prio = estimacion["theta_hat"].to_numpy(dtype=float)
+    rng = np.random.default_rng(seed)
+    if rule == RANDOM:
+        prio = rng.random(len(estimation))
+    elif priority is None:
+        prio = estimation["theta_hat"].to_numpy(dtype=float)
     else:
-        prio = np.asarray(prioridad, dtype=float)
+        prio = np.asarray(priority, dtype=float)
 
-    exp = estimacion["experimento_id"].to_numpy()
-    theta_est = estimacion["theta_hat"].to_numpy(dtype=float)
-    theta_eval = evaluacion["theta_hat"].to_numpy(dtype=float)
+    exp = estimation["experiment_id"].to_numpy()
+    theta_est = estimation["theta_hat"].to_numpy(dtype=float)
+    theta_eval = evaluation["theta_hat"].to_numpy(dtype=float)
 
-    filas = []
-    inicio = 0
-    orden = np.argsort(exp, kind="stable")
-    exp_ord = exp[orden]
-    cortes = np.flatnonzero(np.r_[True, exp_ord[1:] != exp_ord[:-1]])
-    limites = np.r_[cortes, len(exp_ord)]
+    rows = []
+    order = np.argsort(exp, kind="stable")
+    exp_ord = exp[order]
+    cuts = np.flatnonzero(np.r_[True, exp_ord[1:] != exp_ord[:-1]])
+    bounds = np.r_[cuts, len(exp_ord)]
 
-    for a, b in zip(limites[:-1], limites[1:]):
-        idx = orden[a:b]
+    for a, b in zip(bounds[:-1], bounds[1:]):
+        idx = order[a:b]
         if len(idx) < 2:
             continue
-        elegido = idx[_elegir(prio[idx])]
-        mejor_posible = float(theta_eval[idx].max())
-        filas.append(
+        chosen = idx[_choose(prio[idx])]
+        best_possible = float(theta_eval[idx].max())
+        rows.append(
             {
-                "experimento_id": exp_ord[a],
-                "brazos": len(idx),
-                "prometido": float(theta_est[elegido]),
-                "entregado": float(theta_eval[elegido]),
-                "mejor_posible": mejor_posible,
-                "arrepentimiento": mejor_posible - float(theta_eval[elegido]),
-                "inflacion": float(theta_est[elegido]) - float(theta_eval[elegido]),
+                "experiment_id": exp_ord[a],
+                "arms": len(idx),
+                "promised": float(theta_est[chosen]),
+                "delivered": float(theta_eval[chosen]),
+                "best_possible": best_possible,
+                "regret": best_possible - float(theta_eval[chosen]),
+                "inflation": float(theta_est[chosen]) - float(theta_eval[chosen]),
             }
         )
-        inicio = b
 
-    por_exp = pd.DataFrame(filas)
-    return Resultado(
-        regla=regla,
-        experimentos=len(por_exp),
-        valor=float(por_exp["entregado"].mean()),
-        arrepentimiento=float(por_exp["arrepentimiento"].mean()),
-        inflacion=float(por_exp["inflacion"].mean()),
-        por_experimento=por_exp,
+    per_exp = pd.DataFrame(rows)
+    return Result(
+        rule=rule,
+        experiments=len(per_exp),
+        value=float(per_exp["delivered"].mean()),
+        regret=float(per_exp["regret"].mean()),
+        inflation=float(per_exp["inflation"].mean()),
+        per_experiment=per_exp,
     )
 
 
-def comparar(resultados: list[Resultado], referencia: str = "crudo") -> pd.DataFrame:
-    """Tabla comparativa, con la diferencia de valor contra una referencia."""
-    base = next((r for r in resultados if r.regla == referencia), None)
-    filas = []
-    for r in resultados:
-        fila = r.resumen()
+def compare(results: list[Result], reference: str = RAW) -> pd.DataFrame:
+    """Comparison table, with the difference in value against a reference rule."""
+    base = next((r for r in results if r.rule == reference), None)
+    rows = []
+    for r in results:
+        row = r.summary()
         if base is not None:
-            fila["valor_menos_" + referencia] = r.valor - base.valor
-        filas.append(fila)
-    return pd.DataFrame(filas)
+            row["value_minus_" + reference] = r.value - base.value
+        rows.append(row)
+    return pd.DataFrame(rows)
 
 
-def donde_falla(
-    a: Resultado, b: Resultado, nombre_a: str = "A", nombre_b: str = "B"
+def where_it_fails(
+    a: Result, b: Result, name_a: str = "A", name_b: str = "B"
 ) -> dict:
-    """En qué experimentos la regla `a` elige peor que la regla `b`.
+    """In which experiments rule `a` selects worse than rule `b`.
 
-    La parte no opcional del proyecto: contraer mejora el conjunto y perjudica
-    casos concretos. Interesa cuáles y qué tienen en común.
+    The non-optional part of the project: shrinkage improves the aggregate while
+    harming specific cases. Which ones, and what they have in common, is the
+    question.
     """
-    j = a.por_experimento.merge(
-        b.por_experimento, on="experimento_id", suffixes=("_a", "_b")
+    j = a.per_experiment.merge(
+        b.per_experiment, on="experiment_id", suffixes=("_a", "_b")
     )
-    peor = j["entregado_a"] < j["entregado_b"]
+    worse = j["delivered_a"] < j["delivered_b"]
     out = {
-        "comparacion": f"{nombre_a} contra {nombre_b}",
-        "experimentos": int(len(j)),
-        "fraccion_peor": float(peor.mean()),
-        "fraccion_mejor": float((j["entregado_a"] > j["entregado_b"]).mean()),
-        "fraccion_igual": float((j["entregado_a"] == j["entregado_b"]).mean()),
+        "comparison": f"{name_a} against {name_b}",
+        "experiments": int(len(j)),
+        "fraction_worse": float(worse.mean()),
+        "fraction_better": float((j["delivered_a"] > j["delivered_b"]).mean()),
+        "fraction_equal": float((j["delivered_a"] == j["delivered_b"]).mean()),
     }
-    if peor.any():
-        out["perfil_de_los_peores"] = {
-            "brazos_media": float(j.loc[peor, "brazos_a"].mean()),
-            "brazos_media_resto": float(j.loc[~peor, "brazos_a"].mean()),
-            "perdida_media": float(
-                (j.loc[peor, "entregado_b"] - j.loc[peor, "entregado_a"]).mean()
+    if worse.any():
+        out["profile_of_the_worst"] = {
+            "mean_arms": float(j.loc[worse, "arms_a"].mean()),
+            "mean_arms_rest": float(j.loc[~worse, "arms_a"].mean()),
+            "mean_loss": float(
+                (j.loc[worse, "delivered_b"] - j.loc[worse, "delivered_a"]).mean()
             ),
         }
     return out
