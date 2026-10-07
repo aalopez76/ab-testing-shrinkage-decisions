@@ -235,20 +235,25 @@ def fig_umbral() -> None:
     a1.errorbar(x, v_con, yerr=barras(v_con, ic_con), fmt="o-", color=GLOBAL,
                 lw=2, ms=6, capsize=3, label="shrunk", zorder=3)
 
-    # El cruce por cero es el hallazgo: senalar el umbral donde ocurre.
+    # El cruce por cero es el hallazgo: senalar el umbral donde ocurre. La
+    # etiqueta va a la IZQUIERDA del punto, porque debajo la recorta el eje.
     for xi, v in zip(x, v_cru):
         if v < 0:
             a1.annotate("destroys\nvalue", (xi, v),
                         textcoords="offset points",
-                        xytext=(0, -26), ha="center", fontsize=8.5,
-                        color=PERJUDICA, weight="bold")
+                        xytext=(-16, -2), ha="right", va="center",
+                        fontsize=8.5, color=PERJUDICA, weight="bold")
             break
 
     a1.set_xlabel("ship threshold (percentage points of improvement)")
     a1.set_ylabel("realised policy value (pp)")
-    a1.set_title("Above a demanding bar the uncorrected rule turns negative")
+    a1.set_title("The uncorrected rule turns negative", fontsize=10.5)
     a1.legend(frameon=False, loc="upper right")
-    a1.set_xlim(min(x) - 0.06, max(x) + 0.06)
+    a1.set_xlim(min(x) - 0.06, max(x) + 0.08)
+    # Holgura inferior para que la etiqueta y la barra de error quepan enteras.
+    bajo = min(ic[0] * 100 for ic in ic_cru)
+    alto = max(ic[1] * 100 for ic in ic_con)
+    a1.set_ylim(bajo - (alto - bajo) * 0.14, alto + (alto - bajo) * 0.10)
 
     ancho = 0.26
     xi = np.arange(len(us))
@@ -261,7 +266,7 @@ def fig_umbral() -> None:
     a2.set_xticks(xi, [f"> {float(k)*100:.1f}" for k in us])
     a2.set_xlabel("ship threshold (pp)")
     a2.set_ylabel("% of experiments shipped")
-    a2.set_title("The uncorrected rule gets the rate right and the individuals wrong")
+    a2.set_title("Right rate, wrong individuals", fontsize=10.5)
     a2.legend(frameon=False, fontsize=8.5)
 
     fig.suptitle("Ranking is invariant to shrinkage; threshold comparison is not",

@@ -125,20 +125,30 @@ What an experimentation lead should take away: **the correction serves to stop o
 
 ![Where it fails](reports/figures/05_where_it_fails.png)
 
-## 3. Whether to ship: here shrinkage does win, and the margin grows
+## 3. Whether to ship: here shrinkage does win, and the uncorrected rule can destroy value
+
+*Stage 2 — devised after the confirmatory sample had been unblinded. It requires independent confirmation.*
 
 * **The reason is an asymmetry the A/B testing literature does not usually separate.** Ranking is invariant to a monotone transformation, so shrinkage cannot change the argmax. **Comparison against an absolute threshold is not invariant**: shrinkage changes the value, and therefore changes whether it crosses the line.
 
-* **The improvement grows with the stringency of the threshold**, winning across all 20 partitions from 0.4 points upwards:
+* **What is measured is the value the policy delivers, not how often it agrees with a second measurement.** For a threshold *u*, the policy ships arm *i* when its estimate clears the bar, and the value realised is what the independent evaluation partition says it delivered against that bar:
 
-| Threshold | Accuracy, uncorrected | Accuracy, shrunk | Improvement | Wins in |
+  *V*(π) = (1/N) Σ *a*ᵢ (δ_eval,ᵢ − *u*),  *a*ᵢ = 1(δ̂_est,ᵢ > *u*)
+
+  Accuracy against `realised > u` was the earlier measure and is biased: the indicator of a noisy variable does not estimate the indicator of the truth without bias. It is retained in the results files as a secondary quantity and labelled as such.
+
+| Threshold | Value, uncorrected | Value, shrunk | Difference | 95% cluster-bootstrap percentile |
 |---|---|---|---|---|
-| > 0.2 pp | 62.60% | 62.61% | +0.01 pp | 45% |
-| > 0.4 pp | 68.69% | 70.42% | **+1.73 pp** | **100%** |
-| > 0.6 pp | 76.72% | 79.62% | **+2.91 pp** | **100%** |
-| > 0.8 pp | 83.83% | 86.68% | **+2.85 pp** | **100%** |
+| > 0.2 pp | +0.1143 pp | +0.1142 pp | −0.0000 pp | [−0.0005, +0.0003] |
+| > 0.4 pp | +0.0424 pp | +0.0479 pp | **+0.0055 pp** | [+0.0043, +0.0083] |
+| > 0.6 pp | +0.0083 pp | +0.0231 pp | **+0.0147 pp** | [+0.0126, +0.0177] |
+| > 0.8 pp | **−0.0064 pp** | +0.0119 pp | **+0.0183 pp** | [+0.0148, +0.0202] |
 
-* **At a stringent threshold the uncorrected rule ships 14.2% and the truth is 14.2%:** it gets the rate right and the individuals wrong. The shrunk rule ships 3.2% and is more often correct, because most experiments genuinely do not clear a high bar and shrinkage says so.
+* **At the most demanding bar the uncorrected rule delivers negative value.** It is not merely less accurate: the arms it ships do not clear the threshold often enough to pay for those that do, so applying it is worse than shipping nothing. The corrected rule stays positive at every threshold.
+
+* **The mechanism is in the rates.** At a 0.8 pp bar the uncorrected rule ships 14.2% of experiments and 14.2% genuinely clear it: **it gets the rate right and the individuals wrong.** The shrunk rule ships 3.1%, forgoing some genuine winners in exchange for not paying for false ones.
+
+* **At a lenient threshold the two are indistinguishable**, and the interval says so. The gain is not a property of the method alone but of the method and the bar together.
 
 * **This is the decision a team makes most frequently**, and it is where the correction pays.
 
@@ -162,7 +172,7 @@ What an experimentation lead should take away: **the correction serves to stop o
 
 For an experimentation team evaluating whether to adopt the correction:
 
-* **The winning variant overstates by 15.4% in relative terms, and this is correctable.** **Adopt the correction for what is reported to the business and for deciding whether an improvement merits deployment**, since it reduces error by 24% and improves ship-decision accuracy by up to 2.9 points, winning across every partition evaluated.
+* **The winning variant overstates by 15.4% in relative terms, and this is correctable.** **Adopt the correction for what is reported to the business and for deciding whether an improvement merits deployment**, since it reduces estimation error by 24% and, at a demanding ship threshold, turns a policy of negative realised value into a positive one.
 
 * **The variants of an A/B test typically receive balanced traffic by design.** **Do not therefore justify the correction as an improvement to which variant is chosen**: measure the ratio of impressions between the most and least exposed variant, and if it is close to 1 there is an algebraic reason why it will not reorder.
 
@@ -185,6 +195,10 @@ For an experimentation team evaluating whether to adopt the correction:
 * **The normal prior is misspecified by construction.** The winner's advantage is that of an already-selected variant, so its distribution is shifted (skewness +1.19) where the normal assumes zero. This is the reason BHS was implemented, and also the reason posterior-mean ranking does not attain its theoretical optimum.
 
 * **The evaluation measures prediction on a held-out partition, not performance following an actual deployment.** The procedure is exact for the binomial, but what it tests is the ability to anticipate the held-out half of the same experiment. Deployment to a full user base introduces effects — saturation, seasonality, interference between users — that these data cannot reveal.
+
+* **The cluster bootstrap treats experiments as the resampling units and does not model dependence across them.** Shared time periods and editorial context are not accounted for: the archive is a time series, and nothing here is a block bootstrap. Intervals are reported as 95% cluster-bootstrap percentile intervals, with the basic (reverse-percentile) interval alongside; where the two separate materially that is stated, and it signals asymmetry or displacement of the bootstrap distribution rather than demonstrated bias.
+
+* **Monte Carlo variability from the thinning split is reported separately from sampling uncertainty, and in one place it dominates.** On the 1,277 experiments the regime filter retains, the spread across thinning seeds (0.125 pp) exceeds the bootstrap standard error (0.068 pp): at that sample size the choice of split moves the answer more than the sample does.
 
 * **A single publisher, a single metric, 2013–2015, and aggregated data without person-level detail.** There are no segments or user characteristics. **The procedure and its thresholds transfer; the specific figures do not.** No number in this document should be used as an expectation for another platform.
 

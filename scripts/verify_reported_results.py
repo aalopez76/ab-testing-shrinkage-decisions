@@ -36,11 +36,11 @@ class Claim:
     """One number the README states, and where it comes from."""
 
     label: str
-    source: str                 # file in reports/results/
-    path: tuple[str, ...]       # keys to walk
+    source: str                      # file in reports/results/
+    path: tuple[str | int, ...]      # keys to walk; ints index into lists
     expected: float
     tolerance: float
-    scale: float = 1.0          # multiply the stored value before comparing
+    scale: float = 1.0               # multiply the stored value before comparing
 
     def read(self) -> float:
         payload: Any = json.loads((RESULTS / self.source).read_text(encoding="utf-8"))
@@ -75,6 +75,21 @@ CLAIMS: list[Claim] = [
           ("confirmatory", "gain", "raw", "0.05"), 1.086, 0.015, scale=100),
     Claim("gain at 5%, shrunk (pp)", "07_result.json",
           ("confirmatory", "gain", "shrunk", "0.05"), 1.033, 0.015, scale=100),
+
+    # Decision 2, with the interval the README now quotes. The bootstrap is a
+    # Monte Carlo approximation, so these tolerances are wider than the
+    # deterministic claims above: they must survive a rerun on a new seed, not
+    # pin one run's digits. Endpoints moved by 0.0014 pp between B=1000 and
+    # B=2000, which is what sets the scale.
+    Claim("D2 difference, point (pp)", "08_regime.json",
+          ("confirmatory", "full_archive", "difference", "point_estimate"),
+          -0.0685, 0.004, scale=100),
+    Claim("D2 difference, lower endpoint (pp)", "08_regime.json",
+          ("confirmatory", "full_archive", "difference", "percentile_interval", 0),
+          -0.092, 0.010, scale=100),
+    Claim("D2 difference, upper endpoint (pp)", "08_regime.json",
+          ("confirmatory", "full_archive", "difference", "percentile_interval", 1),
+          -0.027, 0.010, scale=100),
 
     # Initial checks
     Claim("Cochran Q/dof, exploratory", "03_calibration.json",
@@ -129,6 +144,36 @@ CLAIMS: list[Claim] = [
           ("confirmatory", "mse_relative_change", "bhs"), -28.1, 0.6, scale=100),
     Claim("regime filter retains (%)", "08_regime.json",
           ("confirmatory", "filter", "fraction_of_arms_retained"), 6.9, 0.3, scale=100),
+
+    # Decision 3, by realised policy value. The sign of the uncorrected rule at
+    # the demanding threshold is the claim that matters, so its tolerance is
+    # tight enough that a change of sign fails here.
+    Claim("ship value at 0.8 pp, raw (pp)", "09_ship_decision.json",
+          ("thresholds", "0.008", "value_raw", "point_estimate"),
+          -0.00641, 0.0020, scale=100),
+    Claim("ship value at 0.8 pp, shrunk (pp)", "09_ship_decision.json",
+          ("thresholds", "0.008", "value_shrunk", "point_estimate"),
+          0.01187, 0.0020, scale=100),
+    Claim("ship difference at 0.8 pp (pp)", "09_ship_decision.json",
+          ("thresholds", "0.008", "difference_shrunk_minus_raw", "point_estimate"),
+          0.01828, 0.0025, scale=100),
+    Claim("ship difference at 0.8 pp, lower endpoint (pp)",
+          "09_ship_decision.json",
+          ("thresholds", "0.008", "difference_shrunk_minus_raw",
+           "percentile_interval", 0),
+          0.0148, 0.0040, scale=100),
+    Claim("ship difference at 0.6 pp (pp)", "09_ship_decision.json",
+          ("thresholds", "0.006", "difference_shrunk_minus_raw", "point_estimate"),
+          0.01475, 0.0025, scale=100),
+    Claim("ship difference at 0.4 pp (pp)", "09_ship_decision.json",
+          ("thresholds", "0.004", "difference_shrunk_minus_raw", "point_estimate"),
+          0.00548, 0.0020, scale=100),
+    Claim("ship rate at 0.8 pp, raw (%)", "09_ship_decision.json",
+          ("thresholds", "0.008", "ship_rate_raw"), 14.2, 0.8, scale=100),
+    Claim("ship rate at 0.8 pp, shrunk (%)", "09_ship_decision.json",
+          ("thresholds", "0.008", "ship_rate_shrunk"), 3.1, 0.8, scale=100),
+    Claim("should ship at 0.8 pp (%)", "09_ship_decision.json",
+          ("thresholds", "0.008", "should_ship"), 14.2, 0.8, scale=100),
 ]
 
 
