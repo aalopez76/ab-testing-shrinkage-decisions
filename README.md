@@ -207,3 +207,17 @@ For an experimentation team evaluating whether to adopt the correction:
 * **A single publisher, a single metric, 2013–2015, and aggregated data without person-level detail.** There are no segments or user characteristics. **The procedure and its thresholds transfer; the specific figures do not.** No number in this document should be used as an expectation for another platform.
 
 * **Two methods were ruled out, each with its reason.** Direct binomial shrinkage, **by diagnostic**: n·p has a median of 40 and only 0.1% of variants falls below 10, so the Gaussian approximation is not the source of the problem here. And Chen's reference implementation, **by declared operational cost**: it is written in R and this project is in Python; its diagnostic was nonetheless run, and it is what explains the principal finding.
+
+---
+
+# Outside Scope
+
+Three things this project does not do. The first two are not scope decisions: the data do not contain what they would require.
+
+* **The findings are not converted into money.** Policy value is reported in percentage points of click-through rate. Turning that into currency needs traffic, margin per conversion and the cost of a deployment — **three quantities this archive does not contain.** Supplying them from assumption would make the headline figure impressive and unfounded, so the value is left in the units that were actually measured.
+
+* **The mechanism behind the prioritisation failure is measured, not modelled.** The correlation between precision and outcome is reported unadjusted and within week and within experiment type, which is what the archive supports. A direct regression explaining *why* that dependence exists would need who wrote each headline, how it was placed and what drove its traffic — **fields the archive does not publish.**
+
+* **BHS is fitted but not calibrated.** Its likelihood ratio of 961 is reported as a fit statistic rather than as a test, because the null it would test places the shape parameter on the boundary of the parameter space, where the usual reference distribution does not apply. Convergence behaviour and the optimiser's grid were not assessed either.
+
+**One caveat about the evaluation design itself is a deliberate choice rather than a limitation of the data.** The counts are split into three equal thirds, and the split fraction is a free parameter one level down in `thinning.split_counts`; only `thinning.split_three_way` fixes it at equal thirds. How the reported magnitude of the curse responds to that choice was not measured, and could be.
