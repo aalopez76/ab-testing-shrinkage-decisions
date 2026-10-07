@@ -143,8 +143,10 @@ What an experimentation lead should take away: **the correction serves to stop o
 |---|---|---|---|---|
 | > 0.2 pp | +0.1143 pp | +0.1142 pp | −0.0000 pp | [−0.0005, +0.0003] |
 | > 0.4 pp | +0.0424 pp | +0.0479 pp | **+0.0055 pp** | [+0.0043, +0.0083] |
-| > 0.6 pp | +0.0083 pp | +0.0231 pp | **+0.0147 pp** | [+0.0126, +0.0177] |
+| > 0.6 pp | +0.0083 pp | +0.0231 pp | **+0.0147 pp** | [+0.0127, +0.0176] |
 | > 0.8 pp | **−0.0064 pp** | +0.0119 pp | **+0.0183 pp** | [+0.0148, +0.0202] |
+
+Every interval above comes from 2,000 cluster-bootstrap replicates over three thinning seeds. **The approximation is settled at that size:** against 1,000 replicates the point estimates are identical to five decimal places, as they must be since they do not depend on the replicate count, and no interval endpoint moves by more than 2.0% of its own width. The same check on the prioritisation estimate moves its endpoints by 0.0014 pp against an interval 0.064 pp wide.
 
 * **At the most demanding bar the uncorrected rule delivers negative value.** It is not merely less accurate: the arms it ships do not clear the threshold often enough to pay for those that do, so applying it is worse than shipping nothing. The corrected rule stays positive at every threshold.
 

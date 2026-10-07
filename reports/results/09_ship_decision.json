@@ -5,55 +5,55 @@
       "value_raw": {
         "point_estimate": 0.0011425166052693092,
         "percentile_interval": [
-          0.0010803169826968937,
-          0.0012024898991075219
+          0.0010799579803929126,
+          0.0012040843440577777
         ],
         "basic_interval": [
-          0.0010825433114310965,
-          0.0012047162278417246
+          0.0010809488664808406,
+          0.0012050752301457058
         ],
-        "bootstrap_se": 3.1107049184558226e-05,
+        "bootstrap_se": 3.1724845328024325e-05,
         "mc_variability": 1.174112835568624e-06,
-        "bootstrap_mean": 0.0011400551048215872,
-        "bias": -2.4615004477219343e-06,
+        "bootstrap_mean": 0.0011416318794871348,
+        "bias": -8.847257821744184e-07,
         "intervals_agree": true,
-        "replicates": 1000,
+        "replicates": 2000,
         "seeds_per_replicate": 3
       },
       "value_shrunk": {
         "point_estimate": 0.0011421998298150318,
         "percentile_interval": [
-          0.0010795986039702577,
-          0.0012016881185626807
+          0.0010795572386928796,
+          0.0012038218593175502
         ],
         "basic_interval": [
-          0.0010827115410673828,
-          0.001204801055659806
+          0.0010805778003125134,
+          0.001204842420937184
         ],
-        "bootstrap_se": 3.116332166140617e-05,
+        "bootstrap_se": 3.1773959698775014e-05,
         "mc_variability": 3.960715300232145e-06,
-        "bootstrap_mean": 0.00113939425765046,
-        "bias": -2.8055721645718363e-06,
+        "bootstrap_mean": 0.001140953313641732,
+        "bias": -1.2465161732997353e-06,
         "intervals_agree": true,
-        "replicates": 1000,
+        "replicates": 2000,
         "seeds_per_replicate": 3
       },
       "difference_shrunk_minus_raw": {
         "point_estimate": -3.167754542773126e-07,
         "percentile_interval": [
-          -4.893167143731724e-06,
-          3.1232253939518013e-06
+          -4.9965333699885075e-06,
+          3.290808523687706e-06
         ],
         "basic_interval": [
-          -3.7567763025064266e-06,
-          4.259616235177099e-06
+          -3.924359432242331e-06,
+          4.362982461433883e-06
         ],
-        "bootstrap_se": 2.0216031409748322e-06,
+        "bootstrap_se": 2.03115346955093e-06,
         "mc_variability": 3.1877225492527368e-06,
-        "bootstrap_mean": -6.608471711275637e-07,
-        "bias": -3.440717168502511e-07,
+        "bootstrap_mean": -6.785658454027895e-07,
+        "bias": -3.617903911254769e-07,
         "intervals_agree": false,
-        "replicates": 1000,
+        "replicates": 2000,
         "seeds_per_replicate": 3
       },
       "ship_rate_raw": 0.4925563165528371,
@@ -67,55 +67,55 @@
       "value_raw": {
         "point_estimate": 0.0004243853771836033,
         "percentile_interval": [
-          0.0003760888030385746,
-          0.0004776556184018016
+          0.00037472534601151123,
+          0.00048205406335948686
         ],
         "basic_interval": [
-          0.000371115135965405,
-          0.000472681951328632
+          0.00036671669100771974,
+          0.0004740454083556954
         ],
-        "bootstrap_se": 2.6579561526669778e-05,
+        "bootstrap_se": 2.7331784389906356e-05,
         "mc_variability": 7.908861541383578e-06,
-        "bootstrap_mean": 0.00042598756719905553,
-        "bias": 1.602190015452228e-06,
+        "bootstrap_mean": 0.0004269521752608565,
+        "bias": 2.5667980772531708e-06,
         "intervals_agree": true,
-        "replicates": 1000,
+        "replicates": 2000,
         "seeds_per_replicate": 3
       },
       "value_shrunk": {
         "point_estimate": 0.00047918914007861546,
         "percentile_interval": [
           0.00044380253228450323,
-          0.0005361978475929357
+          0.000537885020531634
         ],
         "basic_interval": [
-          0.00042218043256429523,
+          0.00042049325962559693,
           0.0005145757478727277
         ],
-        "bootstrap_se": 2.370194546090911e-05,
+        "bootstrap_se": 2.445632674345765e-05,
         "mc_variability": 1.6350835730319093e-05,
-        "bootstrap_mean": 0.0004896329867587877,
-        "bias": 1.0443846680172216e-05,
+        "bootstrap_mean": 0.000490457024431343,
+        "bias": 1.1267884352727576e-05,
         "intervals_agree": false,
-        "replicates": 1000,
+        "replicates": 2000,
         "seeds_per_replicate": 3
       },
       "difference_shrunk_minus_raw": {
         "point_estimate": 5.4803762895012215e-05,
         "percentile_interval": [
-          4.3381861795027915e-05,
-          8.33580150982039e-05
+          4.3272709318504596e-05,
+          8.327756254724981e-05
         ],
         "basic_interval": [
-          2.6249510691820537e-05,
-          6.622566399499652e-05
+          2.6329963242774617e-05,
+          6.633481647151983e-05
         ],
-        "bootstrap_se": 1.000036296662138e-05,
+        "bootstrap_se": 1.005476673212242e-05,
         "mc_variability": 1.850304140279568e-05,
-        "bootstrap_mean": 6.364541955973215e-05,
-        "bias": 8.841656664719934e-06,
+        "bootstrap_mean": 6.350484917048662e-05,
+        "bias": 8.701086275474405e-06,
         "intervals_agree": false,
-        "replicates": 1000,
+        "replicates": 2000,
         "seeds_per_replicate": 3
       },
       "ship_rate_raw": 0.333502341881929,
@@ -129,55 +129,55 @@
       "value_raw": {
         "point_estimate": 8.313631585766289e-05,
         "percentile_interval": [
-          3.8706215489092816e-05,
-          0.0001257734985969973
+          3.738449979633904e-05,
+          0.00012775435597888406
         ],
         "basic_interval": [
-          4.0499133118328473e-05,
-          0.00012756641622623297
+          3.851827573644171e-05,
+          0.00012888813191898674
         ],
-        "bootstrap_se": 2.2561307087439577e-05,
+        "bootstrap_se": 2.3363802155611317e-05,
         "mc_variability": 2.1449098395669448e-05,
-        "bootstrap_mean": 8.179269898594086e-05,
-        "bias": -1.3436168717220287e-06,
+        "bootstrap_mean": 8.247429086624115e-05,
+        "bias": -6.620249914217346e-07,
         "intervals_agree": true,
-        "replicates": 1000,
+        "replicates": 2000,
         "seeds_per_replicate": 3
       },
       "value_shrunk": {
         "point_estimate": 0.00023065764636144548,
         "percentile_interval": [
-          0.0001945514179333223,
-          0.000270848422863813
+          0.00019481799460403513,
+          0.0002730089570123476
         ],
         "basic_interval": [
-          0.00019046686985907797,
-          0.00026676387478956863
+          0.00018830633571054336,
+          0.00026649729811885586
         ],
-        "bootstrap_se": 1.9359862033815975e-05,
+        "bootstrap_se": 1.98674620278381e-05,
         "mc_variability": 1.3448662742720811e-05,
-        "bootstrap_mean": 0.0002329438848079871,
-        "bias": 2.2862384465416167e-06,
+        "bootstrap_mean": 0.00023353952310742066,
+        "bias": 2.881876745975179e-06,
         "intervals_agree": true,
-        "replicates": 1000,
+        "replicates": 2000,
         "seeds_per_replicate": 3
       },
       "difference_shrunk_minus_raw": {
         "point_estimate": 0.0001475213305037826,
         "percentile_interval": [
-          0.00012552555878295686,
-          0.00017690840890560117
+          0.00012647903616704208,
+          0.00017643852726289438
         ],
         "basic_interval": [
-          0.00011813425210196405,
-          0.00016951710222460836
+          0.00011860413374467085,
+          0.00016856362484052315
         ],
-        "bootstrap_se": 1.3125682820092268e-05,
+        "bootstrap_se": 1.2899555036002718e-05,
         "mc_variability": 1.2771375518282733e-05,
-        "bootstrap_mean": 0.00015115118582204628,
-        "bias": 3.6298553182636726e-06,
+        "bootstrap_mean": 0.00015106523224117953,
+        "bias": 3.5439017373969136e-06,
         "intervals_agree": false,
-        "replicates": 1000,
+        "replicates": 2000,
         "seeds_per_replicate": 3
       },
       "ship_rate_raw": 0.21961784940546417,
@@ -191,55 +191,55 @@
       "value_raw": {
         "point_estimate": -6.409776502010567e-05,
         "percentile_interval": [
-          -9.635489111674362e-05,
-          -1.9732499398006818e-05
+          -9.526418418386964e-05,
+          -1.7976527711236795e-05
         ],
         "basic_interval": [
-          -0.00010846303064220453,
-          -3.184063892346773e-05
+          -0.00011021900232897455,
+          -3.293134585634171e-05
         ],
-        "bootstrap_se": 1.9659649527058484e-05,
+        "bootstrap_se": 2.0149710358142405e-05,
         "mc_variability": 1.9530775475462197e-05,
-        "bootstrap_mean": -5.745911765497175e-05,
-        "bias": 6.638647365133924e-06,
+        "bootstrap_mean": -5.687434606886656e-05,
+        "bias": 7.223418951239113e-06,
         "intervals_agree": false,
-        "replicates": 1000,
+        "replicates": 2000,
         "seeds_per_replicate": 3
       },
       "value_shrunk": {
         "point_estimate": 0.00011865969973932829,
         "percentile_interval": [
-          8.401734550953161e-05,
-          0.00015728868012546346
+          8.45270735378148e-05,
+          0.00015789302956719945
         ],
         "basic_interval": [
-          8.003071935319312e-05,
-          0.00015330205396912498
+          7.942636991145713e-05,
+          0.0001527923259408418
         ],
-        "bootstrap_se": 1.8804195484225905e-05,
+        "bootstrap_se": 1.8951513049320416e-05,
         "mc_variability": 3.912090969215486e-06,
-        "bootstrap_mean": 0.00011722005140263617,
-        "bias": -1.439648336692124e-06,
+        "bootstrap_mean": 0.00011749258266493395,
+        "bias": -1.1671170743943388e-06,
         "intervals_agree": true,
-        "replicates": 1000,
+        "replicates": 2000,
         "seeds_per_replicate": 3
       },
       "difference_shrunk_minus_raw": {
         "point_estimate": 0.00018275746475943395,
         "percentile_interval": [
-          0.0001479804492842062,
-          0.0002021220696123993
+          0.00014769874834351935,
+          0.0002020439411693008
         ],
         "basic_interval": [
-          0.00016339285990646862,
-          0.0002175344802346617
+          0.0001634709883495671,
+          0.00021781618117534856
         ],
-        "bootstrap_se": 1.3927135937608586e-05,
+        "bootstrap_se": 1.4058334064043325e-05,
         "mc_variability": 1.577409589083971e-05,
-        "bootstrap_mean": 0.0001746791690576079,
-        "bias": -8.078295701826048e-06,
+        "bootstrap_mean": 0.00017436692873380052,
+        "bias": -8.390536025633432e-06,
         "intervals_agree": false,
-        "replicates": 1000,
+        "replicates": 2000,
         "seeds_per_replicate": 3
       },
       "ship_rate_raw": 0.14186471472080367,
@@ -249,7 +249,7 @@
       "accuracy_shrunk": 0.8665188667168601
     }
   },
-  "replicates": 1000,
+  "replicates": 2000,
   "seeds_per_replicate": 3,
   "sample": "confirmatory",
   "threshold_units": "proportion of click rate",
