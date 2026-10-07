@@ -1,5 +1,7 @@
 # Project Background
 
+[![CI](https://github.com/aalopez76/ab-testing-shrinkage-decisions/actions/workflows/ci.yml/badge.svg)](https://github.com/aalopez76/ab-testing-shrinkage-decisions/actions/workflows/ci.yml)
+
 Organisations that decide through experimentation — digital commerce, media, marketplaces, healthcare, research — propose several versions of the same offering (advertisements, discounts, headlines, doses), measure which performs best, and deploy the winner. **However, the version selected for having performed best subsequently tends to deliver less than was expected.**
 
 This is a well-documented problem known as **the winner's curse**. It arises because the selected offering owes its advantage to two things at once: partly to being genuinely the best performer, and partly to a component of luck — noise — that does not repeat on deployment. Its magnitude depends on the power of the experiment: at 80% power, the industry standard, the exaggeration is around 13%; at 20% power, it exceeds 130%.
@@ -7,6 +9,8 @@ This is a well-documented problem known as **the winner's curse**. It arises bec
 The correction the industry proposes is **empirical Bayes shrinkage**: pulling the winner's result towards the group mean, in a proportion that grows with the imprecision of the measurement. Microsoft and Netflix use it in production, Meta published a variant in 2025 — *Bayesian Hybrid Shrinkage* — and **Spotify published its reasons for not adopting it**, warning that a poorly calibrated prior is actively worse than not correcting at all. Adopting it changes how every result is reported to the business.
 
 **The question this project answers is whether it is worth adopting, and for what exactly.**
+
+Three published lines of work converge on evaluating experiments by the decision they produce rather than by estimation error alone. Among the closest antecedents reviewed, I did not find a public evaluation comparing standard empirical-Bayes shrinkage by realised out-of-sample value under this decision criterion.
 
 Findings and recommendations are organised around four decisions:
 
@@ -44,32 +48,52 @@ The retained period runs at the anomaly rate that would be expected by chance.
 
 ## Check 2: noise model (twofold underestimation)
 
-All shrinkage depends on the variance of each measurement, and A/A experiments — where nothing varies between variants — provide an independent benchmark: the true difference is zero by construction, so the observed dispersion should match the calculated one. It does not. Cochran's *Q* is **1.940** times its degrees of freedom in the exploratory sample and **1.927** in the confirmatory sample, and **replicates across both**.
+All shrinkage depends on the variance of each measurement, and experiments where no recorded treatment field varies between variants provide an independent benchmark. These are **inferred A/A-like experiments, identified from the treatment fields the archive publishes** — not deliberately designed A/A tests in which the true effect is known to be zero, a distinction that matters because the archive may not record every field that varied. Under the assumption that nothing else varied, observed dispersion should match the calculated one. It does not. Cochran's *Q* is **1.940** times its degrees of freedom in the exploratory sample and **1.927** in the confirmatory sample, and **replicates across both**.
+
+What that figure establishes is **excess dispersion relative to the binomial benchmark in those experiments** — not a cleanly identified design effect, since the clustering and the unpublished-field explanations are not separable here.
 
 ![Initial checks](reports/figures/02_initial_checks.png)
 
 ## How out-of-sample evaluation is performed
 
-Measuring how far the winner was inflated requires measuring it where it played no part in being chosen. Each variant's counts are split **hypergeometrically**, which for the family to which the binomial belongs yields **marginally independent** parts summing to the original observation; this is exact, not approximate. The technique is known as *data thinning*.
+Measuring how far the winner was inflated requires measuring it where it played no part in being chosen. Each variant's counts are split **hypergeometrically**, which for the family to which the binomial belongs yields marginally independent parts summing to the original observation. That result is **exact under the binomial observation model**.
+
+It does not follow that the halves behave as independent real-world deployments. Check 2 found overdispersion relative to that very model, so if the excess comes from repeated visitors, sessions or unobserved heterogeneity, splitting aggregate counts does not reproduce the independence a fresh population would have. The partitions are therefore best read as **model-based held-out partitions**, and every out-of-sample guarantee below inherits that condition.
 
 The split is into **three thirds** rather than two: one selects the variant, another estimates its advantage, the third evaluates. With two halves the between-experiment dispersion is estimated as zero, because the winner's advantage is an already-selected statistic and the method assumes an estimate that is not.
+
+Uncertainty is reported as a **95% cluster-bootstrap percentile interval**, resampling whole experiments with replacement. An earlier version divided the spread across thinning seeds by the square root of their count, which measures how much the answer moves when the split moves — a quantity that shrinks towards zero as seeds are added — rather than uncertainty about the effect. Monte Carlo variability from the split is now reported separately from sampling uncertainty.
 
 ---
 
 # Executive Summary
 
-With the method frozen, the confirmatory sample was run **once**. It replicated to the third decimal place on a sample 4.7 times larger that was never touched during development.
-
 **The winner's curse is real and substantial:** the deployed variant promises 1.792% and delivers 1.553%, a **15.4% relative overstatement**. It is a selection effect rather than a measurement effect: choosing a variant at random yields an inflation a hundred times smaller.
 
-**The correction does not fix what most people assume it fixes.** Measured separately across the four decisions:
+**The correction does not fix what most people assume it fixes.** But the four decisions were not all specified at the same time, and that distinction is kept visible below rather than smoothed over.
+
+## Stage 1 — pre-specified confirmatory analysis
+
+The method was frozen at commit `69dfd977`, with its success criterion — **realised gain from the decision**, not reduction in estimation error — recorded in [`reports/results/FROZEN_METHOD.json`](reports/results/FROZEN_METHOD.json). The confirmatory sample was then run **once**, and replicated to the third decimal place on a sample 4.7 times larger that was never touched during development.
+
+**Primary decision analyses**
 
 | Decision | Does shrinkage help? | Figure |
 |---|---|---|
 | **1. Which variant to deploy** | **No, and it cannot** | 99.8% of decisions identical |
-| **2. Which experiments to prioritise** | **No, marginally worse** | −0.056 pp, 95% CI [−0.062, −0.049], loses in 40/40 |
-| **3. Whether to ship** | **Yes, and the margin grows** | +1.73 to +2.91 pp accuracy, wins in 20/20 |
-| **4. The figure reported** | **Yes** | −24.0% error, −28.1% with Meta's variant |
+| **2. Which experiments to prioritise** | **No, and it costs** | −0.069 pp, 95% cluster-bootstrap percentile [−0.092, −0.027] |
+
+**Pre-confirmatory secondary estimation analysis.** The improvement in estimation error was measured before the confirmatory sample was opened, but it is not the frozen criterion: **−24.0% mean squared error**, replicated across both samples.
+
+## Stage 2 — post-confirmatory exploratory analyses
+
+These were devised **after the confirmatory sample had already been unblinded** and evaluated on it. Nothing about them is wrong, but they are not confirmations: they **generate hypotheses requiring independent confirmation**.
+
+| Analysis | Finding |
+|---|---|
+| **3. Whether to ship** | At a 0.8 pp bar the uncorrected policy delivers **negative** value, −0.0064 pp, while shrinkage delivers +0.0119 pp |
+| **BHS** (Meta, 2025) | Better fit and lower held-out estimation error, −28.1% |
+| **Regime boundary** | The closest published result holds inside the 6.9% of arms its filter retains, not outside |
 
 ![The four decisions](reports/figures/03_four_decisions.png)
 
@@ -91,7 +115,7 @@ What an experimentation lead should take away: **the correction serves to stop o
 
 ## 2. Which experiments to prioritise: it degrades, and the reason is identifiable
 
-* **It genuinely reorders but selects worse.** At a 10% budget the correction changes 23.0% of the selection, and realised gain falls by 0.056 pp, losing across all 40 partitions evaluated with an interval that does not cross zero.
+* **It genuinely reorders but selects worse.** At a 10% budget the correction changes 23.0% of the selection, and realised gain falls by **0.069 pp, 95% cluster-bootstrap percentile interval [−0.092, −0.027]**, which does not cross zero. The direction is stable across the three thinning seeds.
 
 * **The mechanism is visible:** it discards experiments with a shrinkage weight of 0.689 and 4,000 impressions, and adds others with a weight of 0.318 and 7,151. That is, **it discards the imprecise and adds the precise**, which is exactly what theory says it does under a capacity constraint.
 
@@ -124,9 +148,9 @@ What an experimentation lead should take away: **the correction serves to stop o
 
 * **The standard correction reduces estimation error by 24.0%**, replicated across both samples. This is what prevents promising the business improvements that never arrive.
 
-* **BHS was also implemented**, the variant Meta published in 2025 with experiment-specific local shrinkage factors. The data call for that flexibility unambiguously: the fitted parameter is **a = 2.65** with a **likelihood ratio of 961** against the standard version.
+* **BHS was also implemented**, the variant Meta published in 2025 with experiment-specific local shrinkage factors. This is a **Stage 2 exploratory extension**: better fit and lower held-out estimation error in this dataset, with the fitted parameter **a = 2.65** and a likelihood ratio of 961 against the standard version. **Numerical sensitivity and formal calibration of that likelihood-ratio comparison were not evaluated and remain outside scope**, so the ratio is reported as a fit statistic rather than as a test.
 
-* **BHS delivers what it promises and estimates better: −28.1% error.** But it does not change the ordering: the difference on decision 2 is +0.009 pp, and it wins in 0% of partitions.
+* **BHS estimates better: −28.1% held-out error.** But it does not change the ordering: the difference on decision 2 is +0.009 pp.
 
 * **The reason had already been measured.** BHS corrects the **shape** of the prior through heavy tails; what fails in these data is **prior independence**. Making the prior more flexible does not make precision independent of the parameter: these are two distinct assumptions, and BHS addresses only one.
 
@@ -155,6 +179,8 @@ For an experimentation team evaluating whether to adopt the correction:
 * **The noise model does not describe these data, and the two candidate explanations are not distinguishable.** Cochran's *Q* is approximately 1.93 times its degrees of freedom across both samples. This may be because impressions are not independent, or because fields the archive does not publish were varying. Both are declared, and the measured factor is applied to the variance of each variant.
 
 * **The design factor is applied only at the level at which it was measured.** The value of 1.94 corresponds to comparisons between variants within an experiment. For the between-experiment advantage, a factor estimated by an independent route — a covariance that does not use the variance at all — gives approximately 1.09. **A design factor does not transfer across levels**, and assuming that it does would reverse the conclusion.
+
+* **The observed failure on prioritisation is consistent with precision−effect dependence, which is not the same as having identified it as the cause.** The correlation between impressions and outcome is negative and survives control for period and for experiment type, which is what the assumption forbids; but a negative correlation among observed quantities does not by itself establish the direction of the dependence in the underlying parameters.
 
 * **The normal prior is misspecified by construction.** The winner's advantage is that of an already-selected variant, so its distribution is shifted (skewness +1.19) where the normal assumes zero. This is the reason BHS was implemented, and also the reason posterior-mean ranking does not attain its theoretical optimum.
 

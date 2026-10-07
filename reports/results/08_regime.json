@@ -5,78 +5,78 @@
       "arms": 4689,
       "median_n_times_p": 130.70194449046213,
       "difference": {
-        "point_estimate": -0.0004506334313326872,
+        "point_estimate": -0.0003021257750842841,
         "percentile_interval": [
-          -0.0018428973703763392,
-          0.0008472163915186392
+          -0.0012979843403739522,
+          0.0013837322557495844
         ],
         "basic_interval": [
-          -0.0017484832541840136,
-          0.0009416305077109648
+          -0.0019879838059181526,
+          0.000693732790205384
         ],
-        "bootstrap_se": 0.0008803253788215845,
-        "mc_variability": 0.0,
-        "bootstrap_mean": -0.00022130234765593924,
-        "bias": 0.00022933108367674798,
-        "intervals_agree": true,
-        "replicates": 10,
-        "seeds_per_replicate": 1
+        "bootstrap_se": 0.000674604423944906,
+        "mc_variability": 0.001254882717132128,
+        "bootstrap_mean": 6.586954568274303e-05,
+        "bias": 0.0003679953207670272,
+        "intervals_agree": false,
+        "replicates": 2000,
+        "seeds_per_replicate": 3
       },
-      "mean_difference": -0.0004506334313326872,
+      "mean_difference": -0.0003021257750842841,
       "percentile_interval": [
-        -0.0018428973703763392,
-        0.0008472163915186392
+        -0.0012979843403739522,
+        0.0013837322557495844
       ],
       "basic_interval": [
-        -0.0017484832541840136,
-        0.0009416305077109648
+        -0.0019879838059181526,
+        0.000693732790205384
       ],
-      "intervals_agree": true,
+      "intervals_agree": false,
       "differs_from_zero": false,
-      "mse_relative_change": -0.33885429171528614
+      "mse_relative_change": -0.3100763878634275
     },
     "full_archive": {
       "experiments": 15787,
       "arms": 77446,
       "median_n_times_p": 39.95417007816627,
       "difference": {
-        "point_estimate": -0.0005992929773966926,
+        "point_estimate": -0.0006853842312306655,
         "percentile_interval": [
-          -0.0010426528863978273,
-          -0.0002684999098019374
+          -0.0009153784989504796,
+          -0.00027333550816637035
         ],
         "basic_interval": [
-          -0.0009300860449914478,
-          -0.0001559330683955579
+          -0.0010974329542949607,
+          -0.00045538996351085145
         ],
-        "bootstrap_se": 0.00026246538952032726,
-        "mc_variability": 0.0,
-        "bootstrap_mean": -0.0005915515474322786,
-        "bias": 7.741429964414027e-06,
+        "bootstrap_se": 0.0001664020687032236,
+        "mc_variability": 8.859515574880413e-05,
+        "bootstrap_mean": -0.0006015525340457223,
+        "bias": 8.383169718494316e-05,
         "intervals_agree": false,
-        "replicates": 10,
-        "seeds_per_replicate": 1
+        "replicates": 2000,
+        "seeds_per_replicate": 3
       },
-      "mean_difference": -0.0005992929773966926,
+      "mean_difference": -0.0006853842312306655,
       "percentile_interval": [
-        -0.0010426528863978273,
-        -0.0002684999098019374
+        -0.0009153784989504796,
+        -0.00027333550816637035
       ],
       "basic_interval": [
-        -0.0009300860449914478,
-        -0.0001559330683955579
+        -0.0010974329542949607,
+        -0.00045538996351085145
       ],
       "intervals_agree": false,
       "differs_from_zero": true,
-      "mse_relative_change": -0.2427281754820957
+      "mse_relative_change": -0.2391218443105284
     },
     "filter": {
       "min_impressions": 1000,
       "min_clicks": 100,
       "fraction_of_arms_retained": 0.0685897270356119
     },
-    "replicates": 10,
-    "seeds_per_replicate": 1,
+    "replicates": 2000,
+    "seeds_per_replicate": 3,
     "interval_method": "cluster bootstrap over experiments, percentile",
     "budget": 0.05
   }

@@ -173,11 +173,13 @@ def fig_cuatro_decisiones(p, partitions: int = 8) -> None:
         ("2. Which experiments to prioritise?", "realised gain at a 5% budget",
          g["shrunk"]["0.05"] * 100, g["raw"]["0.05"] * 100,
          f"worse by {abs(g['shrunk']['0.05']-g['raw']['0.05'])*100:.3f} pp — "
-         "loses in 40 of 40", PERJUDICA, " pp", 2),
-        ("3. Ship or not?", "accuracy against realised, threshold > 0.6 pp",
-         u["0.6"]["accuracy_shrunk"] * 100, u["0.6"]["accuracy_raw"] * 100,
-         f"better by {u['0.6']['improvement']*100:+.2f} pp — wins in 20 of 20",
-         AYUDA, "%", 1),
+         "interval excludes zero", PERJUDICA, " pp", 2),
+        ("3. Ship or not?", "realised policy value, threshold > 0.8 pp",
+         u["0.008"]["value_shrunk"]["point_estimate"] * 100,
+         u["0.008"]["value_raw"]["point_estimate"] * 100,
+         f"the uncorrected rule destroys value: "
+         f"{u['0.008']['value_raw']['point_estimate']*100:+.4f} pp",
+         AYUDA, " pp", 4),
         ("4. Which figure to report?", "mean squared error (lower is better)",
          r["estimation"]["mse_shrunk"] * 1e5, r["estimation"]["mse_raw"] * 1e5,
          f"{abs(r['estimation']['relative_change'])*100:.1f}% less error", AYUDA, " ×10⁻⁵", 2),
@@ -205,39 +207,58 @@ def fig_cuatro_decisiones(p, partitions: int = 8) -> None:
 
 # --------------------------------------------------------------------------
 def fig_umbral() -> None:
-    """Donde shrink sí gana: la decisión de lanzar contra un umbral."""
+    """Donde la contraccion si gana: lanzar contra un umbral absoluto.
+
+    Se grafica el VALOR de la politica, no la exactitud. La exactitud contra
+    `realized > u` compara con una segunda medicion ruidosa, no con la verdad;
+    el valor realizado es lo que la regla entrega.
+    """
     d = leer("09_ship_decision.json")["thresholds"]
     us = sorted(d, key=float)
-    x = [float(k) for k in us]
-    cru = [d[k]["accuracy_raw"] * 100 for k in us]
-    con = [d[k]["accuracy_shrunk"] * 100 for k in us]
+    x = [float(k) * 100 for k in us]                      # a puntos porcentuales
+
+    v_cru = [d[k]["value_raw"]["point_estimate"] * 100 for k in us]
+    v_con = [d[k]["value_shrunk"]["point_estimate"] * 100 for k in us]
+    ic_cru = [d[k]["value_raw"]["percentile_interval"] for k in us]
+    ic_con = [d[k]["value_shrunk"]["percentile_interval"] for k in us]
+
+    def barras(valores, intervalos):
+        bajo = [v - ic[0] * 100 for v, ic in zip(valores, intervalos)]
+        alto = [ic[1] * 100 - v for v, ic in zip(valores, intervalos)]
+        return [bajo, alto]
 
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(10.5, 3.8))
 
-    a1.plot(x, cru, "o-", color=CRUDA, lw=2, ms=6, label="uncorrected")
-    a1.plot(x, con, "o-", color=GLOBAL, lw=2, ms=6, label="shrunk")
-    for xi, k in zip(x, us):
-        gana = d[k]["shrunk_wins_in"]
-        a1.annotate(f"wins in\n{gana:.0%}", (xi, d[k]["accuracy_shrunk"] * 100),
-                    textcoords="offset points", xytext=(0, 11), ha="center",
-                    fontsize=8, color=AYUDA if gana > 0.9 else "#777",
-                    weight="bold" if gana > 0.9 else "normal")
+    a1.axhline(0, color="#333", lw=1.1, zorder=1)
+    a1.errorbar(x, v_cru, yerr=barras(v_cru, ic_cru), fmt="o-", color=CRUDA,
+                lw=2, ms=6, capsize=3, label="uncorrected", zorder=3)
+    a1.errorbar(x, v_con, yerr=barras(v_con, ic_con), fmt="o-", color=GLOBAL,
+                lw=2, ms=6, capsize=3, label="shrunk", zorder=3)
+
+    # El cruce por cero es el hallazgo: senalar el umbral donde ocurre.
+    for xi, v in zip(x, v_cru):
+        if v < 0:
+            a1.annotate("destroys\nvalue", (xi, v),
+                        textcoords="offset points",
+                        xytext=(0, -26), ha="center", fontsize=8.5,
+                        color=PERJUDICA, weight="bold")
+            break
+
     a1.set_xlabel("ship threshold (percentage points of improvement)")
-    a1.set_ylabel("% of correct decisions")
-    a1.set_title("Shrinkage is more accurate, and the margin grows with the threshold")
-    a1.legend(frameon=False, loc="upper left")
-    a1.set_ylim(min(cru) - 5, max(con) + 9)
+    a1.set_ylabel("realised policy value (pp)")
+    a1.set_title("Above a demanding bar the uncorrected rule turns negative")
+    a1.legend(frameon=False, loc="upper right")
     a1.set_xlim(min(x) - 0.06, max(x) + 0.06)
 
     ancho = 0.26
     xi = np.arange(len(us))
-    a2.bar(xi - ancho, [d[k]["ships_raw"] * 100 for k in us], ancho,
+    a2.bar(xi - ancho, [d[k]["ship_rate_raw"] * 100 for k in us], ancho,
            color=CRUDA, label="ships, uncorrected")
-    a2.bar(xi, [d[k]["ships_shrunk"] * 100 for k in us], ancho,
+    a2.bar(xi, [d[k]["ship_rate_shrunk"] * 100 for k in us], ancho,
            color=GLOBAL, label="ships, shrunk")
     a2.bar(xi + ancho, [d[k]["should_ship"] * 100 for k in us], ancho,
            color=ORACULO, edgecolor="#999", label="should ship")
-    a2.set_xticks(xi, [f"> {k}" for k in us])
+    a2.set_xticks(xi, [f"> {float(k)*100:.1f}" for k in us])
     a2.set_xlabel("ship threshold (pp)")
     a2.set_ylabel("% of experiments shipped")
     a2.set_title("The uncorrected rule gets the rate right and the individuals wrong")

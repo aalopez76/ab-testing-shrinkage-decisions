@@ -6,7 +6,13 @@ generator kept reading the old names. Every unit test stayed green: nothing in
 the end of a long pipeline.
 
 This closes that gap cheaply. It does not draw anything; it checks that every
-file and key `11_figures.py` reaches for is present in the committed artefacts.
+result file and every literal subscript key `11_figures.py` reaches for is
+present in the committed artefacts.
+
+The key check was added after the file check alone proved insufficient: when the
+ship analysis moved from accuracy to policy value, four keys the generator read
+(`improvement`, `shrunk_wins_in`, `ships_raw`, `ships_shrunk`) ceased to exist
+and every test still passed, because the file they lived in was still there.
 """
 
 import json
@@ -14,6 +20,8 @@ import re
 from pathlib import Path
 
 import pytest
+
+from _figure_keys import subscript_keys_by_file
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "reports" / "results"
@@ -75,3 +83,36 @@ def test_the_readme_references_only_figures_that_exist():
     missing = sorted(name for name in referenced if not (FIGURES / name).exists())
     assert not missing, f"README points at figures that do not exist: {missing}"
     assert referenced, "the README references no figures at all"
+
+
+def test_every_key_the_generator_subscripts_exists_in_the_file_it_reads():
+    """A renamed key inside a file that still exists was invisible before.
+
+    When the ship analysis moved from accuracy to policy value, four keys the
+    generator read ceased to exist and every test still passed, because the
+    file they lived in was still there. This is that gap.
+    """
+    source = GENERATOR.read_text(encoding="utf-8")
+    problems = []
+    for name, keys in subscript_keys_by_file(source).items():
+        path = RESULTS / name
+        if not path.exists():
+            continue                      # covered by the file-level test
+        text = path.read_text(encoding="utf-8")
+        for key in sorted(keys):
+            if f'"{key}"' not in text:
+                problems.append(f"{name}: {key}")
+    assert not problems, (
+        f"11_figures.py subscripts keys absent from the committed results: {problems}"
+    )
+
+
+def test_the_key_check_actually_finds_keys():
+    """Guards the test above: a broken extractor would pass it vacuously.
+
+    It already earned its place: the first extractor resolved every file and
+    zero keys, and this is what said so.
+    """
+    found = subscript_keys_by_file(GENERATOR.read_text(encoding="utf-8"))
+    assert found, "no result file was matched to any subscript key"
+    assert sum(len(keys) for keys in found.values()) >= 20
