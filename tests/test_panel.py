@@ -1,9 +1,27 @@
-"""The panel is the single gateway to the data, so its contract is tested."""
+"""The panel is the single gateway to the data, so its contract is tested.
+
+These assertions are about the **archive**, not about the software: that the
+exclusion window is empty, that enough A/A experiments survive to calibrate
+against, that rates and variances agree. They cannot run without the real CSV
+files, which are not redistributed here, so they skip where the data are absent
+— on CI, for instance.
+
+The software itself is covered without the archive: `tests/test_pipeline.py`
+walks the same chain over a synthetic one.
+"""
 
 import pandas as pd
 import pytest
 
 from wcab import panel
+
+needs_archive = pytest.mark.skipif(
+    not panel.derived_path("exploratory").exists()
+    and not (panel.RAW / panel.FILES["exploratory"]).exists(),
+    reason="the Upworthy archive is not present; run scripts/00_download.py",
+)
+
+pytestmark = needs_archive
 
 
 @pytest.fixture(scope="module")
