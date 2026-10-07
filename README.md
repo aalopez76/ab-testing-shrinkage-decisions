@@ -74,7 +74,9 @@ Uncertainty is reported as a **95% cluster-bootstrap percentile interval**, resa
 
 ## Stage 1 — pre-specified confirmatory analysis
 
-The method was frozen at commit `69dfd977`, with its success criterion — **realised gain from the decision**, not reduction in estimation error — recorded in [`reports/results/FROZEN_METHOD.json`](reports/results/FROZEN_METHOD.json). The confirmatory sample was then run **once**, and replicated to the third decimal place on a sample 4.7 times larger that was never touched during development.
+The method was frozen as the code at commit `69dfd977`, and the confirmatory sample was then run **once**. It replicated to the third decimal place on a sample 4.7 times larger that was never touched during development.
+
+**What that pre-specification rests on, stated precisely.** Git timestamps the analysis code at the freeze commit nine minutes before the commit carrying the confirmatory results, so the method was fixed before the confirmatory sample was opened. The written success criterion — **realised gain from the decision**, not reduction in estimation error — is recorded in [`reports/results/FROZEN_METHOD.json`](reports/results/FROZEN_METHOD.json), which names that commit but was itself committed two days later, during translation. **It is therefore a repository artefact rather than an independently timestamped pre-registration**, and it is reproduced in the language it was written in rather than rewritten after the fact.
 
 **Primary decision analyses**
 

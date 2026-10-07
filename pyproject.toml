@@ -16,10 +16,11 @@ dependencies = [
     "pandas>=2.2,<3",
     "numpy>=1.26,<3",
     "scipy>=1.13,<2",
-    "statsmodels>=0.14,<1",
-    "scikit-learn>=1.5,<2",
     "matplotlib>=3.9,<4",
 ]
+# statsmodels and scikit-learn were declared here and imported nowhere. A cold
+# install into a clean environment is what surfaced them: they are about 20 MB
+# of wheels that no module in src/, scripts/ or tests/ reaches for.
 
 [project.optional-dependencies]
 dev = [
