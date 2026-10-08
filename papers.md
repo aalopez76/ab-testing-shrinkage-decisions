@@ -61,6 +61,8 @@ DOI: [10.6028/jres.087.022](https://doi.org/10.6028/jres.087.022)
 
 > **The component that makes the evaluation possible.** It allows a variant's counts to be split into **marginally independent** halves that sum to the original observation — hypergeometrically for the binomial, and exactly rather than approximately. Without it there is no way to measure out of sample without additional data.
 >
+> It also supplies the reason the split fraction is reported rather than assumed. The paper treats that fraction as a tuning parameter governing how much information goes to the task being performed as against the task of evaluating it, with a best value that depends on the model. `scripts/12_split_sensitivity.py` reports the published estimates against that choice.
+>
 > **Not to be confused with *data fission*** (Leiner, Duan, Tibshirani and Ramdas), which for the binomial does not yield independent parts.
 
 **Mudd, R., Friedberg, R., Gorbachev, I., Nassif, H. and Zaidi, A.** (2025). *Breaking the Winner's Curse with Bayesian Hybrid Shrinkage*. Meta Platforms. Presented at the **Conference on Digital Experimentation @ MIT (CODE@MIT'25)**.
