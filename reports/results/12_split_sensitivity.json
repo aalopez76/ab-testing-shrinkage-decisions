@@ -1,0 +1,85 @@
+{
+  "sample": "confirmatory",
+  "partitions": 20,
+  "inflation_by_fraction": {
+    "0.3": {
+      "mean": 0.0033483769318108205,
+      "sd_across_partitions": 3.094154865602648e-05,
+      "relative_to_published": 0.4103493425877621
+    },
+    "0.4": {
+      "mean": 0.0027676453047438304,
+      "sd_across_partitions": 3.445977010995312e-05,
+      "relative_to_published": 0.1657429302472875
+    },
+    "0.5": {
+      "mean": 0.002374147192260247,
+      "sd_across_partitions": 3.525608132060153e-05,
+      "relative_to_published": 0.0
+    },
+    "0.6": {
+      "mean": 0.0020783699211060816,
+      "sd_across_partitions": 3.1347334286891215e-05,
+      "relative_to_published": -0.1245825330958431
+    },
+    "0.7": {
+      "mean": 0.0018681310029394788,
+      "sd_across_partitions": 3.611510307973448e-05,
+      "relative_to_published": -0.2131359803513396
+    }
+  },
+  "between_by_shares": {
+    "equal thirds (published)": {
+      "mse_raw": 3.7781648024079096e-05,
+      "mse_shrunk": 2.8670426745621535e-05,
+      "mse_relative_change": -0.2411546810411969,
+      "gain_raw": 0.010829237736681594,
+      "gain_shrunk": 0.010288689326400518,
+      "gain_difference": -0.0005405484102810765,
+      "shares": [
+        0.3333333333333333,
+        0.3333333333333333,
+        0.3333333333333333
+      ]
+    },
+    "more to evaluation": {
+      "mse_raw": 3.710454610365653e-05,
+      "mse_shrunk": 2.346812374607159e-05,
+      "mse_relative_change": -0.36751352029721,
+      "gain_raw": 0.010191255445632727,
+      "gain_shrunk": 0.00940269953097493,
+      "gain_difference": -0.0007885559146577972,
+      "shares": [
+        0.25,
+        0.25,
+        0.5
+      ]
+    },
+    "more to selection": {
+      "mse_raw": 4.9806843231915015e-05,
+      "mse_shrunk": 3.629375317367696e-05,
+      "mse_relative_change": -0.2713099080645848,
+      "gain_raw": 0.010515096634189851,
+      "gain_shrunk": 0.00963342847754253,
+      "gain_difference": -0.0008816681566473222,
+      "shares": [
+        0.5,
+        0.25,
+        0.25
+      ]
+    },
+    "more to estimation": {
+      "mse_raw": 3.7121080245422394e-05,
+      "mse_shrunk": 3.2889916753607004e-05,
+      "mse_relative_change": -0.11398276838501104,
+      "gain_raw": 0.011555443560300575,
+      "gain_shrunk": 0.011253855403680029,
+      "gain_difference": -0.0003015881566205466,
+      "shares": [
+        0.25,
+        0.5,
+        0.25
+      ]
+    }
+  }
+}

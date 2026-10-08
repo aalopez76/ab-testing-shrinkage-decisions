@@ -187,3 +187,61 @@ def test_rejects_impossible_data():
         thinning.split_counts([100], [200], 0.5, np.random.default_rng(0))
     with pytest.raises(ValueError):
         thinning.split_counts([1], [0], 0.5, np.random.default_rng(0))
+
+
+# --------------------------------------------------------------------------
+# The three-way shares. Exposed so the published numbers can be reported
+# against the split that produced them, which makes two things testable: that
+# the default still reproduces the equal thirds every figure was computed on,
+# and that a requested allocation is the one actually delivered.
+# --------------------------------------------------------------------------
+
+def _panel_for_shares(rows: int = 600, seed: int = 11) -> pd.DataFrame:
+    rng = np.random.default_rng(seed)
+    n = rng.integers(400, 4000, size=rows)
+    return pd.DataFrame({
+        "experiment_id": [f"e{i // 3:04d}" for i in range(rows)],
+        "arm_id": [f"a{i:05d}" for i in range(rows)],
+        "impressions": n,
+        "clicks": rng.binomial(n, 0.02),
+    })
+
+
+def test_the_default_shares_are_equal_thirds():
+    """Every published figure uses this path; it must not have moved."""
+    p = _panel_for_shares()
+    parts = thinning.split_three_way(p, seed=3)
+    explicit = thinning.split_three_way(p, seed=3, shares=(1 / 3, 1 / 3, 1 / 3))
+    for a, b in zip(parts, explicit):
+        assert a["clicks"].equals(b["clicks"])
+        assert a["impressions"].equals(b["impressions"])
+
+
+def test_the_three_parts_still_reconstruct_the_original():
+    """Thinning splits counts; it does not create or destroy them."""
+    p = _panel_for_shares()
+    for shares in [(1 / 3, 1 / 3, 1 / 3), (0.25, 0.25, 0.50), (0.5, 0.25, 0.25)]:
+        a, b, c = thinning.split_three_way(p, seed=5, shares=shares)
+        total = (a["clicks"].to_numpy() + b["clicks"].to_numpy()
+                 + c["clicks"].to_numpy())
+        assert (total == p["clicks"].to_numpy()).all()
+        total = (a["impressions"].to_numpy() + b["impressions"].to_numpy()
+                 + c["impressions"].to_numpy())
+        assert (total == p["impressions"].to_numpy()).all()
+
+
+def test_the_requested_allocation_is_the_one_delivered():
+    """A second fraction conditional on the first is easy to get wrong."""
+    p = _panel_for_shares(rows=3000)
+    total = p["impressions"].sum()
+    for shares in [(0.25, 0.25, 0.50), (0.5, 0.25, 0.25), (0.2, 0.4, 0.4)]:
+        parts = thinning.split_three_way(p, seed=9, shares=shares)
+        realised = [part["impressions"].sum() / total for part in parts]
+        for asked, got in zip(shares, realised):
+            assert abs(asked - got) < 0.01, f"asked {shares}, got {realised}"
+
+
+@pytest.mark.parametrize("bad", [(0.5, 0.5, 0.5), (0.5, 0.5, 0.0), (1.0, 0.0, 0.0)])
+def test_shares_that_do_not_form_a_split_are_rejected(bad):
+    with pytest.raises(ValueError):
+        thinning.split_three_way(_panel_for_shares(rows=60), shares=bad)

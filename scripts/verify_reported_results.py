@@ -174,6 +174,33 @@ CLAIMS: list[Claim] = [
           ("thresholds", "0.008", "ship_rate_shrunk"), 3.1, 0.8, scale=100),
     Claim("should ship at 0.8 pp (%)", "09_ship_decision.json",
           ("thresholds", "0.008", "should_ship"), 14.2, 0.8, scale=100),
+
+    # Split sensitivity. The point of these rows is the spread: they fail if a
+    # future change quietly makes the published numbers look less dependent on
+    # the split than they are.
+    Claim("inflation at selection share 0.3 (pp)", "12_split_sensitivity.json",
+          ("inflation_by_fraction", "0.3", "mean"), 0.3348, 0.012, scale=100),
+    Claim("inflation at selection share 0.5 (pp)", "12_split_sensitivity.json",
+          ("inflation_by_fraction", "0.5", "mean"), 0.2374, 0.008, scale=100),
+    Claim("inflation at selection share 0.7 (pp)", "12_split_sensitivity.json",
+          ("inflation_by_fraction", "0.7", "mean"), 0.1868, 0.008, scale=100),
+    Claim("inflation at 0.3, relative to published (%)",
+          "12_split_sensitivity.json",
+          ("inflation_by_fraction", "0.3", "relative_to_published"),
+          41.0, 4.0, scale=100),
+    Claim("MSE change, equal thirds (%)", "12_split_sensitivity.json",
+          ("between_by_shares", "equal thirds (published)",
+           "mse_relative_change"), -24.1, 1.2, scale=100),
+    Claim("MSE change, more to estimation (%)", "12_split_sensitivity.json",
+          ("between_by_shares", "more to estimation", "mse_relative_change"),
+          -11.4, 1.5, scale=100),
+    Claim("gain difference, equal thirds (pp)", "12_split_sensitivity.json",
+          ("between_by_shares", "equal thirds (published)", "gain_difference"),
+          -0.0541, 0.012, scale=100),
+    Claim("gain difference, more to estimation (pp)",
+          "12_split_sensitivity.json",
+          ("between_by_shares", "more to estimation", "gain_difference"),
+          -0.0302, 0.012, scale=100),
 ]
 
 

@@ -127,8 +127,9 @@ def check_sum(panel: pd.DataFrame, p: Partition) -> bool:
 def split_three_way(
     panel: pd.DataFrame,
     seed: int = 0,
+    shares: tuple[float, float, float] = (1 / 3, 1 / 3, 1 / 3),
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Split into three independent thirds: select, estimate, evaluate.
+    """Split into three independent parts: select, estimate, evaluate.
 
     This is necessary because a **selected** statistic — the maximum of an
     experiment — does not behave like an ordinary noisy estimate: its
@@ -145,7 +146,24 @@ def split_three_way(
     The estimated delta then ceases to be a maximum and becomes the advantage of
     an **already-fixed** arm, which is an unbiased estimate and to which shrinkage
     can properly be applied.
+
+    `shares` are the proportions going to (select, estimate, evaluate) and
+    default to equal thirds, which is what every published figure uses. They are
+    exposed because the split fraction governs a real tradeoff rather than a
+    detail: in data thinning it decides how much information goes to the task
+    being performed as against the task of evaluating it, and its best value is
+    model-dependent (Neufeld et al., JMLR 2024). The published estimates are
+    reported against this choice in `scripts/12_split_sensitivity.py`.
+
+    Implemented as two successive binary splits, so the second fraction is
+    conditional on what the first left behind.
     """
-    first = split(panel, fraction=2.0 / 3.0, seed=seed)
-    second = split(first.estimation, fraction=0.5, seed=seed + 10_000)
+    total = sum(shares)
+    if not np.isclose(total, 1.0) or any(s <= 0 for s in shares):
+        raise ValueError(f"shares must be positive and sum to 1, got {shares}")
+
+    select, estimate, evaluate = shares
+    first = split(panel, fraction=select + estimate, seed=seed)
+    second = split(first.estimation, fraction=select / (select + estimate),
+                   seed=seed + 10_000)
     return second.estimation, second.evaluation, first.evaluation

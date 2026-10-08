@@ -70,6 +70,8 @@ Uncertainty is reported as a **95% cluster-bootstrap percentile interval**, resa
 
 **The winner's curse is real and substantial:** the deployed variant promises 1.792% and delivers 1.553%, a **15.4% relative overstatement**. It is a selection effect rather than a measurement effect: choosing a variant at random yields an inflation a hundred times smaller.
 
+**That magnitude is specific to how much data selects the winner, and the dependence was measured.** Halving the selection sample raises it by 41%; devoting 70% of the counts to selection lowers it by 21%. This is the known power dependence of the curse showing up as theory says it should, so the figure is read as *the curse under a half-split on this archive*, never as a constant of the phenomenon. **The sign and the substance hold at every split tested.**
+
 **The correction does not fix what most people assume it fixes.** But the four decisions were not all specified at the same time, and that distinction is kept visible below rather than smoothed over.
 
 ## Stage 1 — pre-specified confirmatory analysis
@@ -96,6 +98,7 @@ These were devised **after the confirmatory sample had already been unblinded** 
 | **3. Whether to ship** | At a 0.8 pp bar the uncorrected policy delivers **negative** value, −0.0064 pp, while shrinkage delivers +0.0119 pp |
 | **BHS** (Meta, 2025) | Better fit and lower held-out estimation error, −28.1% |
 | **Regime boundary** | The closest published result holds inside the 6.9% of arms its filter retains, not outside |
+| **Split sensitivity** | Magnitudes move with the split; the direction of every published conclusion does not |
 
 ![The four decisions](reports/figures/03_four_decisions.png)
 
@@ -220,4 +223,36 @@ Three things this project does not do. The first two are not scope decisions: th
 
 * **BHS is fitted but not calibrated.** Its likelihood ratio of 961 is reported as a fit statistic rather than as a test, because the null it would test places the shape parameter on the boundary of the parameter space, where the usual reference distribution does not apply. Convergence behaviour and the optimiser's grid were not assessed either.
 
-**One caveat about the evaluation design itself is a deliberate choice rather than a limitation of the data.** The counts are split into three equal thirds, and the split fraction is a free parameter one level down in `thinning.split_counts`; only `thinning.split_three_way` fixes it at equal thirds. How the reported magnitude of the curse responds to that choice was not measured, and could be.
+**One caveat about the evaluation design was a deliberate choice, and it has since been measured.** See [`scripts/12_split_sensitivity.py`](scripts/12_split_sensitivity.py) and the result below.
+
+---
+
+# Robustness: how much the split itself decides
+
+Every figure here is measured on held-out parts of the same counts, and the proportions of that split are a choice. The tradeoff is well established − in data thinning the fraction decides how much information goes to the task against the task of evaluating it, and its best value is model-dependent (Neufeld et al., JMLR 2024, reporting a convergence region roughly between 0.4 and 0.7). What had not been measured is how **these** estimates on **this** archive respond, which is a routine robustness question and is answered here. Run on the confirmatory sample over 20 partitions.
+
+**The winner's inflation moves with how much data selects** (the published split is 0.5):
+
+| Selection share | Inflation | Against published |
+|---|---|---|
+| 0.3 | 0.3348 pp | **+41.0%** |
+| 0.4 | 0.2768 pp | +16.6% |
+| **0.5** | **0.2374 pp** | published |
+| 0.6 | 0.2078 pp | −12.5% |
+| 0.7 | 0.1868 pp | −21.3% |
+
+The direction is what theory requires rather than a defect: a smaller selection sample is a less powerful one, and the curse grows as power falls. It is the same dependence quoted at the top of this document − around 13% exaggeration at 80% power against over 130% at 20%.
+
+**The between-experiment conclusions keep their sign under every allocation tested**, while their magnitudes move:
+
+| Shares (select / estimate / evaluate) | Estimation error | Realised gain, shrunk minus raw |
+|---|---|---|
+| **1/3 · 1/3 · 1/3** (published) | −24.1% | −0.0541 pp |
+| 0.25 · 0.25 · 0.50 | −36.8% | −0.0789 pp |
+| 0.50 · 0.25 · 0.25 | −27.1% | −0.0882 pp |
+| 0.25 · 0.50 · 0.25 | −11.4% | −0.0302 pp |
+
+**What this establishes, and what it does not.** Shrinkage reduces estimation error and degrades prioritisation under every split tested, so neither published conclusion rests on the choice of equal thirds. It does not establish that equal thirds is optimal, and no claim is made that it is. Reported magnitudes should be read as holding for the split that produced them.
+
+*An earlier run on the exploratory sample over three partitions showed the gain difference turning positive under one allocation. It did not replicate on the confirmatory sample at twenty partitions, where all four allocations are negative, and it is recorded here because a robustness check that only ever reports agreement is not one.*
+
