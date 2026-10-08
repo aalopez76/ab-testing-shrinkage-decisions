@@ -12,7 +12,7 @@ cross-attribution the tree was brought in to avoid; the walk here stops at each
 function boundary and treats that body as its own scope.
 
 Deliberately shallow. It resolves literal string subscripts on names bound to a
-`leer(...)` / `read(...)` call inside the same scope, and nothing else: keys
+`read(...)` call inside the same scope, and nothing else: keys
 assembled at runtime are not resolvable here and are not attempted. A cheap
 check that catches renames is worth more than a complete one nobody maintains.
 """
@@ -21,7 +21,9 @@ from __future__ import annotations
 
 import ast
 
-READERS = {"leer", "read"}
+# "leer" is the pre-translation name of the reader. It is kept so the check
+# still resolves keys if an older revision of the generator is ever examined.
+READERS = {"read", "leer"}
 FUNCTIONS = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)
 
 
@@ -59,7 +61,7 @@ def _subscript_literals(node: ast.AST) -> tuple[list[str], ast.AST]:
 
 
 def _file_read_by(node: ast.AST) -> str | None:
-    """The .json literal in `leer("x.json")`, including when further subscripted."""
+    """The .json literal in `read("x.json")`, including when further subscripted."""
     _, base = _subscript_literals(node)
     if (
         isinstance(base, ast.Call)

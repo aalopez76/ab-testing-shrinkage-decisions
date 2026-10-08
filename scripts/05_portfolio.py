@@ -84,7 +84,7 @@ def main() -> None:
 
     print(f"experiments in the portfolio: {int(np.mean(sizes)):,}")
     print(f"tau2 between experiments = {np.mean(taus):.3e} "
-          f"(raíz {np.sqrt(np.mean(taus)):.5f})\n")
+          f"(root {np.sqrt(np.mean(taus)):.5f})\n")
 
     c = pd.DataFrame(change_acc)
     print("does it reorder against the raw rule?")
