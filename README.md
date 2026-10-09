@@ -4,9 +4,9 @@
 
 Organisations that decide through experimentation — digital commerce, media, marketplaces, healthcare, research — propose several versions of the same offering (advertisements, discounts, headlines, doses), measure which performs best, and deploy the winner. **However, the version selected for having performed best subsequently tends to deliver less than was expected.**
 
-This is a well-documented problem known as **the winner's curse**. It arises because the selected offering owes its advantage to two things at once: partly to being genuinely the best performer, and partly to a component of luck — noise — that does not repeat on deployment. Its magnitude depends on the power of the experiment: at 80% power, the industry standard, the exaggeration is around 13%; at 20% power, it exceeds 130%.
+This is a well-documented problem known as **the winner's curse**. It arises because the selected offering owes its advantage to two things at once: partly to being genuinely the best performer, and partly to a component of luck — noise — that does not repeat on deployment. Its magnitude depends on the power of the experiment: at 80% power, the industry standard, Gelman and Carlin's normal-design example gives an exaggeration factor of 1.12, about 12%. Reproducing their calculation at 20% power gives about 2.3×, roughly 126%. The first figure is theirs; the second is this project's reproduction of their method, which returns 1.1252 at their own settings and so is checked against the value they publish.
 
-The correction the industry proposes is **empirical Bayes shrinkage**: pulling the winner's result towards the group mean, in a proportion that grows with the imprecision of the measurement. Microsoft and Netflix use it in production, Meta published a variant in 2025 — *Bayesian Hybrid Shrinkage* — and **Spotify published its reasons for not adopting it**, warning that a poorly calibrated prior is actively worse than not correcting at all. Adopting it changes how every result is reported to the business.
+The correction the industry proposes is **empirical Bayes shrinkage**: pulling the winner's result towards the group mean, in a proportion that grows with the imprecision of the measurement. Microsoft reported applying an empirical-Bayes A/B framework at Bing, fitting the prior from thousands of past experiments; Meta presented *Bayesian Hybrid Shrinkage* at CODE@MIT in 2025; and **Spotify published its reasons for not adopting Bayesian A/B testing**, warning that a poorly calibrated prior is actively worse than not correcting at all. Adopting it changes how every result is reported to the business.
 
 **The question this project answers is whether it is worth adopting, and for what exactly.**
 
@@ -20,6 +20,26 @@ Findings and recommendations are organised around four decisions:
 - **What figure to report to the business** — the estimate itself.
 
 Code is in [`src/wcab/`](src/wcab/), the scripts that produce every figure cited here in [`scripts/`](scripts/), the raw results in [`reports/results/`](reports/results/), and the charts in [`reports/figures/`](reports/figures/). Exact references for every method decision are in [`papers.md`](papers.md).
+
+## Running it
+
+```bash
+python -m venv .venv
+# activate the environment, then:
+python -m pip install -e ".[dev]"
+
+python scripts/00_download.py                      # fetches the archive from OSF
+python scripts/01_panel.py --sample exploratory    # builds the canonical panel
+
+ruff check .
+pytest
+python scripts/verify_reported_results.py
+```
+
+The archive is not redistributed here, so `00_download.py` is the first step and the
+tests that assert properties of the data skip until it has run. The published bootstrap
+results use `--replicates 2000 --seeds 3`; development runs use `--replicates 300`.
+`requirements-lock.txt` records the exact environment that produced the figures.
 
 *Processing is Python over flat files, so there are no SQL queries, entity-relationship diagram or interactive dashboard to show. Development was carried out with AI assistance (Claude Code); every figure cited was produced by the scripts in this repository, and every published claim was verified against its primary source.*
 
@@ -42,7 +62,9 @@ The archive is of interest because it satisfies three conditions: **genuine rand
 
 ## Check 1: randomisation
 
-A window covering **6,956 of 22,743 experiments (30.6%)** is excluded. A caching misconfiguration on 25 June 2013 caused a single variant to be shown for months, affecting approximately 22% of the tests. **The public files carry no column identifying them**, so the window was established from scratch using a goodness-of-fit test on impressions per variant, which reproduces the failure month by month: 22.3% in June 2013, **86.4% in December**, 11.0% in January 2014, and between 0.0% and 0.9% thereafter.
+A window covering **6,956 of 22,743 experiments (30.6%)** is excluded. A caching misconfiguration caused a single variant to be shown for months, and the archive's 2024 author correction identifies **25 June 2013 to 10 January 2014** as the likely affected period, about 7,004 tests or 22%.
+
+**This project uses a wider, month-bounded window: 1 June 2013 to 31 January 2014.** It was frozen before the confirmatory sample was opened and is kept rather than narrowed to the official dates afterwards. The correction also added a `problem` flag to the updated main archive; **the legacy exploratory and confirmatory split files this project reads predate that flag**, so the window here was established from scratch using a goodness-of-fit test on impressions per variant, which reproduces the failure month by month: 22.3% in June 2013, **86.4% in December**, 11.0% in January 2014, and between 0.0% and 0.9% thereafter.
 
 The retained period runs at the anomaly rate that would be expected by chance.
 
@@ -76,7 +98,7 @@ Uncertainty is reported as a **95% cluster-bootstrap percentile interval**, resa
 
 ## Stage 1 — pre-specified confirmatory analysis
 
-The method was frozen as the code at commit `69dfd977`, and the confirmatory sample was then run **once**. It replicated to the third decimal place on a sample 4.7 times larger that was never touched during development.
+The method was frozen as the code at commit `69dfd977`, and the confirmatory sample was then **first opened in a single pre-specified run**. It replicated to the third decimal place on a sample 4.7 times larger that was never touched during development.
 
 **What that pre-specification rests on, stated precisely.** Git timestamps the analysis code at the freeze commit nine minutes before the commit carrying the confirmatory results, so the method was fixed before the confirmatory sample was opened. The written success criterion — **realised gain from the decision**, not reduction in estimation error — is recorded in [`reports/results/FROZEN_METHOD.json`](reports/results/FROZEN_METHOD.json), which names that commit but was itself committed two days later, during translation. **It is therefore a repository artefact rather than an independently timestamped pre-registration**, and it is reproduced in the language it was written in rather than rewritten after the fact.
 
@@ -97,7 +119,7 @@ These were devised **after the confirmatory sample had already been unblinded** 
 |---|---|
 | **3. Whether to ship** | At a 0.8 pp bar the uncorrected policy delivers **negative** value, −0.0064 pp, while shrinkage delivers +0.0119 pp |
 | **BHS** (Meta, 2025) | Better fit and lower held-out estimation error, −28.1% |
-| **Regime boundary** | The closest published result holds inside the 6.9% of arms its filter retains, not outside |
+| **Regime comparison** | Under their arm-quality filter no clear difference is detected, which is not an equivalence result and does not reproduce their two-arm construction |
 | **Split sensitivity** | Magnitudes move with the split; the direction of every published conclusion does not |
 
 ![The four decisions](reports/figures/03_four_decisions.png)
@@ -118,15 +140,17 @@ What an experimentation lead should take away: **the correction serves to stop o
 
 * **Practical consequence:** a team whose variants receive balanced traffic can rule out the entire project by measuring a ratio of impressions.
 
-## 2. Which experiments to prioritise: it degrades, and the reason is identifiable
+## 2. Which experiments to prioritise: it degrades, and the pattern is consistent with precision−effect dependence
 
-* **It genuinely reorders but selects worse.** At a 10% budget the correction changes 23.0% of the selection, and realised gain falls by **0.069 pp, 95% cluster-bootstrap percentile interval [−0.092, −0.027]**, which does not cross zero. The direction is stable across the three thinning seeds.
+* **It genuinely reorders.** At a 10% budget the correction changes **23.0%** of the selected experiments.
+
+* **And it selects worse.** At the pre-specified 5% budget, realised gain is **0.069 pp lower, 95% cluster-bootstrap percentile interval [−0.092, −0.027]**, which does not cross zero. The direction is stable across the three thinning seeds. The two figures come from different budgets and are stated separately for that reason.
 
 * **The mechanism is visible:** it discards experiments with a shrinkage weight of 0.689 and 4,000 impressions, and adds others with a weight of 0.318 and 7,151. That is, **it discards the imprecise and adds the precise**, which is exactly what theory says it does under a capacity constraint.
 
-* **But those it discards had greater realised gain** (0.647 against 0.510 pp), because the prior-independence assumption fails: the correlation between impressions and outcome is −0.119 unadjusted, **−0.087 within each week** and **−0.113 within each experiment type**. It survives control for period and for type.
+* **But those it discards had greater realised gain** (0.647 against 0.510 pp), which is the pattern prior independence forbids. The association between impressions and outcome is −0.119 unadjusted, **−0.087 within each week** and **−0.113 within each experiment type** — computed within week and, separately, within type, not jointly, and between total impressions and the aggregate rate rather than against the parameter being shrunk.
 
-* **Practical consequence:** the sign of that correlation predicts whether the correction will help or harm before it is implemented.
+* **Practical consequence:** a negative precision−outcome association is a warning signal worth evaluating out of sample before using shrinkage to prioritise. On one archive it cannot establish that the sign predicts the outcome elsewhere.
 
 ![Where it fails](reports/figures/05_where_it_fails.png)
 
@@ -134,7 +158,7 @@ What an experimentation lead should take away: **the correction serves to stop o
 
 *Stage 2 — devised after the confirmatory sample had been unblinded. It requires independent confirmation.*
 
-* **The reason is an asymmetry the A/B testing literature does not usually separate.** Ranking is invariant to a monotone transformation, so shrinkage cannot change the argmax. **Comparison against an absolute threshold is not invariant**: shrinkage changes the value, and therefore changes whether it crosses the line.
+* **This project treats threshold deployment as a decision separate from ranking, consistent with recent decision-oriented experimentation work.** Ranking is invariant to a monotone transformation, so shrinkage cannot change the argmax. **Comparison against an absolute threshold is not invariant**: shrinkage changes the value, and therefore changes whether it crosses the line.
 
 * **What is measured is the value the policy delivers, not how often it agrees with a second measurement.** For a threshold *u*, the policy ships arm *i* when its estimate clears the bar, and the value realised is what the independent evaluation partition says it delivered against that bar:
 
@@ -153,7 +177,7 @@ Every interval above comes from 2,000 cluster-bootstrap replicates over three th
 
 * **At the most demanding bar the uncorrected rule delivers negative value.** It is not merely less accurate: the arms it ships do not clear the threshold often enough to pay for those that do, so applying it is worse than shipping nothing. The corrected rule stays positive at every threshold.
 
-* **The mechanism is in the rates.** At a 0.8 pp bar the uncorrected rule ships 14.2% of experiments and 14.2% genuinely clear it: **it gets the rate right and the individuals wrong.** The shrunk rule ships 3.1%, forgoing some genuine winners in exchange for not paying for false ones.
+* **The mechanism is in the rates.** At a 0.8 pp bar the uncorrected rule ships **14.2%** of experiments against **3.1%** under shrinkage. The held-out partition also exceeds the threshold in 14.2% of experiments, but **that quantity is itself a noisy indicator and is not the true prevalence of effects above the bar** — it is the same biased comparison that the move to policy value was made to avoid. The two rates coinciding is descriptive, not evidence that the uncorrected rule recovers the real prevalence.
 
 * **At a lenient threshold the two are indistinguishable**, and the interval says so. The gain is not a property of the method alone but of the method and the bar together.
 
@@ -229,7 +253,7 @@ Three things this project does not do. The first two are not scope decisions: th
 
 # Robustness: how much the split itself decides
 
-Every figure here is measured on held-out parts of the same counts, and the proportions of that split are a choice. The tradeoff is well established − in data thinning the fraction decides how much information goes to the task against the task of evaluating it, and its best value is model-dependent (Neufeld et al., JMLR 2024, reporting a convergence region roughly between 0.4 and 0.7). What had not been measured is how **these** estimates on **this** archive respond, which is a routine robustness question and is answered here. Run on the confirmatory sample over 20 partitions.
+Every figure here is measured on held-out parts of the same counts, and the proportions of that split are a choice. The tradeoff is well established − in data thinning the fraction is a tuning parameter governing how much information goes to the task against the task of evaluating it, and Neufeld et al. (JMLR 2024) state that its optimal value depends on the problem at hand. What had not been measured is how **these** estimates on **this** archive respond, which is a routine robustness question and is answered here. Run on the confirmatory sample over 20 partitions.
 
 **The winner's inflation moves with how much data selects** (the published split is 0.5):
 

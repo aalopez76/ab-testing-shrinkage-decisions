@@ -10,11 +10,17 @@ in their Appendix B, imposes two conditions:
      impressions against the second-most - omitting the rest.
 
 The second condition removes selection on outcome, so their setup does not
-contain the winner's curse. The first retains 6.9% of the arms.
+contain the winner's curse.
 
-This script measures the same quantity inside and outside their filter, with a
-confidence interval, to establish whether their conclusion is general or specific
-to their regime.
+**Only the first condition is implemented here.** This script applies their
+arm-quality filter, which retains 6.9% of the arms, and does not reduce each
+experiment to its two largest arms. It is therefore a comparison across that
+quality regime, not a replication of their construction, and nothing it reports
+should be read as reproducing their result.
+
+It measures the same quantity inside and outside that filter with an interval.
+Failing to detect a difference inside it is not evidence of equivalence: the
+filtered sample is small and its interval is correspondingly wide.
 
 Output: reports/results/08_regime.json
 """
@@ -144,9 +150,11 @@ def main() -> None:
     a, b = metrics["filtered_regime"], metrics["full_archive"]
     print("READING")
     if not a["differs_from_zero"] and b["differs_from_zero"] and b["mean_difference"] < 0:
-        print("  In the regime they retain, shrinkage is NEUTRAL for the decision,")
-        print("  consistent with their theorem. Outside it - 93% of the archive - it")
-        print("  degrades selection measurably. Their conclusion holds where tested.")
+        print("  Inside their arm-quality filter, NO CLEAR DIFFERENCE is detected")
+        print("  between raw and shrunken prioritisation. That is not equivalence:")
+        print("  the filtered sample is small and its interval is wide enough to")
+        print("  hold effects of either sign. Outside it - 93% of the archive -")
+        print("  shrinkage degrades selection measurably.")
 
     metrics["filter"] = {"min_impressions": MIN_IMPRESSIONS, "min_clicks": MIN_CLICKS,
                          "fraction_of_arms_retained": float(passes.mean())}

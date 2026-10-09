@@ -1,4 +1,9 @@
-"""Check that every number the README states still matches the artefacts.
+"""Check that the tracked numerical claims in the README match the artefacts.
+
+Tracked, not exhaustive: the list below covers the figures a changed analysis
+would move, not every number the document prints. Several descriptive figures
+are quoted in the README and deliberately not tracked here, because turning
+this gate into a Markdown parser would cost more than it protects.
 
 This answers a different question from the test suite. `pytest` asks whether the
 software works; this asks whether the **published claims still correspond to the
@@ -222,7 +227,7 @@ def main() -> int:
 
     total = len(CLAIMS)
     passed = total - len(failures)
-    print(f"\n{passed}/{total} reported numerical claims verified")
+    print(f"\n{passed}/{total} tracked numerical claims verified")
     if failures:
         print("\nfailed:")
         for label, detail in failures:

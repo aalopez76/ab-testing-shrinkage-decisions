@@ -152,7 +152,7 @@ def split_three_way(
     exposed because the split fraction governs a real tradeoff rather than a
     detail: in data thinning it decides how much information goes to the task
     being performed as against the task of evaluating it, and its best value is
-    model-dependent (Neufeld et al., JMLR 2024). The published estimates are
+    problem-dependent (Neufeld et al., JMLR 2024). The published estimates are
     reported against this choice in `scripts/12_split_sensitivity.py`.
 
     Implemented as two successive binary splits, so the second fraction is

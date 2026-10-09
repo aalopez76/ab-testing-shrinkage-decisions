@@ -4,10 +4,10 @@ Every figure in this project is measured on held-out parts of the same counts,
 and the proportions of that split are a choice. In data thinning the fraction
 governs a real tradeoff rather than a detail: it decides how much information
 goes to the task being performed as against the task of evaluating it, and its
-best value is model-dependent (Neufeld et al., JMLR 2024, which reports a
-convergence region roughly between 0.4 and 0.7). The tradeoff is well
-established; what was not measured is how THESE estimates on THIS archive
-respond to it, which is what this script reports.
+optimal value depends on the problem at hand (Neufeld et al., JMLR 2024,
+which states exactly that and gives no general recommended range). The
+tradeoff is well established; what was not measured is how THESE estimates on
+THIS archive respond to it, which is what this script reports.
 
 Two different splits are at work and they are varied separately:
 

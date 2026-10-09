@@ -1,6 +1,7 @@
 """Step 0: reproduce the archive's randomisation failure, month by month.
 
-The archive's team reported in June 2024 that a Cloudflare caching
+The archive's author correction, published in Scientific Data in July 2024,
+reports that a Cloudflare caching
 misconfiguration affected roughly 22% of the tests. The public CSV files carry no
 column marking them, so this script verifies it from scratch and produces the
 table that justifies the exclusion.
