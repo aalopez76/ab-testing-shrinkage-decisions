@@ -130,7 +130,7 @@ DOI: [10.1371/journal.pgen.1010546](https://doi.org/10.1371/journal.pgen.1010546
 **Gelman, A. and Carlin, J.** (2014). *Beyond power calculations: assessing Type S (sign) and Type M (magnitude) errors*. **Perspectives on Psychological Science** 9(6), 641–651.
 DOI: [10.1177/1745691614551642](https://doi.org/10.1177/1745691614551642)
 
-> The exaggeration ratio, which is what makes the severity of the problem **depend on the power of the experiment itself**: at 80% power the exaggeration is around 13%; at 50%, 40%; at 20%, above 130%.
+> The exaggeration ratio, which is what makes the severity of the problem **depend on the power of the experiment itself**. The paper's own normal-design example gives a factor of **1.12 at 80% power**, about 12%. It states no figure for lower power, noting only that problems begin below 0.5; reproducing their `retrodesign()` calculation gives about 41% at 50% power and 126% at 20%, and returns 1.1252 at their published settings, which is what checks the reproduction against them.
 
 ---
 

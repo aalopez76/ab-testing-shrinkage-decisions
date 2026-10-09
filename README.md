@@ -265,7 +265,7 @@ Every figure here is measured on held-out parts of the same counts, and the prop
 | 0.6 | 0.2078 pp | −12.5% |
 | 0.7 | 0.1868 pp | −21.3% |
 
-The direction is what theory requires rather than a defect: a smaller selection sample is a less powerful one, and the curse grows as power falls. It is the same dependence quoted at the top of this document − around 13% exaggeration at 80% power against over 130% at 20%.
+The direction is what theory requires rather than a defect: a smaller selection sample is a less powerful one, and the curse grows as power falls. It is the same dependence quoted at the top of this document: about 12% exaggeration at 80% power against roughly 126% at 20%.
 
 **The between-experiment conclusions keep their sign under every allocation tested**, while their magnitudes move:
 
