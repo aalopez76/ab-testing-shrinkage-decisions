@@ -153,8 +153,9 @@ def main() -> None:
         print("  Inside their arm-quality filter, NO CLEAR DIFFERENCE is detected")
         print("  between raw and shrunken prioritisation. That is not equivalence:")
         print("  the filtered sample is small and its interval is wide enough to")
-        print("  hold effects of either sign. Outside it - 93% of the archive -")
-        print("  shrinkage degrades selection measurably.")
+        print("  hold effects of either sign. In the FULL ARCHIVE, which contains")
+        print("  the filtered arms rather than excluding them, shrinkage degrades")
+        print("  selection measurably.")
 
     metrics["filter"] = {"min_impressions": MIN_IMPRESSIONS, "min_clicks": MIN_CLICKS,
                          "fraction_of_arms_retained": float(passes.mean())}

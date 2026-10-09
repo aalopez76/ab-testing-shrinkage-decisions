@@ -4,7 +4,7 @@
 
 Organisations that decide through experimentation — digital commerce, media, marketplaces, healthcare, research — propose several versions of the same offering (advertisements, discounts, headlines, doses), measure which performs best, and deploy the winner. **However, the version selected for having performed best subsequently tends to deliver less than was expected.**
 
-This is a well-documented problem known as **the winner's curse**. It arises because the selected offering owes its advantage to two things at once: partly to being genuinely the best performer, and partly to a component of luck — noise — that does not repeat on deployment. Its magnitude depends on the power of the experiment: at 80% power, the industry standard, Gelman and Carlin's normal-design example gives an exaggeration factor of 1.12, about 12%. Reproducing their calculation at 20% power gives about 2.3×, roughly 126%. The first figure is theirs; the second is this project's reproduction of their method, which returns 1.1252 at their own settings and so is checked against the value they publish.
+This is a well-documented problem known as **the winner's curse**. It arises because the selected offering owes its advantage to two things at once: partly to being genuinely the best performer, and partly to a component of luck — noise — that does not repeat on deployment. Its magnitude depends on the power of the experiment: at 80% power, a common design target, Gelman and Carlin's normal-design example gives an expected exaggeration factor of 1.12, about 12%. They show it rising sharply once power falls much below 0.5.
 
 The correction the industry proposes is **empirical Bayes shrinkage**: pulling the winner's result towards the group mean, in a proportion that grows with the imprecision of the measurement. Microsoft reported applying an empirical-Bayes A/B framework at Bing, fitting the prior from thousands of past experiments; Meta presented *Bayesian Hybrid Shrinkage* at CODE@MIT in 2025; and **Spotify published its reasons for not adopting Bayesian A/B testing**, warning that a poorly calibrated prior is actively worse than not correcting at all. Adopting it changes how every result is reported to the business.
 
@@ -39,7 +39,9 @@ python scripts/verify_reported_results.py
 The archive is not redistributed here, so `00_download.py` is the first step and the
 tests that assert properties of the data skip until it has run. The published bootstrap
 results use `--replicates 2000 --seeds 3`; development runs use `--replicates 300`.
-`requirements-lock.txt` records the exact environment that produced the figures.
+`requirements-lock.txt` records the clean environment used to reproduce the project; two
+non-computational version differences from the original figure-producing environment are
+documented in its header.
 
 *Processing is Python over flat files, so there are no SQL queries, entity-relationship diagram or interactive dashboard to show. Development was carried out with AI assistance (Claude Code); every figure cited was produced by the scripts in this repository, and every published claim was verified against its primary source.*
 
@@ -106,8 +108,8 @@ The method was frozen as the code at commit `69dfd977`, and the confirmatory sam
 
 | Decision | Does shrinkage help? | Figure |
 |---|---|---|
-| **1. Which variant to deploy** | **No, and it cannot** | 99.8% of decisions identical |
-| **2. Which experiments to prioritise** | **No, and it costs** | −0.069 pp, 95% cluster-bootstrap percentile [−0.092, −0.027] |
+| **1. Which variant to deploy** | **No material benefit under balanced precision** | 99.8% of decisions identical |
+| **2. Which experiments to prioritise** | **No, and it costs** | −0.069 pp **at the pre-specified 5% budget**, 95% cluster-bootstrap percentile [−0.092, −0.027] |
 
 **Pre-confirmatory secondary estimation analysis.** The improvement in estimation error was measured before the confirmatory sample was opened, but it is not the frozen criterion: **−24.0% mean squared error**, replicated across both samples.
 
@@ -130,7 +132,7 @@ What an experimentation lead should take away: **the correction serves to stop o
 
 # Insights Deep Dive
 
-## 1. Which variant to deploy: cannot be improved, and this is demonstrable
+## 1. Which variant to deploy: nearly invariant under balanced traffic, and the reason is algebraic
 
 * **It is not that shrinkage fails to help; it is that it cannot.** Shrinkage is a weighted average between the observation and a common centre, so when the weight and the centre are equal across the variants of a single experiment it is a monotonically increasing function of the estimator and **preserves the ordering**.
 
@@ -138,7 +140,7 @@ What an experimentation lead should take away: **the correction serves to stop o
 
 * **This is the degenerate case the literature already describes.** Under homogeneous variance, the posterior mean, the tail probability and the tail expectation produce the same ordering. With balanced variants there was no selection problem to improve upon.
 
-* **Practical consequence:** a team whose variants receive balanced traffic can rule out the entire project by measuring a ratio of impressions.
+* **Practical consequence:** a team whose variants receive balanced traffic can rule out shrinkage as a meaningful way to improve within-experiment variant selection by measuring a ratio of impressions. That says nothing about the other three decisions, where it still pays.
 
 ## 2. Which experiments to prioritise: it degrades, and the pattern is consistent with precision−effect dependence
 
@@ -146,7 +148,7 @@ What an experimentation lead should take away: **the correction serves to stop o
 
 * **And it selects worse.** At the pre-specified 5% budget, realised gain is **0.069 pp lower, 95% cluster-bootstrap percentile interval [−0.092, −0.027]**, which does not cross zero. The direction is stable across the three thinning seeds. The two figures come from different budgets and are stated separately for that reason.
 
-* **The mechanism is visible:** it discards experiments with a shrinkage weight of 0.689 and 4,000 impressions, and adds others with a weight of 0.318 and 7,151. That is, **it discards the imprecise and adds the precise**, which is exactly what theory says it does under a capacity constraint.
+* **The reordering mechanism is visible:** it discards experiments with a shrinkage weight of 0.689 and 4,000 impressions, and adds others with a weight of 0.318 and 7,151. That is, **it discards the imprecise and adds the precise**, which is exactly what theory says it does under a capacity constraint.
 
 * **But those it discards had greater realised gain** (0.647 against 0.510 pp), which is the pattern prior independence forbids. The association between impressions and outcome is −0.119 unadjusted, **−0.087 within each week** and **−0.113 within each experiment type** — computed within week and, separately, within type, not jointly, and between total impressions and the aggregate rate rather than against the parameter being shrunk.
 
@@ -181,7 +183,7 @@ Every interval above comes from 2,000 cluster-bootstrap replicates over three th
 
 * **At a lenient threshold the two are indistinguishable**, and the interval says so. The gain is not a property of the method alone but of the method and the bar together.
 
-* **This is the decision a team makes most frequently**, and it is where the correction pays.
+* **This is a common deployment decision**, and it is where the correction pays in this archive.
 
 ![The ship decision](reports/figures/04_ship_decision.png)
 
@@ -265,7 +267,7 @@ Every figure here is measured on held-out parts of the same counts, and the prop
 | 0.6 | 0.2078 pp | −12.5% |
 | 0.7 | 0.1868 pp | −21.3% |
 
-The direction is what theory requires rather than a defect: a smaller selection sample is a less powerful one, and the curse grows as power falls. It is the same dependence quoted at the top of this document: about 12% exaggeration at 80% power against roughly 126% at 20%.
+The direction is what theory requires rather than a defect: a smaller selection sample is a less powerful one, and the curse grows as power falls. It is the same dependence quoted at the top of this document: the exaggeration grows as power falls.
 
 **The between-experiment conclusions keep their sign under every allocation tested**, while their magnitudes move:
 
