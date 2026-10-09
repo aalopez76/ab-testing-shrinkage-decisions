@@ -100,7 +100,7 @@ arXiv: [2212.14444](https://arxiv.org/abs/2212.14444)
 
 > That the prior-independence assumption can fail, and that when it does **screening on shrunken estimates can be worse than on unshrunken ones**. This is the diagnostic that explains the project's principal finding.
 >
-> **Measured here:** the correlation between precision and outcome is −0.119 unadjusted, −0.087 within each week and −0.113 within each experiment type. It survives control.
+> **Measured here:** the association between precision and outcome is −0.119 unadjusted, −0.087 within each week and −0.113 within each experiment type — computed within week and, separately, within type, not in a joint model, and between total impressions and the aggregate rate rather than against the parameter being shrunk.
 >
 > The reference implementation, `close`, is written in R; this project is in Python. **Declared operational cost, not an omission**: the diagnostic itself was run.
 

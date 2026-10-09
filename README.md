@@ -134,11 +134,11 @@ What an experimentation lead should take away: **the correction serves to stop o
 
 ## 1. Which variant to deploy: nearly invariant under balanced traffic, and the reason is algebraic
 
-* **It is not that shrinkage fails to help; it is that it cannot.** Shrinkage is a weighted average between the observation and a common centre, so when the weight and the centre are equal across the variants of a single experiment it is a monotonically increasing function of the estimator and **preserves the ordering**.
+* **When the shrinkage weights are equal across an experiment's arms, shrinkage cannot change their ordering.** It is then a weighted average between the observation and a common centre, which is a monotonically increasing function of the estimator and **preserves the ordering**. Here the weights are nearly equal rather than exactly equal, and 99.8% of decisions are accordingly unchanged.
 
 * **And in these data the weight is effectively identical:** it varies by 0.009 across variants of the same experiment, because they receive balanced traffic by design — the ratio between the most and least exposed variant has a median of 1.040. 99.8% of decisions turn out identical.
 
-* **This is the degenerate case the literature already describes.** Under homogeneous variance, the posterior mean, the tail probability and the tail expectation produce the same ordering. With balanced variants there was no selection problem to improve upon.
+* **This is the degenerate case the literature already describes.** Under homogeneous variance, the posterior mean, the tail probability and the tail expectation produce the same ordering. With balanced variants there was effectively no within-experiment ranking problem for shrinkage to improve. The winner's curse itself does not disappear: it is still there in what gets reported, which is where the correction pays.
 
 * **Practical consequence:** a team whose variants receive balanced traffic can rule out shrinkage as a meaningful way to improve within-experiment variant selection by measuring a ratio of impressions. That says nothing about the other three decisions, where it still pays.
 
@@ -205,15 +205,15 @@ Every interval above comes from 2,000 cluster-bootstrap replicates over three th
 
 For an experimentation team evaluating whether to adopt the correction:
 
-* **The winning variant overstates by 15.4% in relative terms, and this is correctable.** **Adopt the correction for what is reported to the business and for deciding whether an improvement merits deployment**, since it reduces estimation error by 24% and, at a demanding ship threshold, turns a policy of negative realised value into a positive one.
+* **The winning variant overstates by 15.4% in relative terms, and this is correctable.** **Adopt the correction for what is reported to the business**, where it reduces estimation error by 24% and replicates across both samples. **For threshold-based ship decisions, treat the result as promising rather than settled**: at a demanding bar it turns a policy of negative realised value into a positive one, but that is a Stage 2 exploratory finding and warrants independent validation before adoption.
 
 * **The variants of an A/B test typically receive balanced traffic by design.** **Do not therefore justify the correction as an improvement to which variant is chosen**: measure the ratio of impressions between the most and least exposed variant, and if it is close to 1 there is an algebraic reason why it will not reorder.
 
-* **The central assumption of the correction is that the true value does not depend on the precision with which it was measured.** **Before using it to prioritise across experiments, measure that correlation, because a negative sign means it will select worse.** Here it is −0.12 and survives control.
+* **The central assumption of the correction is that the true value does not depend on the precision with which it was measured.** **Before using it to prioritise across experiments, diagnose whether precision proxies are associated with realised outcomes. A negative association is a warning signal to evaluate out of sample, not a deterministic predictor of failure.** Here it is −0.12 unadjusted and remains negative within week and, separately, within experiment type.
 
 * **Variance is the input on which the entire method depends, and here it was underestimated twofold.** **Audit it against A/A experiments before anything else, and if the platform does not run them, start there**, because without an independent benchmark there is no way to establish whether it is correctly measured.
 
-* **A winner's advantage is an already-selected statistic, and the method assumes an estimate that is not.** **If shrinkage is to be applied, split the counts three ways** — one selects, one estimates, one evaluates — because with two the dispersion is estimated as zero and the correction ceases to function.
+* **A winner's advantage is an already-selected statistic, and the method assumes an estimate that is not.** **When evaluating shrinkage on already-selected winners from the same observed counts, separate selection, estimation and evaluation**; this project uses a three-way thinning split for that purpose, because with only two parts the between-experiment dispersion collapsed to zero and the correction ceased to function. **This is an evaluation design, not an operational requirement**: applying shrinkage in production normally means estimating the prior from a corpus of past experiments, as Microsoft reported doing at Bing, and no three-way split of the current experiment is involved.
 
 ---
 
@@ -223,7 +223,7 @@ For an experimentation team evaluating whether to adopt the correction:
 
 * **The design factor is applied only at the level at which it was measured.** The value of 1.94 corresponds to comparisons between variants within an experiment. For the between-experiment advantage, a factor estimated by an independent route — a covariance that does not use the variance at all — gives approximately 1.09. **A design factor does not transfer across levels**, and assuming that it does would reverse the conclusion.
 
-* **The observed failure on prioritisation is consistent with precision−effect dependence, which is not the same as having identified it as the cause.** The correlation between impressions and outcome is negative and survives control for period and for experiment type, which is what the assumption forbids; but a negative correlation among observed quantities does not by itself establish the direction of the dependence in the underlying parameters.
+* **The observed failure on prioritisation is consistent with precision−effect dependence, which is not the same as having identified it as the cause.** The association between impressions and outcome remains negative within week and, separately, within experiment type, which is what the assumption forbids; but a negative correlation among observed quantities does not by itself establish the direction of the dependence in the underlying parameters.
 
 * **The normal prior is misspecified by construction.** The winner's advantage is that of an already-selected variant, so its distribution is shifted (skewness +1.19) where the normal assumes zero. This is the reason BHS was implemented, and also the reason posterior-mean ranking does not attain its theoretical optimum.
 
@@ -233,7 +233,7 @@ For an experimentation team evaluating whether to adopt the correction:
 
 * **Monte Carlo variability from the thinning split is reported separately from sampling uncertainty, and in one place it dominates.** On the 1,277 experiments the regime filter retains, the spread across thinning seeds (0.125 pp) exceeds the bootstrap standard error (0.068 pp): at that sample size the choice of split moves the answer more than the sample does.
 
-* **A single publisher, a single metric, 2013–2015, and aggregated data without person-level detail.** There are no segments or user characteristics. **The procedure and its thresholds transfer; the specific figures do not.** No number in this document should be used as an expectation for another platform.
+* **A single publisher, a single metric, 2013–2015, and aggregated data without person-level detail.** There are no segments or user characteristics. **The evaluation procedure and the threshold-based decision framework transfer; the numerical thresholds and effect sizes do not.** A 0.8 pp bar reflects this archive's costs and margins, and means nothing on another platform. No number in this document should be used as an expectation for another platform.
 
 * **Two methods were ruled out, each with its reason.** Direct binomial shrinkage, **by diagnostic**: n·p has a median of 40 and only 0.1% of variants falls below 10, so the Gaussian approximation is not the source of the problem here. And Chen's reference implementation, **by declared operational cost**: it is written in R and this project is in Python; its diagnostic was nonetheless run, and it is what explains the principal finding.
 

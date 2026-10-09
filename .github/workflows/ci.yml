@@ -32,8 +32,9 @@ jobs:
 
       # Installs from pyproject, not from requirements-lock.txt. The two answer
       # different questions: this proves the declared ranges are installable,
-      # while the lock file records the exact environment that produced the
-      # published figures.
+      # while the lock file records the clean reproducibility environment and
+      # documents the two non-computational differences from the original
+      # figure-producing environment.
       - name: Install
         run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
 

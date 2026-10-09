@@ -2,8 +2,9 @@
 
 The earlier phases measured two decisions of **ordering**: which variant to
 deploy within an experiment, and which experiments to prioritise under a budget.
-In both, shrinkage does not help — and within an experiment it cannot, by
-algebra.
+In both, shrinkage does not help; within an experiment it barely can, because
+the shrinkage weights are nearly equal across arms and a common weight makes
+the transformation order-preserving.
 
 There is a third decision no earlier step measured, and it is the one a team
 takes most often: **do I ship this or not?** It does not compare variants against

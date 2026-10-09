@@ -188,7 +188,8 @@ def main() -> None:
           f"({dep['groups_week']} weeks)")
     print(f"      within type    {dep['correlation_within_type']:+.3f} "
           f"({dep['groups_type']} types)")
-    print(f"      survives control: {'YES' if dep['survives_control'] else 'no'}")
+    print("      negative within week and, separately, within type: "
+          f"{'YES' if dep['survives_control'] else 'no'}")
 
     metrics = {
         "sample": args.sample,
