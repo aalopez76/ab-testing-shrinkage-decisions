@@ -196,8 +196,8 @@ def shrink_portfolio(c: Portfolio, tau2: float | None = None) -> tuple[np.ndarra
     Here precision **does** vary between experiments, so alpha varies with it and
     the transformation is no longer monotone in the estimated delta: two
     experiments with the same estimated gain but different precision are ranked
-    differently. This is why shrinkage at this level can reorder while the
-    while within-experiment shrinkage in phase D was nearly ranking-invariant,
+    differently. This is why shrinkage at this level can reorder while
+    within-experiment shrinkage in phase D was nearly ranking-invariant,
     because precision there was nearly homogeneous.
     """
     d = c.table["delta_estimated"].to_numpy(dtype=float)
