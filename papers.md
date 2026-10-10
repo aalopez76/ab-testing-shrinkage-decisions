@@ -9,12 +9,12 @@ The works reviewed during the development of this project, with their exact refe
 **Matias, J. N., Munger, K., Aubin Le Quéré, M. and Ebersole, C.** (2021). *The Upworthy Research Archive, a time series of 32,487 experiments in U.S. media*. **Scientific Data** 8, 195.
 DOI: [10.1038/s41597-021-00934-7](https://doi.org/10.1038/s41597-021-00934-7) · Data: [osf.io/jd64p](https://osf.io/jd64p/)
 
-> The archive this project uses. It supplies the genuine randomisation, the A/A experiments and the exploratory/confirmatory split that allows the method to be frozen.
+> The archive this project uses. It supplies the genuine randomisation, the A/A-like experiments and the exploratory/confirmatory split that allows the method to be frozen.
 
 **Matias, J. N., Munger, K., Aubin Le Quéré, M. and Ebersole, C.** (2024). *Author Correction: The Upworthy Research Archive, a time series of 32,487 experiments in U.S. media*. **Scientific Data** 11.
-DOI: [10.1038/s41597-024-03575-8](https://doi.org/10.1038/s41597-024-03575-8)
+DOI: [10.1038/s41597-024-03600-w](https://doi.org/10.1038/s41597-024-03600-w)
 
-> The correction documenting the Cloudflare caching failure of 25 June 2013. It affects approximately 22% of the tests and advises against using them for causal inference. **The public CSV files carry no column identifying them**, so this project reconstructed the affected window from scratch.
+> The correction documenting the Cloudflare caching failure. It identifies **25 June 2013 to 10 January 2014** as the likely affected period, about 7,004 tests or 22%, and advises against using them for causal inference. It also added a `problem` flag to the updated main archive; **the legacy exploratory and confirmatory split files this project reads predate that flag**, so the affected window was reconstructed here from scratch.
 
 ---
 
@@ -44,7 +44,7 @@ DOI: [10.1080/01621459.1975.10479864](https://doi.org/10.1080/01621459.1975.1047
 **Cochran, W. G.** (1954). *The combination of estimates from different experiments*. **Biometrics** 10(1), 101–129.
 DOI: [10.2307/3001666](https://doi.org/10.2307/3001666)
 
-> The *Q* statistic this project uses to audit the noise model against A/A experiments. **Result: Q/df = 1.940 in the exploratory sample and 1.927 in the confirmatory sample; the binomial model underestimates noise by close to a factor of two.**
+> The *Q* statistic this project uses to audit the noise model against A/A-like experiments. **Result: Q/df = 1.940 in the exploratory sample and 1.927 in the confirmatory sample; the binomial model underestimates noise by close to a factor of two.**
 
 **DerSimonian, R. and Laird, N.** (1986). *Meta-analysis in clinical trials*. **Controlled Clinical Trials** 7(3), 177–188.
 DOI: [10.1016/0197-2456(86)90046-2](https://doi.org/10.1016/0197-2456(86)90046-2)
@@ -68,7 +68,7 @@ DOI: [10.6028/jres.087.022](https://doi.org/10.6028/jres.087.022)
 **Mudd, R., Friedberg, R., Gorbachev, I., Nassif, H. and Zaidi, A.** (2025). *Breaking the Winner's Curse with Bayesian Hybrid Shrinkage*. Meta Platforms. Presented at the **Conference on Digital Experimentation @ MIT (CODE@MIT'25)**.
 arXiv: [2511.06318](https://arxiv.org/abs/2511.06318)
 
-> The most recent variant, implemented in `src/wcab/shrinkage/bhs.py`. It adds **local** shrinkage factors per experiment through an inverse-gamma prior on the scale, which is equivalent to a Student-t prior.
+> The BHS variant implemented in `src/wcab/shrinkage/bhs.py`, presented at CODE@MIT 2025. A later and more developed preprint appeared in March 2026 ([arXiv:2603.12867](https://arxiv.org/abs/2603.12867), *Breaking the Winner's Curse with Bayesian Hybrid Shrinkage*, with an expanded author list); this project implements the earlier version and was not revalidated against it. It adds **local** shrinkage factors per experiment through an inverse-gamma prior on the scale, which is equivalent to a Student-t prior.
 >
 > The paper names its own base case: with λᵢ = 1 for all i it reduces to what the authors call *"Bayesian Global Shrinkage"*, which is standard shrinkage.
 >
@@ -85,14 +85,14 @@ arXiv: [2608.12949](https://arxiv.org/abs/2608.12949) (13 August 2026)
 >
 > Two statements this project uses directly. From the conclusion: *"error rates, estimation accuracy, and regret are all different risks, and the appropriate method follows from the risks an experimentation program needs to control, not the other way around."*
 >
-> And from the abstract, which states the obstacle this project resolves: *"winner-selected corpora, pooled programs, and heterogeneous metrics can each prevent calibration **regardless of corpus size**."* The authors further demonstrate that collecting more data from the same biased source does not help. This project's answer is the three-way split.
+> And from the abstract: *"winner-selected corpora, pooled programs, and heterogeneous metrics can each prevent calibration **regardless of corpus size**."* Their point concerns the historical corpus the prior is fitted on — one kept only because those experiments won — and more data from the same biased source does not fix it. **This project avoids that by fitting on the complete archive rather than a winners-only subset.** Its three-way thinning answers a different question: preventing the same observed counts from serving at once for winner selection, effect estimation and evaluation.
 
 **Gu, J. and Koenker, R.** (2023). *Invidious Comparisons: Ranking and Selection as Compound Decisions*. **Econometrica** 91(1), 1–41.
 DOI: [10.3982/ECTA19304](https://doi.org/10.3982/ECTA19304)
 
 > That the loss function determines which ordering is optimal. Two results this project uses:
 >
-> - Under **homogeneous variance**, the posterior mean, the tail probability and the tail expectation **produce the same ordering**. This is the degenerate case into which decision 1 falls, and it explains why shrinkage cannot change which variant is deployed.
+> - Under **homogeneous variance**, the posterior mean, the tail probability and the tail expectation **produce the same ordering**. Decision 1 lies close to this homogeneous-variance case, which is what explains its observed 99.8% ranking invariance rather than an exact one.
 > - Under a capacity constraint, the posterior mean **favours units with smaller variance** while the tail probability **prefers those with larger variance**. This explains why the tail rule loses when the criterion is realised gain.
 
 **Chen, J.** (2026). *Empirical Bayes When Estimation Precision Predicts Parameters*. **Econometrica** 94(2).
@@ -139,7 +139,7 @@ DOI: [10.1177/1745691614551642](https://doi.org/10.1177/1745691614551642)
 **Deng, A.** (2015). *Objective Bayesian Two Sample Hypothesis Testing for Online Controlled Experiments*. In **Proceedings of the 24th International Conference on World Wide Web (WWW '15 Companion)**, pp. 923–928.
 DOI: [10.1145/2740908.2742563](https://doi.org/10.1145/2740908.2742563)
 
-> Priors estimated from the historical record of experiments at Bing. This is the basis for stating that shrinkage is **in production** at Microsoft rather than only in papers.
+> Priors estimated from the historical record of experiments at Bing. Deng reports the method being **applied successfully at Bing, with thousands of past experiments used to set the priors**, which is what the README states. It does not by itself establish a continuing production deployment, and this project does not claim one.
 
 **Dimmery, D., Bakshy, E. and Sekhon, J.** (2019). *Shrinkage Estimators in Online Experiments*. In **Proceedings of the 25th ACM SIGKDD Conference (KDD '19)**.
 arXiv: [1904.12918](https://arxiv.org/abs/1904.12918)

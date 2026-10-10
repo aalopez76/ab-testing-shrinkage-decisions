@@ -1,7 +1,8 @@
 """Step 1: the verdict on the noise model.
 
-Tests v = p(1-p)/n against the dispersion observed in the A/A experiments, where
-the true difference between arms is zero by construction.
+Tests v = p(1-p)/n against the dispersion observed in the A/A-like experiments:
+those in which no recorded treatment field varies between arms, where the true
+difference is zero under the assumption that nothing unrecorded varied either.
 
 Output: reports/results/03_calibration.json
 """

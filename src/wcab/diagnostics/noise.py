@@ -5,13 +5,16 @@ there is a closed form — p(1-p)/n — but that formula assumes an arm's impres
 are independent, and in online experimentation they rarely are: the same visitor
 may see several, and there are time-of-day and traffic-source effects.
 
-A/A experiments provide the yardstick. If no public field varies between an
-experiment's arms, the true difference is zero by construction, so **all** of the
-observed dispersion should correspond to the calculated noise. Cochran's Q should
-then average k-1.
+A/A-like experiments provide the yardstick: experiments in which no *recorded*
+treatment field varies between arms. These are inferred from what the archive
+publishes, not deliberately designed A/A tests, so the zero-effect premise is an
+assumption rather than a construction. **Under the assumption that no unrecorded
+treatment attribute varied**, all of the observed dispersion should correspond to
+the calculated noise and Cochran's Q should average k-1.
 
-If it is larger, `v` is underestimated by a **design factor** that must be
-corrected before use. This is precisely Spotify's warning: a poorly calibrated
+If it is larger, the observed dispersion exceeds the binomial benchmark. The
+project uses that ratio as a working variance multiplier, while acknowledging
+that clustering and unrecorded treatment variation cannot be separated here. This is precisely Spotify's warning: a poorly calibrated
 prior decides worse than not correcting at all.
 
 What this module does **not** do is settle the explanation. Excess dispersion may
@@ -52,7 +55,7 @@ class Calibration:
         return (
             f"noise calibration: {status}\n"
             f"  Q/dof = {self.q_over_dof:.3f} (should be ~1.00) over "
-            f"{self.experiments:,} A/A experiments\n"
+            f"{self.experiments:,} A/A-like experiments\n"
             f"  median per experiment = {self.median_q_over_dof:.3f}\n"
             f"  fraction with p<0.05 = {self.fraction_p_005:.3f} "
             f"(should be ~0.05)\n"
@@ -86,7 +89,7 @@ def cochran_q(panel: pd.DataFrame) -> pd.DataFrame:
 
 
 def calibrate(panel: pd.DataFrame, tolerance: float = 0.15) -> Calibration:
-    """Test the noise model against the A/A experiments.
+    """Test the noise model against the A/A-like experiments.
 
     `tolerance` is how far Q/dof may stray from 1 before the calibration is judged
     unsound. The value 0.15 is deliberately generous: what matters is detecting a
@@ -94,11 +97,11 @@ def calibrate(panel: pd.DataFrame, tolerance: float = 0.15) -> Calibration:
     """
     aa = panel.loc[panel["is_aa"]]
     if aa.empty:
-        raise ValueError("no A/A experiments in the panel: calibration is impossible")
+        raise ValueError("no A/A-like experiments in the panel: calibration is impossible")
 
     q = cochran_q(aa)
     if q.empty:
-        raise ValueError("no A/A experiment is usable for Cochran's Q")
+        raise ValueError("no A/A-like experiment is usable for Cochran's Q")
 
     ratio = float(q["Q"].sum() / q["dof"].sum())
     p = stats.chi2.sf(q["Q"].to_numpy(), q["dof"].to_numpy())

@@ -12,8 +12,15 @@
 #   Platform Windows 10 AMD64
 #   pip      26.2.1
 #
-# To reproduce the published figures:   pip install -r requirements-lock.txt
-# To install for development:           pip install -e ".[dev]"
+# This snapshot excludes the project itself (pip freeze --exclude-editable), and
+# with a src/ layout the package is not importable until it is installed. To
+# reproduce the published figures, pin the dependencies and then add the
+# project without re-resolving them:
+#
+#     python -m pip install -r requirements-lock.txt
+#     python -m pip install -e . --no-deps
+#
+# For development, where exact pins do not matter: pip install -e ".[dev]"
 #
 # Regenerated after statsmodels and scikit-learn were removed from
 # pyproject.toml, which also dropped their exclusive transitive dependencies:

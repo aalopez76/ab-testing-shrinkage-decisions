@@ -133,7 +133,7 @@ def fig_checks(p) -> None:
     a2.axvline(cal.q_over_dof, lw=1.6, color=HARMS)
     a2.text(cal.q_over_dof + 0.12, a2.get_ylim()[1] * 0.62,
             f"measured: {cal.q_over_dof:.2f}×", fontsize=9, color=HARMS, weight="bold")
-    a2.set_xlabel("Cochran's Q / degrees of freedom, per A/A experiment")
+    a2.set_xlabel("Cochran's Q / degrees of freedom, per A/A-like experiment")
     a2.set_ylabel(f"experiments  (n={len(qs):,})")
     a2.set_title("2. The noise model underestimates twofold")
 

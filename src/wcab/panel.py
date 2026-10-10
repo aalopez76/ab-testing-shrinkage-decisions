@@ -9,7 +9,7 @@ Columns:
     date  week  varies_headline  varies_image  is_aa  sample
 
 `v` is the binomial variance of the rate, and it is **underestimated**: the audit
-measured Q/dof = 1.927 over the A/A experiments, close to twice the dispersion the
+measured Q/dof = 1.927 over the A/A-like experiments, close to twice the dispersion the
 formula predicts. For that reason `v` is exposed as it is (naive) and the design
 factor correction is applied explicitly in `shrinkage/`, where the two can be
 compared. Nothing is corrected silently here.

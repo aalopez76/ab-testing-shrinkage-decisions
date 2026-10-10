@@ -94,7 +94,7 @@ Uncertainty is reported as a **95% cluster-bootstrap percentile interval**, resa
 
 **The winner's curse is real and substantial:** the deployed variant promises 1.792% and delivers 1.553%, a **15.4% relative overstatement**. It is a selection effect rather than a measurement effect: choosing a variant at random yields an inflation a hundred times smaller.
 
-**That magnitude is specific to how much data selects the winner, and the dependence was measured.** Halving the selection sample raises it by 41%; devoting 70% of the counts to selection lowers it by 21%. This is the known power dependence of the curse showing up as theory says it should, so the figure is read as *the curse under a half-split on this archive*, never as a constant of the phenomenon. **The sign and the substance hold at every split tested.**
+**That magnitude is specific to how much data selects the winner, and the dependence was measured.** Reducing the selection share from 50% to 30% raises the estimated inflation by 41%; allocating 70% to selection lowers it by 21%. This is the known power dependence of the curse showing up as theory says it should, so the figure is read as *the curse under a half-split on this archive*, never as a constant of the phenomenon. **The sign and the substance hold at every split tested.**
 
 **The correction does not fix what most people assume it fixes.** But the four decisions were not all specified at the same time, and that distinction is kept visible below rather than smoothed over.
 
@@ -122,11 +122,11 @@ These were devised **after the confirmatory sample had already been unblinded** 
 | **3. Whether to ship** | At a 0.8 pp bar the uncorrected policy delivers **negative** value, −0.0064 pp, while shrinkage delivers +0.0119 pp |
 | **BHS** (Meta, 2025) | Better fit and lower held-out estimation error, −28.1% |
 | **Regime comparison** | Under their arm-quality filter no clear difference is detected, which is not an equivalence result and does not reproduce their two-arm construction |
-| **Split sensitivity** | Magnitudes move with the split; the direction of every published conclusion does not |
+| **Split sensitivity** | Winner inflation stays positive, and the estimation-error and prioritisation conclusions keep their direction, across every allocation tested |
 
 ![The four decisions](reports/figures/03_four_decisions.png)
 
-What an experimentation lead should take away: **the correction serves to stop overstating results and to decide whether an improvement is worth deploying; it does not serve to choose better among candidates.** The distinction is not a nuance — it is a quarter of engineering effort well or poorly invested.
+What an experimentation lead should take away: **the correction clearly reduces overstatement in what gets reported, and it does not materially improve within-experiment ranking.** For threshold-based deployment decisions it shows promising value in this archive, which is a Stage 2 result rather than a settled one. The distinction between the three is not a nuance — it is a quarter of engineering effort well or poorly invested.
 
 ---
 
@@ -160,7 +160,7 @@ What an experimentation lead should take away: **the correction serves to stop o
 
 *Stage 2 — devised after the confirmatory sample had been unblinded. It requires independent confirmation.*
 
-* **This project treats threshold deployment as a decision separate from ranking, consistent with recent decision-oriented experimentation work.** Ranking is invariant to a monotone transformation, so shrinkage cannot change the argmax. **Comparison against an absolute threshold is not invariant**: shrinkage changes the value, and therefore changes whether it crosses the line.
+* **This project treats threshold deployment as a decision separate from ranking, consistent with recent decision-oriented experimentation work.** A common, strictly increasing transformation preserves ranking, so in the nearly homogeneous within-experiment setting here shrinkage is almost ranking-invariant. **Comparison against an absolute threshold is not invariant at all**: shrinkage changes the value, and therefore changes whether it crosses the line.
 
 * **What is measured is the value the policy delivers, not how often it agrees with a second measurement.** For a threshold *u*, the policy ships arm *i* when its estimate clears the bar, and the value realised is what the independent evaluation partition says it delivered against that bar:
 
@@ -187,7 +187,7 @@ Every interval above comes from 2,000 cluster-bootstrap replicates over three th
 
 ![The ship decision](reports/figures/04_ship_decision.png)
 
-## 4. The reported figure: improves, and the most recent variant improves further
+## 4. The reported figure: improves, and Meta's local-shrinkage variant improves further
 
 * **The standard correction reduces estimation error by 24.0%**, replicated across both samples. This is what prevents promising the business improvements that never arrive.
 
@@ -211,7 +211,7 @@ For an experimentation team evaluating whether to adopt the correction:
 
 * **The central assumption of the correction is that the true value does not depend on the precision with which it was measured.** **Before using it to prioritise across experiments, diagnose whether precision proxies are associated with realised outcomes. A negative association is a warning signal to evaluate out of sample, not a deterministic predictor of failure.** Here it is −0.12 unadjusted and remains negative within week and, separately, within experiment type.
 
-* **Variance is the input on which the entire method depends, and here it was underestimated twofold.** **Audit it against A/A experiments before anything else, and if the platform does not run them, start there**, because without an independent benchmark there is no way to establish whether it is correctly measured.
+* **Variance is the input on which the entire method depends, and here it was underestimated twofold.** **Audit it against A/A or A/A-like experiments before anything else, and if the platform does not run them, start there**, because without an independent benchmark there is no way to establish whether it is correctly measured.
 
 * **A winner's advantage is an already-selected statistic, and the method assumes an estimate that is not.** **When evaluating shrinkage on already-selected winners from the same observed counts, separate selection, estimation and evaluation**; this project uses a three-way thinning split for that purpose, because with only two parts the between-experiment dispersion collapsed to zero and the correction ceased to function. **This is an evaluation design, not an operational requirement**: applying shrinkage in production normally means estimating the prior from a corpus of past experiments, as Microsoft reported doing at Bing, and no three-way split of the current experiment is involved.
 
@@ -233,7 +233,7 @@ For an experimentation team evaluating whether to adopt the correction:
 
 * **Monte Carlo variability from the thinning split is reported separately from sampling uncertainty, and in one place it dominates.** On the 1,277 experiments the regime filter retains, the spread across thinning seeds (0.125 pp) exceeds the bootstrap standard error (0.068 pp): at that sample size the choice of split moves the answer more than the sample does.
 
-* **A single publisher, a single metric, 2013–2015, and aggregated data without person-level detail.** There are no segments or user characteristics. **The evaluation procedure and the threshold-based decision framework transfer; the numerical thresholds and effect sizes do not.** A 0.8 pp bar reflects this archive's costs and margins, and means nothing on another platform. No number in this document should be used as an expectation for another platform.
+* **A single publisher, a single metric, 2013–2015, and aggregated data without person-level detail.** There are no segments or user characteristics. **The evaluation procedure and the threshold-based decision framework transfer; the numerical thresholds and effect sizes do not.** The 0.2 to 0.8 pp thresholds are illustrative practical-effect bars used to study the decision rule; **they are not estimated from deployment costs or margins, which this archive does not contain.** No number in this document should be used as an expectation for another platform.
 
 * **Two methods were ruled out, each with its reason.** Direct binomial shrinkage, **by diagnostic**: n·p has a median of 40 and only 0.1% of variants falls below 10, so the Gaussian approximation is not the source of the problem here. And Chen's reference implementation, **by declared operational cost**: it is written in R and this project is in Python; its diagnostic was nonetheless run, and it is what explains the principal finding.
 

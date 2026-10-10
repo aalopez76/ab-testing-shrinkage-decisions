@@ -1,10 +1,11 @@
 """Phase E: the decision BETWEEN experiments, which is where improvement is possible.
 
-Phase D found that shrinkage cannot change which arm is selected **within** an
-experiment: with a near-uniform alpha and a common target, theta-tilde is a
-monotone transformation of theta-hat and preserves the ordering. This is not a
-failure of the method — with balanced arms there is no selection problem to
-improve upon.
+Phase D found that shrinkage barely changes which arm is selected **within** an
+experiment. An alpha that is *equal* across an experiment's arms makes
+theta-tilde a common monotone transformation of theta-hat, which preserves the
+ordering exactly; here alpha is near-uniform rather than uniform, and 99.8% of
+selections are unchanged. This is not a failure of the method — with balanced
+arms there is almost no within-experiment ranking problem to improve upon.
 
 The condition that makes the selection problem real has a name in the
 literature: **heterogeneous precision** (Gu and Koenker, *Invidious Comparisons:
