@@ -70,7 +70,7 @@ A window covering **6,956 of 22,743 experiments (30.6%)** is excluded. A caching
 
 The retained period runs at the anomaly rate that would be expected by chance.
 
-## Check 2: noise model (twofold underestimation)
+## Check 2: noise model (about 1.93× excess dispersion)
 
 All shrinkage depends on the variance of each measurement, and experiments where no recorded treatment field varies between variants provide an independent benchmark. These are **inferred A/A-like experiments, identified from the treatment fields the archive publishes** — not deliberately designed A/A tests in which the true effect is known to be zero, a distinction that matters because the archive may not record every field that varied. Under the assumption that nothing else varied, observed dispersion should match the calculated one. It does not. Cochran's *Q* is **1.940** times its degrees of freedom in the exploratory sample and **1.927** in the confirmatory sample, and **replicates across both**.
 
@@ -211,7 +211,7 @@ For an experimentation team evaluating whether to adopt the correction:
 
 * **The central assumption of the correction is that the true value does not depend on the precision with which it was measured.** **Before using it to prioritise across experiments, diagnose whether precision proxies are associated with realised outcomes. A negative association is a warning signal to evaluate out of sample, not a deterministic predictor of failure.** Here it is −0.12 unadjusted and remains negative within week and, separately, within experiment type.
 
-* **Variance is the input on which the entire method depends, and here it was underestimated twofold.** **Audit it against A/A or A/A-like experiments before anything else, and if the platform does not run them, start there**, because without an independent benchmark there is no way to establish whether it is correctly measured.
+* **Variance is the input on which the entire method depends, and here the observed dispersion is about 1.93× the binomial benchmark.** **Audit it against A/A or A/A-like experiments before anything else, and if the platform does not run them, start there**, because without an independent benchmark there is no way to establish whether it is correctly measured.
 
 * **A winner's advantage is an already-selected statistic, and the method assumes an estimate that is not.** **When evaluating shrinkage on already-selected winners from the same observed counts, separate selection, estimation and evaluation**; this project uses a three-way thinning split for that purpose, because with only two parts the between-experiment dispersion collapsed to zero and the correction ceased to function. **This is an evaluation design, not an operational requirement**: applying shrinkage in production normally means estimating the prior from a corpus of past experiments, as Microsoft reported doing at Bing, and no three-way split of the current experiment is involved.
 

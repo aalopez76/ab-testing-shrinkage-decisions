@@ -2,18 +2,17 @@
 
 The earlier phases measured two decisions of **ordering**: which variant to
 deploy within an experiment, and which experiments to prioritise under a budget.
-In both, shrinkage does not help; within an experiment it barely can, because
-the shrinkage weights are nearly equal across arms and a common weight makes
-the transformation order-preserving.
+In both, shrinkage does not help. A common, strictly increasing transformation
+preserves the argmax, so under the nearly homogeneous within-experiment
+precision observed here shrinkage is almost ranking-invariant.
 
-There is a third decision no earlier step measured, and it is the one a team
-takes most often: **do I ship this or not?** It does not compare variants against
+There is a third decision no earlier step measured: **do I ship this or not?** It does not compare variants against
 one another; it compares an estimated improvement against an **absolute
 threshold** — the minimum that justifies deploying, maintaining and carrying the
 risk. And there the invariance breaks:
 
-    ranking     is invariant to a monotone transformation, so shrinkage CANNOT
-                change the argmax
+    ranking     is preserved by a COMMON monotone transformation, so with the
+                nearly equal weights seen here shrinkage barely moves the argmax
     threshold   is NOT invariant, so shrinkage changes the value and therefore
     comparison  changes whether it crosses the line
 

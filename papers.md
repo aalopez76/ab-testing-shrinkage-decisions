@@ -9,7 +9,7 @@ The works reviewed during the development of this project, with their exact refe
 **Matias, J. N., Munger, K., Aubin Le Quéré, M. and Ebersole, C.** (2021). *The Upworthy Research Archive, a time series of 32,487 experiments in U.S. media*. **Scientific Data** 8, 195.
 DOI: [10.1038/s41597-021-00934-7](https://doi.org/10.1038/s41597-021-00934-7) · Data: [osf.io/jd64p](https://osf.io/jd64p/)
 
-> The archive this project uses. It supplies the genuine randomisation, the A/A-like experiments and the exploratory/confirmatory split that allows the method to be frozen.
+> The archive this project uses. It supplies the genuine randomisation, the treatment fields from which this project infers the A/A-like experiments, and the exploratory/confirmatory split that allows the method to be frozen.
 
 **Matias, J. N., Munger, K., Aubin Le Quéré, M. and Ebersole, C.** (2024). *Author Correction: The Upworthy Research Archive, a time series of 32,487 experiments in U.S. media*. **Scientific Data** 11.
 DOI: [10.1038/s41597-024-03600-w](https://doi.org/10.1038/s41597-024-03600-w)
@@ -44,7 +44,7 @@ DOI: [10.1080/01621459.1975.10479864](https://doi.org/10.1080/01621459.1975.1047
 **Cochran, W. G.** (1954). *The combination of estimates from different experiments*. **Biometrics** 10(1), 101–129.
 DOI: [10.2307/3001666](https://doi.org/10.2307/3001666)
 
-> The *Q* statistic this project uses to audit the noise model against A/A-like experiments. **Result: Q/df = 1.940 in the exploratory sample and 1.927 in the confirmatory sample; the binomial model underestimates noise by close to a factor of two.**
+> The *Q* statistic this project uses to audit the noise model against A/A-like experiments. **Result: Q/df = 1.940 in the exploratory sample and 1.927 in the confirmatory sample — about 1.93× the dispersion the binomial benchmark predicts.** The project uses that ratio as a working variance multiplier; clustering and unrecorded treatment variation are not separable here.
 
 **DerSimonian, R. and Laird, N.** (1986). *Meta-analysis in clinical trials*. **Controlled Clinical Trials** 7(3), 177–188.
 DOI: [10.1016/0197-2456(86)90046-2](https://doi.org/10.1016/0197-2456(86)90046-2)

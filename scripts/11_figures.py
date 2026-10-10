@@ -28,7 +28,7 @@ FIG = ROOT / "reports" / "figures"
 # in light grey, and green/red reserved for verdicts.
 UNCORRECTED, GLOBAL, BHS = "#8c7b6b", "#3b6ea5", "#1f4068"
 ORACLE = "#e8e4dc"
-HELPS, HARMS, CANNOT = "#2f7d4f", "#b4422f", "#9a9a9a"
+HELPS, HARMS, NEUTRAL = "#2f7d4f", "#b4422f", "#9a9a9a"
 
 plt.rcParams.update({
     "font.size": 9.5,
@@ -135,7 +135,7 @@ def fig_checks(p) -> None:
             f"measured: {cal.q_over_dof:.2f}×", fontsize=9, color=HARMS, weight="bold")
     a2.set_xlabel("Cochran's Q / degrees of freedom, per A/A-like experiment")
     a2.set_ylabel(f"experiments  (n={len(qs):,})")
-    a2.set_title("2. The noise model underestimates twofold")
+    a2.set_title("2. About 1.93× the dispersion the model predicts")
 
     fig.suptitle("Two data problems, resolved before any measurement",
                  fontsize=11, weight="bold", y=1.04)
@@ -172,7 +172,7 @@ def fig_four_decisions(p, partitions: int = 8) -> None:
     rows = [
         ("1. Which variant to deploy?", "click-through rate actually delivered",
          np.mean(delivered_shrunk) * 100, np.mean(delivered_raw) * 100,
-         "cannot change it: ordering is preserved", CANNOT, "%", 3),
+         "no material benefit: ordering is near-preserved", NEUTRAL, "%", 3),
         ("2. Which experiments to prioritise?", "realised gain at a 5% budget",
          g["shrunk"]["0.05"] * 100, g["raw"]["0.05"] * 100,
          f"worse by {abs(g['shrunk']['0.05']-g['raw']['0.05'])*100:.3f} pp — "

@@ -8,7 +8,7 @@ Columns:
     experiment_id  arm_id  impressions  clicks  theta_hat  v
     date  week  varies_headline  varies_image  is_aa  sample
 
-`v` is the binomial variance of the rate, and it is **underestimated**: the audit
+`v` is the binomial variance of the rate, and the observed dispersion **exceeds** it: the audit
 measured Q/dof = 1.927 over the A/A-like experiments, close to twice the dispersion the
 formula predicts. For that reason `v` is exposed as it is (naive) and the design
 factor correction is applied explicitly in `shrinkage/`, where the two can be
@@ -66,7 +66,9 @@ def build(sample: str = "exploratory") -> tuple[pd.DataFrame, exclusion.Exclusio
     size = g.size().rename("k")
 
     varies = distinct.join(size)
-    # An experiment is A/A in effect if it has >=2 arms and no field varies.
+    # An experiment is classified A/A-LIKE when it has >=2 arms and no recorded
+    # treatment field varies. Inferred from what the archive publishes, not a
+    # label the archive supplies.
     is_aa = (varies["k"] >= 2) & (varies[VARIANT_FIELDS].max(axis=1) <= 1)
 
     date = pd.to_datetime(data["created_at"], errors="coerce")
